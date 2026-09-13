@@ -1,26 +1,181 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@theme {
+  --font-sans:
+    "Outfit Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display:
+    "Fraunces Variable", ui-serif, Georgia, "Times New Roman", serif;
+
+  --color-cream: #fffdf7;
+  --color-cream-2: #fbf5ec;
+  --color-ink: #2b2320;
+  --color-ink-soft: #6f6059;
+
+  /* Rose */
+  --color-rose-50: #fdf2f2;
+  --color-rose-100: #fbe4e3;
+  --color-rose-200: #f7c9c7;
+  --color-rose-300: #efa9a6;
+  --color-rose-400: #e6918e;
+  --color-rose-500: #d96b67;
+  --color-rose-600: #c04e49;
+  --color-rose-700: #9e3a36;
+  --color-rose-800: #7c2e2b;
+  --color-rose-900: #592422;
+
+  /* Teal */
+  --color-teal-50: #effbf8;
+  --color-teal-100: #d2f4ec;
+  --color-teal-200: #a6e9da;
+  --color-teal-300: #71d7c2;
+  --color-teal-400: #41c0ab;
+  --color-teal-500: #24a794;
+  --color-teal-600: #18857a;
+  --color-teal-700: #146b63;
+  --color-teal-800: #13544f;
+  --color-teal-900: #123f3c;
+
+  /* Gold */
+  --color-gold-50: #fef7e6;
+  --color-gold-100: #fdecc4;
+  --color-gold-200: #fad98a;
+  --color-gold-300: #f7c355;
+  --color-gold-400: #f2ab2f;
+  --color-gold-500: #e0861d;
+  --color-gold-600: #c26818;
+  --color-gold-700: #984e16;
+  --color-gold-800: #6b3a12;
+  --color-gold-900: #472a10;
+
+  /* Mint */
+  --color-mint-50: #f2fbf6;
+  --color-mint-100: #e0f7e9;
+  --color-mint-200: #c1edd3;
+  --color-mint-300: #97ddb6;
+  --color-mint-400: #7ad0a6;
+  --color-mint-500: #4fb78a;
+  --color-mint-600: #2f9170;
+  --color-mint-700: #25705a;
+  --color-mint-800: #1f5647;
+  --color-mint-900: #1a4037;
+
+  --shadow-soft: 0 24px 60px -28px rgb(89 36 34 / 0.28);
+  --shadow-card: 0 12px 40px -18px rgb(89 36 34 / 0.18);
+  --shadow-pin: 0 14px 26px -12px rgb(43 35 32 / 0.35);
+  --shadow-glow: 0 10px 42px -12px rgb(230 145 142 / 0.55);
+
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-float-slow: float 11s ease-in-out infinite;
+  --animate-spin-slow: spin-slow 30s linear infinite;
+  --animate-pop: pop 0.45s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  --animate-drift: drift 22s ease-in-out infinite alternate;
+  --animate-ticker: ticker 32s linear infinite;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes drift {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(-50px, -28px, 0) scale(1.06);
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@layer base {
+  * {
+    border-color: color-mix(in srgb, var(--color-ink) 12%, transparent);
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--color-rose-200);
+    color: var(--color-rose-900);
+  }
+}
+
+@layer components {
+  .container-page {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 72rem;
+    padding-inline: 1.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .container-page {
+      padding-inline: 2rem;
+    }
+  }
+
+  .glass {
+    background: rgb(255 255 255 / 0.62);
+    -webkit-backdrop-filter: blur(18px) saturate(1.4);
+    backdrop-filter: blur(18px) saturate(1.4);
+    border: 1px solid rgb(255 255 255 / 0.75);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .bg-dots {
+    background-image: radial-gradient(
+      color-mix(in srgb, var(--color-ink) 9%, transparent) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+  }
 }
