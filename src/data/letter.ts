@@ -7,13 +7,6 @@ export type Block =
 
 const p = (text: string): Block => ({ type: "p", text });
 const key = (text: string): Block => ({ type: "key", text });
-const image = (caption: string, alt: string, tone: "teal" | "rose" | "gold" = "teal", src?: string): Block => ({
-  type: "image",
-  caption,
-  alt,
-  tone,
-  src,
-});
 
 export type Letter = {
   slug: string;

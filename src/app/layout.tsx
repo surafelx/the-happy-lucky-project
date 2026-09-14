@@ -10,6 +10,7 @@ import { Confetti } from "@/components/Confetti";
 import { Backdrop } from "@/components/Backdrop";
 import { Toast } from "@/components/Toast";
 import { PageCurtain } from "@/components/PageCurtain";
+import { FaviconSpinner } from "@/components/FaviconSpinner";
 
 const lucky = Luckiest_Guy({
   weight: "400",
@@ -62,6 +63,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main id="top">{children}</main>
         <Toast />
         <PageCurtain />
+        <FaviconSpinner />
       </body>
     </html>
   );
