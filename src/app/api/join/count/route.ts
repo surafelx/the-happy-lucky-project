@@ -35,7 +35,16 @@ export async function GET(req: Request) {
     const detail = debug
       ? String(err instanceof Error ? err.message : err).replace(webhook ?? " ", "<webhook>").slice(0, 400)
       : undefined;
-    const rawText = debug ? raw?.replace(/\s+/g, " ").slice(0, 600) : undefined;
+    // Visible text only: Google error pages bury the message under a lot of script.
+    const rawText = debug
+      ? raw
+          ?.replace(/<script[\s\S]*?<\/script>/gi, " ")
+          .replace(/<style[\s\S]*?<\/style>/gi, " ")
+          .replace(/<[^>]+>/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 600)
+      : undefined;
     return NextResponse.json({ count: null, detail, raw: rawText });
   }
 }
