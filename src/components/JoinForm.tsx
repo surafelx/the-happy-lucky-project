@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
+import { track } from "@vercel/analytics";
+
 import { JoinCelebration } from "@/components/JoinCelebration";
 
 type Status = "idle" | "sending" | "done" | "error";
@@ -28,12 +30,14 @@ export function JoinForm() {
       });
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (!res.ok || !data.ok) {
+        track("join_failed", { code: (data as { code?: string }).code ?? String(res.status) });
         setStatus("error");
         setError(data.error || "That didn’t go through. Please try once more.");
         return;
       }
       setStatus("done");
       setCelebrate(true);
+      track("join");
     } catch {
       setStatus("error");
       setError("We couldn’t reach the server. Check your connection and try again.");

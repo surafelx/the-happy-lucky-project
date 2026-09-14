@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Luckiest_Guy, Poppins } from "next/font/google";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 
 import "./globals.css";
 
@@ -64,6 +65,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Toast />
         <PageCurtain />
         <FaviconSpinner />
+        <Analytics />
       </body>
     </html>
   );
