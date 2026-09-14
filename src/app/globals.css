@@ -599,3 +599,28 @@ html{overflow-x:hidden}
   .join input[type="email"]{flex-basis:100%;padding:.55rem .6rem}
   .join form .btn{width:100%;justify-content:center}
 }
+
+/* join cards: bigger, and immune to the article's paragraph styling */
+.article .join-card p{font-size:inherit;line-height:1.5;margin:0;color:inherit}
+.join-card{padding:2.2rem 2.2rem 2rem;border-radius:32px;width:min(100%,34rem)}
+.join-card h2{font-size:2.6rem;margin-top:.5rem}
+.join-card .note{font-size:1.05rem;line-height:1.55;margin-top:.6rem;color:var(--ink-2)}
+.join form{margin-top:1.3rem;padding:.35rem .35rem .35rem 1.3rem}
+.join input[type="email"]{font-size:1.05rem;padding:.7rem .5rem}
+.join form .btn{padding:.75rem 1.5rem;font-size:1rem}
+.join .demo-note{margin-top:1rem;font-size:.78rem;line-height:1.5}
+.join-count{margin-top:1rem;font-size:1rem}
+.join-card.end{padding:3rem clamp(1.6rem,4.5vw,3.5rem);gap:1.6rem 3.5rem;border-radius:36px}
+.join-card.end h2{font-size:clamp(2.4rem,4.6vw,3.6rem);line-height:.98}
+.join-card.end .note{font-size:1.12rem;max-width:42ch}
+.join-card.end .demo-note{margin-top:1rem;font-size:.8rem}
+.join-card.end .bg{width:280px;height:280px;right:-60px;bottom:-70px}
+@media (max-width:900px){.join-card{width:100%}}
+@media (max-width:560px){
+  .join-card{padding:1.6rem 1.3rem 1.5rem;border-radius:24px}
+  .join-card h2{font-size:2.1rem}
+  .join-card .note{font-size:.98rem}
+  .join-card.end{padding:2rem 1.4rem;border-radius:26px}
+  .join-card.end h2{font-size:2.2rem}
+  .join-card.end .note{font-size:1rem}
+}
