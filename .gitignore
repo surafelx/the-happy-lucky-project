@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# collected join emails (see src/app/api/join/route.ts)
+data/

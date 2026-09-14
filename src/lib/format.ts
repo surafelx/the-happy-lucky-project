@@ -1,28 +1,18 @@
-export function formatNum(n: number): string {
-  return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+/** Fire the petal confetti drawn by <Confetti />. Defaults to the centre of the viewport. */
+export function burst(x?: number, y?: number, n = 90) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(
+    new CustomEvent("hlp:burst", {
+      detail: { x: x ?? window.innerWidth / 2, y: y ?? window.innerHeight / 2, n },
+    }),
+  );
 }
 
-export function etb(n: number): string {
-  return `ETB ${formatNum(n)}`;
+/** Show a short message in the <Toast /> pill at the bottom of the screen. */
+export function toast(message: string) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("hlp:toast", { detail: { message } }));
 }
 
-export function pct(part: number, whole: number): number {
-  if (whole <= 0) return 0;
-  return Math.min(100, Math.round((part / whole) * 100));
-}
-
-export function date12(d: Date): string {
-  return new Intl.DateTimeFormat("en", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  }).format(d);
-}
-
-let counter = 0;
-export function uid(prefix = "hlp"): string {
-  counter += 1;
-  return `${prefix}-${Date.now().toString(36)}-${counter}-${Math.random()
-    .toString(36)
-    .slice(2, 7)}`;
-}
+export const prefersReducedMotion = () =>
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;

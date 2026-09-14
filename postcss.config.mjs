@@ -1,7 +1,4 @@
-const config = {
-  plugins: {
-    "@tailwindcss/postcss": {},
-  },
-};
+/** No PostCSS plugins are needed: the stylesheet is plain CSS. */
+const config = { plugins: {} };
 
 export default config;
