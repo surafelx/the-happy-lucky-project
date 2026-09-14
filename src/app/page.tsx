@@ -28,30 +28,19 @@ export default function HomePage() {
               A project about childhood, luck, and the people who show up. It began as a letter on a
               Sunday, and it is still becoming.
             </p>
-            <div className="hero-cta pop" style={pop(3)}>
+            <section id="join" className="join hero-join pop" style={pop(3)} aria-labelledby="join-h">
+              <h2 id="join-h">Join</h2>
+              <p className="note">
+                Leave your email and you&apos;ll hear from us as Happy Lucky takes shape.
+              </p>
+              <JoinForm />
+            </section>
+            <div className="hero-cta pop" style={pop(4)}>
               <Link className="btn rose" href={`/sundays/${letter.slug}`}>
                 Read {letter.title}
               </Link>
-              <Link className="btn gold" href="/sundays">
-                Sundays
-              </Link>
-              <a className="btn ghost" href="#join">
-                Join →
-              </a>
             </div>
           </div>
-
-          <section id="join" className="join join-card pop" style={pop(2)} aria-labelledby="join-h">
-            <span className="eyebrow">Come and build it with me</span>
-            <h2 id="join-h">Join</h2>
-            <p className="note">
-              Leave your email and you&apos;ll hear from us as Happy Lucky takes shape.
-            </p>
-            <JoinForm />
-            <p className="demo-note">
-              No newsletters for the sake of it. Just a note when there is something real to share.
-            </p>
-          </section>
         </div>
       </header>
     </div>
