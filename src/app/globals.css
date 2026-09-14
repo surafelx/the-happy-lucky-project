@@ -447,13 +447,20 @@ html::-webkit-scrollbar-thumb:hover{background:var(--teal-deep)}
 
 /* backdrop: fixed decoration at the edges */
 .backdrop{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}
-.backdrop .blob{opacity:1}
-.backdrop .blob.teal{left:-16vw;top:-14vw;animation-duration:18s}
-.backdrop .blob.rose{right:-14vw;bottom:-16vw;animation-duration:22s}
-.backdrop .blob.gold{background:var(--gold);width:22vw;height:22vw;max-width:260px;max-height:260px;left:-9vw;top:58%;border-radius:52% 48% 60% 40%/45% 55% 45% 55%;animation-delay:-11s;animation-duration:16s}
+.backdrop .blob{opacity:1;animation:blobby 26s ease-in-out infinite;will-change:transform,border-radius}
+.backdrop .blob.teal{left:-16vw;top:-14vw;animation-duration:24s}
+.backdrop .blob.rose{right:-14vw;bottom:-16vw;animation-duration:30s;animation-delay:-9s;animation-direction:reverse}
+.backdrop .blob.gold{background:var(--gold);width:24vw;height:24vw;max-width:280px;max-height:280px;left:-9vw;top:58%;animation-duration:20s;animation-delay:-14s}
+@keyframes blobby{
+  0%{border-radius:42% 58% 63% 37%/48% 40% 60% 52%;transform:translate(0,0) rotate(0deg) scale(1)}
+  25%{border-radius:58% 42% 38% 62%/60% 34% 66% 40%;transform:translate(3vw,-2vw) rotate(10deg) scale(1.08)}
+  50%{border-radius:36% 64% 55% 45%/42% 58% 42% 58%;transform:translate(1vw,3vw) rotate(-6deg) scale(.96)}
+  75%{border-radius:62% 38% 46% 54%/38% 62% 38% 62%;transform:translate(-3vw,1vw) rotate(6deg) scale(1.05)}
+  100%{border-radius:42% 58% 63% 37%/48% 40% 60% 52%;transform:translate(0,0) rotate(0deg) scale(1)}
+}
 .backdrop .ribbon{opacity:.85;animation:sway 12s ease-in-out infinite alternate}
 .backdrop .plane{position:absolute;top:calc(var(--nav-h) + 18px);left:auto;right:6%;width:150px;animation:fly 11s ease-in-out infinite}
-.backdrop .scribble{position:absolute;left:38%;bottom:7%;width:100px;opacity:1;animation:bob 8s ease-in-out infinite}
+.backdrop .scribble{position:absolute;left:2.5%;bottom:5%;width:96px;opacity:.9;animation:bob 8s ease-in-out infinite}
 @keyframes sway{to{transform:translateY(-14px) rotate(3deg)}}
 
 /* hero: full screen */
