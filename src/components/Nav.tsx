@@ -10,7 +10,8 @@ export function Nav() {
       <div className="wrap">
         <Link className="brand" href="/">
           <Logo />
-          The Happy Lucky Project
+          <span className="full">The Happy Lucky Project</span>
+          <span className="short">Happy Lucky</span>
         </Link>
         <NavLinks />
         <ThemeToggle />

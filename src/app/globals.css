@@ -558,3 +558,44 @@ a:hover .logo-boost,button:hover .logo-boost,.hero-logo:hover .logo-boost{animat
 /* joined-so-far counter under the form */
 .join-count{margin-top:.9rem;font-size:.9rem;font-weight:600;color:var(--ink-2)}
 .join-count b{color:var(--teal-deep);font-size:1.05rem}
+
+/* ---------- phones ---------- */
+html{overflow-x:hidden}
+.brand .short{display:none}
+@media (max-width:900px){
+  .hero.full .wrap{grid-template-columns:1fr;gap:2rem}
+  .hero.full{padding:2rem 0 2.5rem}
+  .backdrop .plane{width:110px;right:4%}
+}
+@media (max-width:560px){
+  .brand .full{display:none}
+  .brand .short{display:inline}
+  .brand{font-size:1rem}
+  .brand svg{width:32px;height:32px}
+  .nav .wrap{gap:.6rem}
+  .nav-links{gap:.7rem;font-size:.85rem}
+  .lang{padding:.35rem .6rem}
+  .hero.full .hero-logo{width:84px;height:84px}
+  .hero.full h1{font-size:clamp(2.6rem,13vw,3.4rem)}
+  .hero.full h1 .proj svg{inset:-28% -12%;width:124%;height:156%}
+  .hero-cta .btn{width:100%;justify-content:center}
+  .join-card{padding:1.4rem 1.2rem;border-radius:22px;box-shadow:6px 6px 0 var(--ink)}
+  .join-card h2{font-size:1.9rem}
+  .join form{padding:.25rem .25rem .25rem .9rem}
+  .join form .btn{padding:.55rem 1rem}
+  .join-card.end{box-shadow:6px 6px 0 var(--gold)}
+  .post{padding-top:2rem}
+  .article h1{font-size:clamp(2.2rem,11vw,3rem)}
+  .letter p.key{font-size:1.45rem}
+  .sundays-page{padding-top:2.5rem}
+  .cheer{padding:1rem}
+  .cheer-in{padding:1.6rem 1.1rem 1.8rem;border-radius:24px;box-shadow:6px 6px 0 #1F1A1C}
+  .cheer-in h1{font-size:clamp(2.6rem,14vw,3.6rem)}
+  .cheer-cta .btn{width:100%;justify-content:center}
+}
+@media (max-width:380px){
+  .nav-links{gap:.5rem;font-size:.8rem}
+  .join form{flex-wrap:wrap;border-radius:22px;padding:.4rem}
+  .join input[type="email"]{flex-basis:100%;padding:.55rem .6rem}
+  .join form .btn{width:100%;justify-content:center}
+}
