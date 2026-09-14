@@ -14,10 +14,10 @@ export const revalidate = 60;
 export async function GET(req: Request) {
   const debug = req.headers.get("x-join-debug") !== null;
   const webhook = process.env.JOIN_WEBHOOK_URL?.trim();
+  let raw: string | undefined;
   try {
     const sheets = sheetsConfig();
     let count: number | null = null;
-    let raw: string | undefined;
 
     if (sheets) {
       count = await readEmailCount(sheets);
@@ -35,6 +35,7 @@ export async function GET(req: Request) {
     const detail = debug
       ? String(err instanceof Error ? err.message : err).replace(webhook ?? " ", "<webhook>").slice(0, 400)
       : undefined;
-    return NextResponse.json({ count: null, detail });
+    const rawText = debug ? raw?.replace(/\s+/g, " ").slice(0, 600) : undefined;
+    return NextResponse.json({ count: null, detail, raw: rawText });
   }
 }
