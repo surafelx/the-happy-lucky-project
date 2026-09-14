@@ -535,7 +535,7 @@ html::-webkit-scrollbar-thumb:hover{background:var(--teal-deep)}
 @media (max-width:700px){.shot img,.shot .frame{aspect-ratio:4/3;border-radius:20px;box-shadow:5px 5px 0 var(--ink)}}
 
 /* full-screen thank-you after joining */
-.cheer{position:fixed;inset:0;z-index:90;display:grid;place-items:center;overflow:hidden;background:var(--rose);color:#1F1A1C;padding:1.5rem;animation:cheerin .6s var(--spring)}
+.cheer{position:fixed;inset:0;z-index:72;display:grid;place-items:center;overflow:auto;background:var(--rose);color:#1F1A1C;padding:1.5rem;animation:cheerin .6s var(--spring)}
 .cheer i{position:absolute;border-radius:45% 55% 52% 48%/55% 45% 55% 45%;animation:blobby 18s ease-in-out infinite}
 .cheer .b1{background:var(--teal);width:60vw;height:60vw;max-width:640px;max-height:640px;left:-18vw;top:-22vw}
 .cheer .b2{background:var(--gold);width:48vw;height:48vw;max-width:520px;max-height:520px;right:-14vw;bottom:-18vw;animation-delay:-8s;animation-direction:reverse}

@@ -10,12 +10,20 @@ import { Logo } from "@/components/SvgDefs";
  * Full-screen thank-you after joining. Rendered in a portal so the tilted card can't trap it.
  * Only ever mounted after a client-side submit, so `document` is always available.
  */
+function moreConfetti() {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  burst(w / 2, h / 2, 200);
+  window.setTimeout(() => burst(w * 0.2, h * 0.4, 110), 180);
+  window.setTimeout(() => burst(w * 0.8, h * 0.4, 110), 360);
+}
+
 export function JoinCelebration({ email, onClose }: { email: string; onClose: () => void }) {
   useEffect(() => {
     const timers = [
-      window.setTimeout(() => burst(window.innerWidth / 2, window.innerHeight / 2, 160), 250),
-      window.setTimeout(() => burst(window.innerWidth * 0.25, window.innerHeight * 0.35, 80), 900),
-      window.setTimeout(() => burst(window.innerWidth * 0.75, window.innerHeight * 0.4, 80), 1400),
+      window.setTimeout(() => burst(window.innerWidth / 2, window.innerHeight / 2, 220), 250),
+      window.setTimeout(() => burst(window.innerWidth * 0.22, window.innerHeight * 0.3, 120), 800),
+      window.setTimeout(() => burst(window.innerWidth * 0.78, window.innerHeight * 0.35, 120), 1300),
     ];
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -49,7 +57,7 @@ export function JoinCelebration({ email, onClose }: { email: string; onClose: ()
           <button className="btn rose" type="button" onClick={onClose}>
             Back to the letter
           </button>
-          <button className="btn ghost" type="button" onClick={() => burst(undefined, undefined, 120)}>
+          <button className="btn ghost" type="button" onClick={moreConfetti}>
             More confetti 🍀
           </button>
         </div>
