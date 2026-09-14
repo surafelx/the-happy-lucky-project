@@ -565,7 +565,7 @@ html{overflow-x:hidden}
 @media (max-width:900px){
   .hero.full .wrap{grid-template-columns:1fr;gap:2rem}
   .hero.full{padding:2rem 0 2.5rem}
-  .backdrop .plane{width:110px;right:4%}
+  .backdrop .plane{width:88px;right:3%;top:calc(var(--nav-h) + 6px)}
 }
 @media (max-width:560px){
   .brand .full{display:none}
