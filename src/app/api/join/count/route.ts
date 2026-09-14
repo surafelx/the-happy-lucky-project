@@ -1,8 +1,29 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { NextResponse } from "next/server";
 
 import { readEmailCount, sheetsConfig } from "@/lib/sheets";
 
 export const runtime = "nodejs";
+
+/** Local development only: unique emails in data/subscribers.jsonl (never present on Vercel). */
+async function localFileCount(): Promise<number | null> {
+  if (process.env.VERCEL) return null;
+  try {
+    const text = await readFile(path.join(process.cwd(), "data", "subscribers.jsonl"), "utf8");
+    const emails = new Set<string>();
+    for (const line of text.split("\n")) {
+      if (!line.trim()) continue;
+      try {
+        const rec = JSON.parse(line) as { email?: string };
+        if (rec.email) emails.add(rec.email);
+      } catch {}
+    }
+    return emails.size;
+  } catch {
+    return null;
+  }
+}
 // The count is cached for a minute so a busy launch day doesn't hammer Google.
 export const revalidate = 60;
 
@@ -29,9 +50,12 @@ export async function GET(req: Request) {
       if (typeof data.count === "number") count = data.count;
     }
 
+    if (count === null) count = await localFileCount();
     return NextResponse.json(debug ? { count, raw: raw?.slice(0, 300) } : { count });
   } catch (err) {
     console.error("[join/count]", err);
+    const fallback = await localFileCount();
+    if (fallback !== null) return NextResponse.json({ count: fallback });
     const detail = debug
       ? String(err instanceof Error ? err.message : err).replace(webhook ?? " ", "<webhook>").slice(0, 400)
       : undefined;
