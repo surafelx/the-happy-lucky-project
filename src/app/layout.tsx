@@ -9,6 +9,7 @@ import { Nav } from "@/components/Nav";
 import { Confetti } from "@/components/Confetti";
 import { Backdrop } from "@/components/Backdrop";
 import { Toast } from "@/components/Toast";
+import { PageCurtain } from "@/components/PageCurtain";
 
 const lucky = Luckiest_Guy({
   weight: "400",
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Nav />
         <main id="top">{children}</main>
         <Toast />
+        <PageCurtain />
       </body>
     </html>
   );

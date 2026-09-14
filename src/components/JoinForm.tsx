@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 
-import { burst, toast } from "@/lib/format";
+import { JoinCelebration } from "@/components/JoinCelebration";
 
 type Status = "idle" | "sending" | "done" | "error";
 
@@ -11,6 +11,7 @@ export function JoinForm() {
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState("");
+  const [celebrate, setCelebrate] = useState(false);
 
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -32,8 +33,7 @@ export function JoinForm() {
         return;
       }
       setStatus("done");
-      burst(undefined, undefined, 120);
-      toast("You're on the list. 🍀");
+      setCelebrate(true);
     } catch {
       setStatus("error");
       setError("Couldn't reach the server. Please try again.");
@@ -42,9 +42,12 @@ export function JoinForm() {
 
   if (status === "done") {
     return (
-      <p className="msg ok" role="status">
-        Thank you. You&apos;re on the list, and you&apos;ll hear from us when there is something to share.
-      </p>
+      <>
+        <p className="msg ok" role="status">
+          Thank you. You&apos;re on the list, and you&apos;ll hear from us when there is something to share.
+        </p>
+        {celebrate ? <JoinCelebration email={email} onClose={() => setCelebrate(false)} /> : null}
+      </>
     );
   }
 

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { letters, readingMinutes } from "@/data/letter";
 import { JoinForm } from "@/components/JoinForm";
 import { Reveal } from "@/components/Reveal";
+import { renderInline } from "@/lib/inline";
 
 type Params = { slug: string };
 
@@ -50,10 +51,28 @@ export default async function LetterPage({ params }: { params: Promise<Params> }
 
           <Reveal className="letter">
             {l.body.map((b, i) => {
+              if (b.type === "image") {
+                return (
+                  <figure className={`shot ${b.tone ?? "teal"}`} key={i}>
+                    {b.src ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={b.src} alt={b.alt} />
+                    ) : (
+                      <div className="frame" role="img" aria-label={b.alt}>
+                        <svg aria-hidden="true">
+                          <use href="#logo" />
+                        </svg>
+                        <span>Photo coming</span>
+                      </div>
+                    )}
+                    <figcaption>{b.caption}</figcaption>
+                  </figure>
+                );
+              }
               if (b.type === "key") {
                 return (
                   <p className="key" key={i}>
-                    {b.text}
+                    {renderInline(b.text)}
                   </p>
                 );
               }
@@ -64,17 +83,26 @@ export default async function LetterPage({ params }: { params: Promise<Params> }
                   </p>
                 );
               }
-              return <p key={i}>{b.text}</p>;
+              return <p key={i}>{renderInline(b.text)}</p>;
             })}
           </Reveal>
 
           <section id="join" className="join join-card end" aria-labelledby="join-h">
-            <span className="eyebrow">Come and build it with me</span>
-            <h2 id="join-h">Join</h2>
-            <p className="note">
-              Leave your email and you&apos;ll hear from us as Happy Lucky takes shape.
-            </p>
-            <JoinForm />
+            <svg className="bg" aria-hidden="true">
+              <use href="#logo" />
+            </svg>
+            <div>
+              <span className="eyebrow">Join</span>
+              <h2 id="join-h">Come and build it with me</h2>
+              <p className="note">
+                Not for me. With me. Leave your email and you&apos;ll hear from us as Happy Lucky takes
+                shape: the next Sunday letter, the first steps, the moments worth sharing.
+              </p>
+            </div>
+            <div>
+              <JoinForm />
+              <p className="demo-note">No newsletters for the sake of it. Just a note when there is something real.</p>
+            </div>
           </section>
         </div>
       </div>
