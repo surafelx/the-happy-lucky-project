@@ -6,6 +6,7 @@ import type { FormEvent } from "react";
 import { track } from "@vercel/analytics";
 
 import { JoinCelebration } from "@/components/JoinCelebration";
+import { JOINED_EVENT } from "@/components/JoinCount";
 
 type Status = "idle" | "sending" | "done" | "error";
 
@@ -38,6 +39,7 @@ export function JoinForm() {
       setStatus("done");
       setCelebrate(true);
       track("join");
+      window.dispatchEvent(new Event(JOINED_EVENT));
     } catch {
       setStatus("error");
       setError("We couldn’t reach the server. Check your connection and try again.");

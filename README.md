@@ -47,6 +47,21 @@ Invalid addresses are rejected, and a hidden honeypot field drops bots.
    - `GOOGLE_SHEETS_TAB` (optional): the tab name if it is not `Sheet1`
 5. Redeploy. Submit the form once and the row appears in the sheet.
 
+### The "people have joined" counter
+
+`GET /api/join/count` (cached for a minute) reads the number of emails from
+the same destination and the join cards show it. With the Apps Script route,
+add this to the script next to `doPost` and redeploy a new version:
+
+```javascript
+function doGet() {
+  var rows = SpreadsheetApp.getActiveSpreadsheet().getSheets()[0].getRange("B:B").getValues();
+  var count = rows.filter(function (r) { return String(r[0]).indexOf("@") !== -1; }).length;
+  return ContentService.createTextOutput(JSON.stringify({ ok: true, count: count }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+```
+
 No Google SDK is used: `src/lib/sheets.ts` signs a service-account JWT with
 Node's `crypto`, exchanges it for an access token, and calls the Sheets REST
 API. Tokens are cached for their lifetime.

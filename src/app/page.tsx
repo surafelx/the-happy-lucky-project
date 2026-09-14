@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { letter } from "@/data/letter";
 import { JoinForm } from "@/components/JoinForm";
+import { JoinCount } from "@/components/JoinCount";
 import { Logo } from "@/components/SvgDefs";
 
 const pop = (i: number) => ({ "--i": i }) as React.CSSProperties;
@@ -42,6 +43,7 @@ export default function HomePage() {
               Leave your email and you&apos;ll hear from us as Happy Lucky takes shape.
             </p>
             <JoinForm />
+            <JoinCount />
             <p className="demo-note">
               No newsletters for the sake of it. Just a note when there is something real to share.
             </p>

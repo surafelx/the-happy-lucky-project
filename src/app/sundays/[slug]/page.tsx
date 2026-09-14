@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { letters, readingMinutes } from "@/data/letter";
 import { JoinForm } from "@/components/JoinForm";
+import { JoinCount } from "@/components/JoinCount";
 import { Reveal } from "@/components/Reveal";
 import { renderInline } from "@/lib/inline";
 
@@ -101,6 +102,7 @@ export default async function LetterPage({ params }: { params: Promise<Params> }
             </div>
             <div>
               <JoinForm />
+              <JoinCount />
               <p className="demo-note">No newsletters for the sake of it. Just a note when there is something real.</p>
             </div>
           </section>

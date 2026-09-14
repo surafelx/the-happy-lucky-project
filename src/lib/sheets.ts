@@ -77,3 +77,15 @@ export async function appendRow(cfg: SheetsConfig, values: (string | number)[]):
   });
   if (!res.ok) throw new Error(`Sheets append failed: ${res.status} ${await res.text()}`);
 }
+
+/** Counts rows whose second column holds an email (works with or without a header row). */
+export async function readEmailCount(cfg: SheetsConfig): Promise<number> {
+  const token = await accessToken(cfg);
+  const range = encodeURIComponent(`${cfg.tab}!B:B`);
+  const res = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${cfg.sheetId}/values/${range}`, {
+    headers: { authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error(`Sheets read failed: ${res.status} ${await res.text()}`);
+  const data = (await res.json()) as { values?: string[][] };
+  return (data.values ?? []).filter((row) => String(row[0] ?? "").includes("@")).length;
+}

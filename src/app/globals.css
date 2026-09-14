@@ -554,3 +554,7 @@ html::-webkit-scrollbar-thumb:hover{background:var(--teal-deep)}
 .logo-spin{animation:spin 28s linear infinite}
 .logo-boost{animation:spin 5s linear infinite;animation-play-state:paused}
 a:hover .logo-boost,button:hover .logo-boost,.hero-logo:hover .logo-boost{animation-play-state:running}
+
+/* joined-so-far counter under the form */
+.join-count{margin-top:.9rem;font-size:.9rem;font-weight:600;color:var(--ink-2)}
+.join-count b{color:var(--teal-deep);font-size:1.05rem}
