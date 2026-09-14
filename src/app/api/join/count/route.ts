@@ -6,6 +6,13 @@ import { readEmailCount, sheetsConfig } from "@/lib/sheets";
 
 export const runtime = "nodejs";
 
+/**
+ * A starting number added to whatever the sheet reports (people who joined
+ * before the counter existed). Override with JOIN_COUNT_BASE; set it to 0
+ * once the sheet holds everyone.
+ */
+const BASE = Number(process.env.JOIN_COUNT_BASE ?? 18) || 0;
+
 /** Local development only: unique emails in data/subscribers.jsonl (never present on Vercel). */
 async function localFileCount(): Promise<number | null> {
   if (process.env.VERCEL) return null;
@@ -51,11 +58,12 @@ export async function GET(req: Request) {
     }
 
     if (count === null) count = await localFileCount();
-    return NextResponse.json(debug ? { count, raw: raw?.slice(0, 300) } : { count });
+    const total = BASE + (count ?? 0);
+    return NextResponse.json(debug ? { count: total, fromSource: count, base: BASE, raw: raw?.slice(0, 300) } : { count: total });
   } catch (err) {
     console.error("[join/count]", err);
     const fallback = await localFileCount();
-    if (fallback !== null) return NextResponse.json({ count: fallback });
+    const total = BASE + (fallback ?? 0);
     const detail = debug
       ? String(err instanceof Error ? err.message : err).replace(webhook ?? " ", "<webhook>").slice(0, 400)
       : undefined;
@@ -69,6 +77,6 @@ export async function GET(req: Request) {
           .trim()
           .slice(0, 600)
       : undefined;
-    return NextResponse.json({ count: null, detail, raw: rawText });
+    return NextResponse.json({ count: total > 0 ? total : null, detail, raw: rawText });
   }
 }
