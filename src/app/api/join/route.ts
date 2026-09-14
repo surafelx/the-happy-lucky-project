@@ -12,12 +12,13 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
  * Collects a joining email. Where it goes, in order of preference:
  *
  * 1. A Google Sheet, when GOOGLE_SHEETS_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL and
- *    GOOGLE_PRIVATE_KEY are set (the setup used on Vercel; see README).
- * 2. A webhook, when JOIN_WEBHOOK_URL is set (Zapier, Make, Apps Script, ...).
+ *    GOOGLE_PRIVATE_KEY are set.
+ * 2. A webhook, when JOIN_WEBHOOK_URL is set (Google Apps Script, Zapier, ...).
  * 3. data/subscribers.jsonl next to the app, for a self-hosted server.
  *
  * On Vercel the file fallback cannot work (read-only filesystem), so the
  * route refuses with a clear error when it is deployed there unconfigured.
+ * Failures carry a short `code` so they can be diagnosed from the browser.
  */
 export async function POST(req: Request) {
   let body: { email?: unknown; website?: unknown };
@@ -43,23 +44,36 @@ export async function POST(req: Request) {
   const at = new Date().toISOString();
   const source = "sunday-0";
   const sheets = sheetsConfig();
-  const webhook = process.env.JOIN_WEBHOOK_URL;
+  const webhook = process.env.JOIN_WEBHOOK_URL?.trim();
 
+  let code = "STORE_FAILED";
   try {
     if (sheets) {
+      code = "SHEETS_FAILED";
       await appendRow(sheets, [at, email, source]);
     } else if (webhook) {
+      code = "WEBHOOK_FAILED";
+      // Google Apps Script answers a POST with a redirect to the real response,
+      // so follow it and check the final body rather than trusting the status alone.
       const res = await fetch(webhook, {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email, at, source }),
+        redirect: "follow",
       });
-      if (!res.ok) throw new Error(`Webhook responded ${res.status}`);
+      const text = await res.text();
+      if (!res.ok) throw new Error(`Webhook responded ${res.status}: ${text.slice(0, 200)}`);
+      const rejected =
+        /"ok"\s*:\s*false/.test(text) ||
+        /Script function not found|Authorization is required|accounts\.google\.com/i.test(text);
+      if (rejected) throw new Error(`Webhook rejected the request: ${text.slice(0, 200)}`);
     } else if (process.env.VERCEL) {
+      code = "NOT_CONFIGURED";
       throw new Error(
-        "No destination configured. Set GOOGLE_SHEETS_ID, GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_PRIVATE_KEY in the Vercel project.",
+        "No destination configured. Set JOIN_WEBHOOK_URL (or the GOOGLE_* variables) in the Vercel project and redeploy.",
       );
     } else {
+      code = "FILE_FAILED";
       const dir = path.join(process.cwd(), "data");
       await mkdir(dir, { recursive: true });
       await appendFile(
@@ -69,9 +83,9 @@ export async function POST(req: Request) {
       );
     }
   } catch (err) {
-    console.error("[join] could not store email:", err);
+    console.error(`[join] ${code}:`, err);
     return NextResponse.json(
-      { ok: false, error: "We couldn't save your email right now. Please try again later." },
+      { ok: false, code, error: "We couldn't save your email right now. Please try again later." },
       { status: 500 },
     );
   }
