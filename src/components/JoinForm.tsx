@@ -29,14 +29,14 @@ export function JoinForm() {
       const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (!res.ok || !data.ok) {
         setStatus("error");
-        setError(data.error || "Something went wrong. Please try again.");
+        setError(data.error || "That didn’t go through. Please try once more.");
         return;
       }
       setStatus("done");
       setCelebrate(true);
     } catch {
       setStatus("error");
-      setError("Couldn't reach the server. Please try again.");
+      setError("We couldn’t reach the server. Check your connection and try again.");
     }
   };
 
@@ -52,7 +52,8 @@ export function JoinForm() {
   }
 
   return (
-    <form onSubmit={submit} noValidate>
+    <>
+      <form onSubmit={submit} noValidate>
       <label className="hp" aria-hidden="true">
         Leave this empty
         <input type="text" name="website" tabIndex={-1} autoComplete="off" />
@@ -70,11 +71,12 @@ export function JoinForm() {
       <button className="btn gold" type="submit" disabled={status === "sending"}>
         {status === "sending" ? "Joining…" : "Join"}
       </button>
+    </form>
       {status === "error" ? (
         <p className="msg err" role="alert">
-          {error}
+          <span aria-hidden="true">🍀</span> {error}
         </p>
       ) : null}
-    </form>
+    </>
   );
 }

@@ -496,7 +496,7 @@ html::-webkit-scrollbar-thumb:hover{background:var(--teal-deep)}
 .join .btn[disabled]{opacity:.7;cursor:progress}
 .join .msg{font-size:.92rem;font-weight:600;margin-top:1rem}
 .join .msg.ok{color:var(--teal-deep)}
-.join .msg.err{color:var(--rose-deep);position:absolute;left:1rem;top:calc(100% + .5rem);margin:0}
+.join .msg.err{position:static;margin-top:.7rem;padding:.55rem .85rem;border-radius:12px;background:var(--rose-soft);color:var(--rose-deep);font-size:.9rem;line-height:1.4;display:flex;gap:.5rem;align-items:flex-start}
 .join .demo-note{margin-top:.8rem}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;opacity:0}
 @media (max-width:900px){.join-card{justify-self:stretch;width:100%;transform:none}}
