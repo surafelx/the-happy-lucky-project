@@ -47,6 +47,10 @@ export default function HomePage() {
             <p className="demo-note">
               No newsletters for the sake of it. Just a note when there is something real to share.
             </p>
+            <p className="mentor-link">
+              Could you mentor, teach or run a workshop?{" "}
+              <Link href="/mentor">Fill in the mentor form →</Link>
+            </p>
           </section>
         </div>
       </header>

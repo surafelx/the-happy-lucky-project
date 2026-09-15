@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 import { burst } from "@/lib/format";
@@ -18,7 +19,21 @@ function moreConfetti() {
   window.setTimeout(() => burst(w * 0.8, h * 0.4, 110), 360);
 }
 
-export function JoinCelebration({ email, onClose }: { email: string; onClose: () => void }) {
+export function JoinCelebration({
+  email,
+  onClose,
+  eyebrow = "You’re on the list",
+  title,
+  message,
+  closeLabel = "Back to the letter",
+}: {
+  email: string;
+  onClose: () => void;
+  eyebrow?: string;
+  title?: ReactNode;
+  message?: ReactNode;
+  closeLabel?: string;
+}) {
   useEffect(() => {
     const timers = [
       window.setTimeout(() => burst(window.innerWidth / 2, window.innerHeight / 2, 220), 250),
@@ -45,17 +60,25 @@ export function JoinCelebration({ email, onClose }: { email: string; onClose: ()
       <i className="b3" />
       <div className="cheer-in">
         <Logo className="cheer-logo" />
-        <p className="eyebrow">You&apos;re on the list</p>
+        <p className="eyebrow">{eyebrow}</p>
         <h1 id="cheer-h">
-          Lucky <span className="w">you</span>
+          {title ?? (
+            <>
+              Lucky <span className="w">you</span>
+            </>
+          )}
         </h1>
         <p className="lede">
-          Thank you. We&apos;ll write to <b>{email}</b> when there is something real to share. No noise, just
-          the Sundays that matter.
+          {message ?? (
+            <>
+              Thank you. We&apos;ll write to <b>{email}</b> when there is something real to share. No noise,
+              just the Sundays that matter.
+            </>
+          )}
         </p>
         <div className="cheer-cta">
           <button className="btn rose" type="button" onClick={onClose}>
-            Back to the letter
+            {closeLabel}
           </button>
           <button className="btn ghost" type="button" onClick={moreConfetti}>
             More confetti 🍀

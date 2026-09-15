@@ -40,6 +40,9 @@ export const revalidate = 60;
  * Returns { count: null } when nothing is configured.
  */
 export async function GET(req: Request) {
+  // Hidden in production for now: the cards hide themselves when count is null.
+  // Set JOIN_COUNT_ENABLED=1 in Vercel to switch it on.
+  if (process.env.VERCEL && !process.env.JOIN_COUNT_ENABLED) return NextResponse.json({ count: null });
   const debug = req.headers.get("x-join-debug") !== null;
   const webhook = process.env.JOIN_WEBHOOK_URL?.trim();
   let raw: string | undefined;

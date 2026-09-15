@@ -104,6 +104,10 @@ export default async function LetterPage({ params }: { params: Promise<Params> }
               <JoinForm />
               <JoinCount />
               <p className="demo-note">No newsletters for the sake of it. Just a note when there is something real.</p>
+              <p className="mentor-link">
+                Could you mentor, teach or run a workshop?{" "}
+                <Link href="/mentor">Fill in the mentor form →</Link>
+              </p>
             </div>
           </section>
         </div>
