@@ -1,9 +1,10 @@
-import { appendFile, mkdir } from "node:fs/promises";
+import { appendFile, mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 
 import { CONTRIBUTE_OPTIONS, SHARE_OPTIONS } from "@/data/mentor";
 import type { MentorInterest } from "@/data/mentor";
+import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,7 @@ const pick = <T extends string>(v: unknown, allowed: readonly T[]): T[] =>
  * On Vercel with nothing configured it refuses with NOT_CONFIGURED.
  */
 export async function POST(req: Request) {
+  if (!MENTOR_FORM_ENABLED) return NextResponse.json({ ok: false, error: "Not available." }, { status: 404 });
   let body: Record<string, unknown>;
   try {
     body = (await req.json()) as Record<string, unknown>;
@@ -48,8 +50,14 @@ export async function POST(req: Request) {
   if (record.contribute.length === 0)
     return NextResponse.json({ ok: false, error: "Pick at least one way you'd like to contribute." }, { status: 400 });
 
+  // Optional smiling photo: a small JPEG data URL from the browser (downscaled there).
+  const photoRaw = typeof body.photo === "string" ? body.photo : "";
+  const photo =
+    /^data:image\/jpeg;base64,[A-Za-z0-9+/=]+$/.test(photoRaw) && photoRaw.length < 1_500_000 ? photoRaw : "";
+
   const at = new Date().toISOString();
-  const payload = { kind: "mentor", at, ...record };
+  const id = `${at.slice(0, 10)}-${Math.random().toString(36).slice(2, 8)}`;
+  const payload = { kind: "mentor", at, id, ...record, photo };
   const webhook = (process.env.MENTOR_WEBHOOK_URL ?? process.env.JOIN_WEBHOOK_URL)?.trim();
 
   let code = "STORE_FAILED";
@@ -75,7 +83,17 @@ export async function POST(req: Request) {
       code = "FILE_FAILED";
       const dir = path.join(process.cwd(), "data");
       await mkdir(dir, { recursive: true });
-      await appendFile(path.join(dir, "mentors.jsonl"), JSON.stringify(payload) + "\n", "utf8");
+      let photoFile = "";
+      if (photo) {
+        await mkdir(path.join(dir, "mentor-photos"), { recursive: true });
+        photoFile = `mentor-photos/${id}.jpg`;
+        await writeFile(path.join(dir, photoFile), Buffer.from(photo.split(",")[1], "base64"));
+      }
+      await appendFile(
+        path.join(dir, "mentors.jsonl"),
+        JSON.stringify({ ...payload, photo: photoFile }) + "\n",
+        "utf8",
+      );
     }
   } catch (err) {
     console.error(`[mentor] ${code}:`, err);

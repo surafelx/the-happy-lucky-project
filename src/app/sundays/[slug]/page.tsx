@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { letters, readingMinutes } from "@/data/letter";
 import { JoinForm } from "@/components/JoinForm";
 import { JoinCount } from "@/components/JoinCount";
+import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 import { Reveal } from "@/components/Reveal";
 import { renderInline } from "@/lib/inline";
 
@@ -104,10 +105,14 @@ export default async function LetterPage({ params }: { params: Promise<Params> }
               <JoinForm />
               <JoinCount />
               <p className="demo-note">No newsletters for the sake of it. Just a note when there is something real.</p>
-              <p className="mentor-link">
-                Could you mentor, teach or run a workshop?{" "}
-                <Link href="/mentor">Fill in the mentor form →</Link>
-              </p>
+              {MENTOR_FORM_ENABLED ? (
+                <div className="mentor-cta">
+                  <span>Could you mentor, teach or run a workshop?</span>
+                  <Link className="btn gold" href="/mentor">
+                    Become a big sibling →
+                  </Link>
+                </div>
+              ) : null}
             </div>
           </section>
         </div>

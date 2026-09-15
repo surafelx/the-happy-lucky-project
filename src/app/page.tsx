@@ -3,6 +3,7 @@ import Link from "next/link";
 import { letter } from "@/data/letter";
 import { JoinForm } from "@/components/JoinForm";
 import { JoinCount } from "@/components/JoinCount";
+import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 import { Logo } from "@/components/SvgDefs";
 
 const pop = (i: number) => ({ "--i": i }) as React.CSSProperties;
@@ -33,6 +34,11 @@ export default function HomePage() {
               <Link className="btn rose" href={`/sundays/${letter.slug}`}>
                 Read {letter.title}
               </Link>
+              {MENTOR_FORM_ENABLED ? (
+                <Link className="btn gold" href="/mentor">
+                  Become a big sibling →
+                </Link>
+              ) : null}
             </div>
           </div>
 
@@ -46,10 +52,6 @@ export default function HomePage() {
             <JoinCount />
             <p className="demo-note">
               No newsletters for the sake of it. Just a note when there is something real to share.
-            </p>
-            <p className="mentor-link">
-              Could you mentor, teach or run a workshop?{" "}
-              <Link href="/mentor">Fill in the mentor form →</Link>
             </p>
           </section>
         </div>

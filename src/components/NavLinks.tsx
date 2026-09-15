@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { MENTOR_FORM_ENABLED } from "@/lib/flags";
+
 const LINKS = [
   { href: "/", label: "Home" },
   { href: "/sundays", label: "Sundays" },
-  { href: "/mentor", label: "Mentor" },
+  ...(MENTOR_FORM_ENABLED ? [{ href: "/mentor", label: "Mentor" }] : []),
 ];
 
 export function NavLinks() {
