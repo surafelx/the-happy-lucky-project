@@ -8,7 +8,13 @@ import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 const LINKS = [
   { href: "/", label: "Home" },
   { href: "/sundays", label: "Sundays" },
-  ...(MENTOR_FORM_ENABLED ? [{ href: "/mentor", label: "Mentor" }] : []),
+  ...(MENTOR_FORM_ENABLED
+    ? [
+        { href: "/mentor", label: "Mentor" },
+        { href: "/me", label: "Your Sundays" },
+        { href: "/office", label: "Office" },
+      ]
+    : []),
 ];
 
 export function NavLinks() {
