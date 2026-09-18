@@ -11,8 +11,7 @@ const LINKS = [
   ...(MENTOR_FORM_ENABLED
     ? [
         { href: "/mentor", label: "Mentor" },
-        { href: "/me", label: "Your Sundays" },
-        { href: "/office", label: "Office" },
+        { href: "/partners", label: "Organisations" },
       ]
     : []),
 ];

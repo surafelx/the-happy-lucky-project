@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { DASHBOARDS_ENABLED, forbidden, notAvailable, officeAllowed } from "@/lib/guard";
-import { isoDate, skillCounts, weeklyCounts } from "@/lib/office";
-import { kidsTotal, readJoins, readMentors, readReceipts, readRsvps, readSundays, readTasks } from "@/lib/store";
+import { isoDate, skillCounts, suggestMentors, weeklyCounts } from "@/lib/office";
+import { kidsTotal, readJoins, readMentors, readPartners, readReceipts, readRsvps, readSundays, readTasks } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,7 +13,7 @@ export async function GET() {
   if (!(await officeAllowed())) return forbidden();
 
   const now = new Date();
-  const [joins, mentors, tasks, rsvps, ledger] = await Promise.all([readJoins(), readMentors(), readTasks(), readRsvps(), readReceipts()]);
+  const [joins, mentors, tasks, rsvps, ledger, partners] = await Promise.all([readJoins(), readMentors(), readTasks(), readRsvps(), readReceipts(), readPartners()]);
   const sundays = await readSundays(mentors, now);
 
   const weekAgo = new Date(now.getTime() - 7 * 864e5);
@@ -33,6 +33,7 @@ export async function GET() {
       joinedThisWeek: joinsThisWeek,
       pool: mentors.length,
       byStatus,
+      requestsOpen: partners.filter((p) => p.status !== "done").length,
       campaignsOpen: ledger.campaigns.length,
       raisedThisMonth,
       yearTarget: 8_000_000,
@@ -65,5 +66,25 @@ export async function GET() {
     thisSunday: { ...thisSunday, goingIds: going, kidsTotal: kidsTotal() },
     receipts: ledger.receipts.slice(0, 6),
     campaigns: ledger.campaigns,
+    requests: partners.map((p) => ({
+      id: p.id,
+      at: p.at,
+      org: p.org,
+      type: p.type,
+      location: p.location,
+      contact: p.contact,
+      email: p.email,
+      phone: p.phone,
+      kids: p.kids,
+      needs: p.needs,
+      needsOther: p.needsOther,
+      where: p.where,
+      when: p.when,
+      note: p.note,
+      status: p.status,
+      notes: p.notes,
+      matched: p.matched,
+      suggestions: suggestMentors(p.needs, mentors).map((s) => ({ id: s.mentor.id, name: s.mentor.name, club: s.mentor.club, because: s.because, score: s.score })),
+    })),
   });
 }

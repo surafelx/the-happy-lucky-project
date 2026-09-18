@@ -10,10 +10,8 @@ export const metadata: Metadata = { title: "The office", robots: { index: false,
 export default function OfficePage() {
   if (!DASHBOARDS_ENABLED) notFound();
   return (
-    <div className="page page-enter dash-page">
-      <div className="wrap">
-        <OfficeDashboard />
-      </div>
+    <div className="admin-page light" data-theme="light">
+      <OfficeDashboard />
     </div>
   );
 }

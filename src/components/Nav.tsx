@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Logo } from "@/components/SvgDefs";
 import { NavLinks } from "@/components/NavLinks";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 
 export function Nav() {
   return (
@@ -14,6 +15,11 @@ export function Nav() {
           <span className="short">Happy Lucky</span>
         </Link>
         <NavLinks />
+        {MENTOR_FORM_ENABLED ? (
+          <Link className="enter-btn" href="/enter">
+            <span aria-hidden="true">🗝️</span> Enter
+          </Link>
+        ) : null}
         <ThemeToggle />
       </div>
     </nav>

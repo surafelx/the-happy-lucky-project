@@ -134,3 +134,70 @@ export function clubFor(share: string[]): "coding" | "reading" | "art" | "scienc
 export function receiptId(date: Date, seq: number): string {
   return `HLP-${String(date.getFullYear()).slice(2)}${String(date.getMonth() + 1).padStart(2, "0")}-${String(seq).padStart(4, "0")}`;
 }
+
+export const REQUEST_STATUSES = ["new", "contacted", "matched", "done"] as const;
+export type RequestStatus = (typeof REQUEST_STATUSES)[number];
+export const REQUEST_LABEL: Record<RequestStatus, string> = { new: "New", contacted: "Contacted", matched: "Matched", done: "Done" };
+
+/** Which clubs (mentor groups) can answer each kind of request. */
+export const NEED_CLUBS: Record<string, string[]> = {
+  "One-time workshop": ["coding", "art", "science", "reading", "general"],
+  "Regular mentoring": ["coding", "reading", "art", "science", "general"],
+  "Homework help": ["general", "science", "reading"],
+  "Coding / tech club": ["coding"],
+  "Reading club": ["reading"],
+  "Art or music": ["art"],
+  "Career or university guidance": ["general", "coding", "science"],
+  "Educational material": ["reading", "coding", "science", "art"],
+  "Help running an event": ["general", "art"],
+  "Laptops or equipment": ["coding"],
+  "Something else": ["general"],
+};
+
+/** Which skills answer a request directly (stronger signal than the club). */
+export const NEED_SKILLS: Record<string, string[]> = {
+  "Coding / tech club": ["Programming", "Technology"],
+  "Laptops or equipment": ["Technology", "Engineering"],
+  "Reading club": ["Writing", "Languages"],
+  "Art or music": ["Art", "Music"],
+  "Career or university guidance": ["Career guidance", "University guidance", "Business", "Entrepreneurship"],
+  "Homework help": ["Mathematics", "Science", "Languages"],
+  "Educational material": ["Writing", "Programming", "Science", "Art"],
+};
+
+/**
+ * Ranks the mentor pool for a request. Score: +3 per matching skill, +1 per
+ * matching club, +1 if they offered a fitting way to help, +1 if active.
+ */
+export function suggestMentors<M extends { id: string; share: string[]; contribute: string[]; club: string; status: string }>(
+  needs: string[],
+  pool: M[],
+  limit = 3,
+): { mentor: M; score: number; because: string[] }[] {
+  const out = pool.map((m) => {
+    let score = 0;
+    const because: string[] = [];
+    for (const n of needs) {
+      const skills = (NEED_SKILLS[n] ?? []).filter((s) => m.share.includes(s));
+      if (skills.length) {
+        score += 3 * skills.length;
+        because.push(...skills);
+      }
+      if ((NEED_CLUBS[n] ?? []).includes(m.club)) score += 1;
+      const workshop = /workshop/i.test(n) && m.contribute.some((c) => /workshop/i.test(c));
+      const mentoring = /mentoring/i.test(n) && m.contribute.some((c) => /mentor/i.test(c));
+      const event = /event/i.test(n) && m.contribute.some((c) => /event/i.test(c));
+      const material = /material/i.test(n) && m.contribute.some((c) => /material/i.test(c));
+      if (workshop || mentoring || event || material) {
+        score += 1;
+        because.push(m.contribute.find((c) => /workshop|mentor|event|material/i.test(c)) ?? "");
+      }
+    }
+    if (score > 0 && m.status === "active") score += 1; // a tie-breaker, never a match on its own
+    return { mentor: m, score, because: [...new Set(because.filter(Boolean))].slice(0, 3) };
+  });
+  return out
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit);
+}

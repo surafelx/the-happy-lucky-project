@@ -40,6 +40,11 @@ export default function HomePage() {
                 </Link>
               ) : null}
             </div>
+            {MENTOR_FORM_ENABLED ? (
+              <p className="hero-note pop" style={pop(4)}>
+                Run a school, a children&apos;s home or a centre? <Link href="/partners">Ask the community for help →</Link>
+              </p>
+            ) : null}
           </div>
 
           <section id="join" className="join join-card pop" style={pop(2)} aria-labelledby="join-h">

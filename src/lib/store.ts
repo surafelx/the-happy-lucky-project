@@ -2,8 +2,9 @@ import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 import type { MentorInterest } from "@/data/mentor";
-import { STATUSES, clubFor, isoDate, nextSundays, receiptId, sundayKind } from "@/lib/office";
-import type { MentorStatus, SundayKind } from "@/lib/office";
+import type { PartnerRequest } from "@/data/partner";
+import { REQUEST_STATUSES, STATUSES, clubFor, isoDate, nextSundays, receiptId, sundayKind } from "@/lib/office";
+import type { MentorStatus, RequestStatus, SundayKind } from "@/lib/office";
 
 /**
  * Local data store for the dashboards: JSON and JSONL files under data/.
@@ -242,4 +243,41 @@ export async function readReceipts(): Promise<{ receipts: Receipt[]; campaigns: 
 export async function appendJsonl(name: string, value: unknown): Promise<void> {
   await mkdir(DIR, { recursive: true });
   await appendFile(file(name), JSON.stringify(value) + "\n", "utf8");
+}
+
+// ---------- organisation requests ("partners") ----------
+export type PartnerRecord = PartnerRequest & { kind: "partner"; at: string; id: string };
+export type PartnerMeta = { status: RequestStatus; notes: string; matched: string[]; updatedAt: string };
+export type Partner = PartnerRecord & PartnerMeta;
+
+export async function readPartners(): Promise<Partner[]> {
+  const rows = await readJsonl<PartnerRecord>("partners.jsonl");
+  const meta = await readJson<Record<string, PartnerMeta>>("partner-meta.json", {});
+  return rows
+    .map((r) => ({ ...r, ...(meta[r.id] ?? { status: "new" as RequestStatus, notes: "", matched: [], updatedAt: r.at }) }))
+    .sort((a, b) => b.at.localeCompare(a.at));
+}
+
+export async function updatePartner(
+  id: string,
+  patch: { status?: RequestStatus; notes?: string; match?: { mentorId: string; on: boolean } },
+): Promise<PartnerMeta | null> {
+  const partners = await readPartners();
+  const p = partners.find((x) => x.id === id);
+  if (!p) return null;
+  const meta = await readJson<Record<string, PartnerMeta>>("partner-meta.json", {});
+  const cur: PartnerMeta = meta[id] ?? { status: p.status, notes: p.notes, matched: p.matched, updatedAt: p.updatedAt };
+  if (patch.status && REQUEST_STATUSES.includes(patch.status)) cur.status = patch.status;
+  if (typeof patch.notes === "string") cur.notes = patch.notes.slice(0, 2000);
+  if (patch.match) {
+    const set = new Set(cur.matched);
+    if (patch.match.on) set.add(patch.match.mentorId);
+    else set.delete(patch.match.mentorId);
+    cur.matched = [...set];
+    if (cur.matched.length && cur.status === "new") cur.status = "matched";
+  }
+  cur.updatedAt = new Date().toISOString();
+  meta[id] = cur;
+  await writeJson("partner-meta.json", meta);
+  return cur;
 }

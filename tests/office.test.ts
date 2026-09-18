@@ -9,6 +9,7 @@ import {
   onboardingSteps,
   receiptId,
   skillCounts,
+  suggestMentors,
   sundayKind,
   sundaysOfMonth,
   weeklyCounts,
@@ -83,4 +84,19 @@ test("clubFor routes skills to a club", () => {
 
 test("receiptId formats year, month and sequence", () => {
   assert.equal(receiptId(new Date(2026, 8, 14), 124), "HLP-2609-0124");
+});
+
+test("suggestMentors ranks skill matches above club matches and drops non-matches", () => {
+  const pool = [
+    { id: "a", share: ["Programming"], contribute: ["Weekly group mentor"], club: "coding", status: "new" },
+    { id: "b", share: ["Art"], contribute: ["One-time workshop"], club: "art", status: "active" },
+    { id: "c", share: ["Business"], contribute: ["Help remotely"], club: "general", status: "new" },
+  ];
+  const out = suggestMentors(["Coding / tech club"], pool);
+  assert.deepEqual(out.map((x) => x.mentor.id), ["a"]);
+  assert.ok(out[0].score >= 4); // 3 for the skill + 1 for the club
+  assert.deepEqual(out[0].because, ["Programming"]);
+  const art = suggestMentors(["Art or music", "One-time workshop"], pool);
+  assert.equal(art[0].mentor.id, "b");
+  assert.ok(art[0].because.includes("Art"));
 });
