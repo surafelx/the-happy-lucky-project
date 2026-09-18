@@ -5,7 +5,7 @@ import type { MentorInterest } from "@/data/mentor";
 import type { PartnerRequest } from "@/data/partner";
 import type { PledgeInput } from "@/data/campaign";
 import { PLEDGE_STATUSES, REQUEST_STATUSES, STATUSES, clubFor, isoDate, nextSundays, receiptId, sundayKind } from "@/lib/office";
-import type { MentorStatus, PledgeStatus, RequestStatus, SundayKind } from "@/lib/office";
+import type { MentorStatus, PledgeFields, PledgeStatus, RequestStatus, SundayKind } from "@/lib/office";
 
 /**
  * Local data store for the dashboards: JSON and JSONL files under data/.
@@ -284,25 +284,75 @@ export async function updatePartner(
 }
 
 // ---------- campaign pledges ----------
-export type PledgeRecord = PledgeInput & { kind: "pledge"; at: string; id: string; campaign: string };
-export type PledgeMeta = { status: PledgeStatus; updatedAt: string };
+// pledges.jsonl is the intake log and is only ever appended to. Everything the
+// office does afterwards (status, edits, proof, delete) lives in pledge-meta.json,
+// so nothing a giver sent is ever overwritten and a delete can be undone by hand.
+export type PledgeRecord = PledgeInput & { kind: "pledge"; at: string; id: string; campaign: string; source?: "site" | "office" };
+export type PledgeProof = { link: string; image: string; ref: string; at: string };
+export type PledgeMeta = { status: PledgeStatus; updatedAt: string; proof?: PledgeProof; edit?: Partial<PledgeFields>; deleted?: boolean };
 export type Pledge = PledgeRecord & PledgeMeta;
+
+const readPledgeMeta = () => readJson<Record<string, PledgeMeta>>("pledge-meta.json", {});
 
 export async function readPledges(campaign?: string): Promise<Pledge[]> {
   const rows = await readJsonl<PledgeRecord>("pledges.jsonl");
-  const meta = await readJson<Record<string, PledgeMeta>>("pledge-meta.json", {});
+  const meta = await readPledgeMeta();
   return rows
-    .filter((r) => !campaign || r.campaign === campaign)
-    .map((r) => ({ ...r, ...(meta[r.id] ?? { status: "pledged" as PledgeStatus, updatedAt: r.at }) }))
+    .filter((r) => (!campaign || r.campaign === campaign) && !meta[r.id]?.deleted)
+    .map((r) => {
+      const m = meta[r.id] ?? { status: "pledged" as PledgeStatus, updatedAt: r.at };
+      return { ...r, ...(m.edit as Partial<PledgeInput> | undefined), ...m };
+    })
     .sort((a, b) => b.at.localeCompare(a.at));
 }
 
-export async function updatePledge(id: string, status: PledgeStatus): Promise<PledgeMeta | null> {
-  if (!PLEDGE_STATUSES.includes(status)) return null;
-  const all = await readPledges();
-  if (!all.some((p) => p.id === id)) return null;
-  const meta = await readJson<Record<string, PledgeMeta>>("pledge-meta.json", {});
-  meta[id] = { status, updatedAt: new Date().toISOString() };
+/** A pledge the office records itself, e.g. cash handed over in person. */
+export async function createPledge(campaign: string, fields: PledgeFields, status: PledgeStatus): Promise<PledgeRecord> {
+  const at = new Date().toISOString();
+  const record: PledgeRecord = { kind: "pledge", at, id: `g-${at.slice(0, 10)}-${Math.random().toString(36).slice(2, 8)}`, campaign, source: "office", ...(fields as PledgeInput) };
+  await appendJsonl("pledges.jsonl", record);
+  if (status !== "pledged") {
+    const meta = await readPledgeMeta();
+    meta[record.id] = { status, updatedAt: at };
+    await writeJson("pledge-meta.json", meta);
+  }
+  return record;
+}
+
+export async function editPledge(id: string, patch: { fields?: PledgeFields; status?: PledgeStatus }): Promise<PledgeMeta | null> {
+  const current = (await readPledges()).find((p) => p.id === id);
+  if (!current) return null;
+  const meta = await readPledgeMeta();
+  const next: PledgeMeta = { ...(meta[id] ?? { status: current.status, updatedAt: current.updatedAt }) };
+  if (patch.fields) next.edit = patch.fields;
+  if (patch.status && PLEDGE_STATUSES.includes(patch.status)) next.status = patch.status;
+  next.updatedAt = new Date().toISOString();
+  meta[id] = next;
+  await writeJson("pledge-meta.json", meta);
+  return next;
+}
+
+export async function deletePledge(id: string): Promise<boolean> {
+  const current = (await readPledges()).find((p) => p.id === id);
+  if (!current) return false;
+  const meta = await readPledgeMeta();
+  meta[id] = { ...(meta[id] ?? { status: current.status, updatedAt: current.updatedAt }), deleted: true, updatedAt: new Date().toISOString() };
+  await writeJson("pledge-meta.json", meta);
+  return true;
+}
+
+/** The giver showed proof of payment. The pledge waits as "sent" until the office verifies it. */
+export async function attachProof(id: string, proof: PledgeProof): Promise<PledgeMeta | null> {
+  const current = (await readPledges()).find((p) => p.id === id);
+  if (!current) return null;
+  const meta = await readPledgeMeta();
+  const before = meta[id];
+  meta[id] = {
+    ...before,
+    status: current.status === "received" ? "received" : "sent",
+    updatedAt: proof.at,
+    proof: { ...proof, image: proof.image || before?.proof?.image || "", link: proof.link || before?.proof?.link || "" },
+  };
   await writeJson("pledge-meta.json", meta);
   return meta[id];
 }

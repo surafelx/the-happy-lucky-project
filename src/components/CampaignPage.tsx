@@ -8,6 +8,7 @@ import { CAMPAIGN, PLEDGE_TIERS, TIER_EMOJI } from "@/data/campaign";
 import type { PledgeTier } from "@/data/campaign";
 import { JoinCelebration } from "@/components/JoinCelebration";
 import { OptionCards } from "@/components/OptionCards";
+import { PaymentProof } from "@/components/PaymentProof";
 
 type Sums = { packs: number; perWomanMonth: number; perWomanYear: number; goal: number };
 type Totals = { pledged: number; received: number; count: number; pct: number; womenCovered: number; remaining: number };
@@ -148,6 +149,7 @@ export function CampaignPage({ math, initial }: { math: Sums; initial: Totals })
           <ol className="camp-steps">
             <li><span>🤝</span><b>You pledge</b><p>Pick what you’d like to cover. No card, no payment here.</p></li>
             <li><span>✉️</span><b>We write to you</b><p>Within two days, with how to send it by Telebirr or bank transfer.</p></li>
+            <li><span>📸</span><b>You show the receipt</b><p>A screenshot or a link, and we verify it against our account.</p></li>
             <li><span>📦</span><b>We buy in bulk</b><p>Every three months, from a wholesaler, so the money goes further.</p></li>
             <li><span>🚪</span><b>Delivered quietly</b><p>Handed to the home’s matron, who gives them out in private.</p></li>
             <li><span>🧾</span><b>Receipts, in the open</b><p>Every purchase receipt is published, down to the birr.</p></li>
@@ -204,6 +206,17 @@ export function CampaignPage({ math, initial }: { math: Sums; initial: Totals })
         </div>
       </section>
 
+      <section className="camp-sec alt mflow" id="confirm">
+        <div className="wrap">
+          <span className="eyebrow">Already sent it?</span>
+          <h2>Show us the receipt</h2>
+          <p className="camp-foot top">
+            Once you have made the transfer, add a screenshot or the receipt link here. We check it against our account, mark your pledge as received, and your flower lights up.
+          </p>
+          <PaymentProof email={email} onEmail={setEmail} />
+        </div>
+      </section>
+
       {thanks !== null ? (
         <JoinCelebration
           email={email}
@@ -211,7 +224,7 @@ export function CampaignPage({ math, initial }: { math: Sums; initial: Totals })
           title="Thank you"
           message={
             <>
-              Your pledge of <b>{fmt(thanks)} {CAMPAIGN.currency}</b> is noted. We’ll write to <b>{email}</b> within two days with how to send it.
+              Your pledge of <b>{fmt(thanks)} {CAMPAIGN.currency}</b> is noted. We’ll write to <b>{email}</b> within two days with how to send it. Once you have, come back and show us the receipt.
             </>
           }
           closeLabel="Back to the campaign"

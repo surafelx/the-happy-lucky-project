@@ -3,14 +3,12 @@ import { NextResponse } from "next/server";
 import { CAMPAIGN, PLEDGE_TIERS } from "@/data/campaign";
 import type { PledgeInput, PledgeTier } from "@/data/campaign";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
-import { pledgeTotals, supplyMath } from "@/lib/office";
+import { checkPledge, pledgeTotals, supplyMath } from "@/lib/office";
 import { appendJsonl, readPledges } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const clean = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
 
 /** Public totals for the progress bar. Names never leave the office. */
 export async function GET() {
@@ -43,23 +41,14 @@ export async function POST(req: Request) {
     "Five women, the whole year": math.perWomanYear * 5,
     "My own amount": null,
   };
-  const amount = fixed[tier] ?? Math.round(Number(body.amount));
-  const record: PledgeInput = {
-    name: clean(body.name, 120),
-    email: clean(body.email, 254).toLowerCase(),
-    phone: clean(body.phone, 40),
-    tier,
-    amount,
-    anonymous: body.anonymous === true,
-    note: clean(body.note, 1000),
-  };
-  if (!Number.isFinite(amount) || amount < 10 || amount > 10_000_000) return NextResponse.json({ ok: false, error: "Please enter an amount in birr." }, { status: 400 });
-  if (record.name.length < 2) return NextResponse.json({ ok: false, error: "Please tell us your name." }, { status: 400 });
-  if (!EMAIL.test(record.email)) return NextResponse.json({ ok: false, error: "Please enter a valid email address." }, { status: 400 });
+  const checked = checkPledge({ ...body, tier, amount: fixed[tier] ?? body.amount }, PLEDGE_TIERS, { requireEmail: true });
+  if (!checked.ok) return NextResponse.json({ ok: false, error: checked.error }, { status: 400 });
+  const record = checked.value as PledgeInput;
+  const amount = record.amount;
 
   const at = new Date().toISOString();
   const id = `g-${at.slice(0, 10)}-${Math.random().toString(36).slice(2, 8)}`;
-  const payload = { kind: "pledge", at, id, campaign: CAMPAIGN.key, ...record };
+  const payload = { kind: "pledge", at, id, campaign: CAMPAIGN.key, source: "site", ...record };
   const webhook = (process.env.MENTOR_WEBHOOK_URL ?? process.env.JOIN_WEBHOOK_URL)?.trim();
 
   const send = async () => {

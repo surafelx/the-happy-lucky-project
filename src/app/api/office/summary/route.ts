@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { DASHBOARDS_ENABLED, forbidden, notAvailable, officeAllowed } from "@/lib/guard";
 import { CAMPAIGN } from "@/data/campaign";
-import { isoDate, pledgeTotals, skillCounts, suggestMentors, supplyMath, weeklyCounts } from "@/lib/office";
+import { isoDate, skillCounts, suggestMentors, weeklyCounts } from "@/lib/office";
 import { kidsTotal, readJoins, readMentors, readPartners, readPledges, readReceipts, readRsvps, readSundays, readTasks } from "@/lib/store";
 
 export const runtime = "nodejs";
@@ -15,7 +15,6 @@ export async function GET() {
 
   const now = new Date();
   const [joins, mentors, tasks, rsvps, ledger, partners, pledges] = await Promise.all([readJoins(), readMentors(), readTasks(), readRsvps(), readReceipts(), readPartners(), readPledges(CAMPAIGN.key)]);
-  const math = supplyMath(CAMPAIGN.plan);
   const sundays = await readSundays(mentors, now);
 
   const weekAgo = new Date(now.getTime() - 7 * 864e5);
@@ -35,6 +34,7 @@ export async function GET() {
       joinedThisWeek: joinsThisWeek,
       pool: mentors.length,
       byStatus,
+      pledgesToVerify: pledges.filter((p) => p.status === "sent").length,
       requestsOpen: partners.filter((p) => p.status !== "done").length,
       campaignsOpen: ledger.campaigns.length,
       raisedThisMonth,
@@ -68,16 +68,6 @@ export async function GET() {
     thisSunday: { ...thisSunday, goingIds: going, kidsTotal: kidsTotal() },
     receipts: ledger.receipts.slice(0, 6),
     campaigns: ledger.campaigns,
-    drive: {
-      key: CAMPAIGN.key,
-      title: CAMPAIGN.title,
-      home: CAMPAIGN.home,
-      confirmed: CAMPAIGN.confirmed,
-      plan: CAMPAIGN.plan,
-      math,
-      totals: pledgeTotals(pledges, math.goal, math.perWomanYear),
-      pledges: pledges.map((p) => ({ id: p.id, at: p.at, name: p.name, email: p.email, phone: p.phone, tier: p.tier, amount: p.amount, anonymous: p.anonymous, note: p.note, status: p.status })),
-    },
     requests: partners.map((p) => ({
       id: p.id,
       at: p.at,

@@ -10,6 +10,7 @@ const LINKS = [
   { href: "/sundays", label: "Sundays" },
   ...(MENTOR_FORM_ENABLED
     ? [
+        { href: "/work", label: "Our work" },
         { href: "/mentor", label: "Mentor" },
         { href: "/partners", label: "Organisations" },
         { href: "/campaigns/a-year-covered", label: "Give" },

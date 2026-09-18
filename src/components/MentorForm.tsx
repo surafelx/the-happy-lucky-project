@@ -1,5 +1,6 @@
 "use client";
 
+import { shrinkImage } from "@/lib/image";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import Link from "next/link";
@@ -16,30 +17,6 @@ const STEPS = ["share", "contribute", "you"] as const;
 type Step = (typeof STEPS)[number];
 const TONES = ["teal", "rose", "gold"] as const;
 
-/** Reads an image file and returns a JPEG data URL no larger than `max` px on its long side. */
-async function shrinkImage(file: File, max: number): Promise<string> {
-  const url = URL.createObjectURL(file);
-  try {
-    const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-      const i = new Image();
-      i.onload = () => resolve(i);
-      i.onerror = () => reject(new Error("bad image"));
-      i.src = url;
-    });
-    const scale = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
-    const w = Math.round(img.naturalWidth * scale);
-    const h = Math.round(img.naturalHeight * scale);
-    const canvas = document.createElement("canvas");
-    canvas.width = w;
-    canvas.height = h;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) throw new Error("no canvas");
-    ctx.drawImage(img, 0, 0, w, h);
-    return canvas.toDataURL("image/jpeg", 0.85);
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-}
 
 /** Big tappable option cards, multi-select. */
 function Cards<T extends string>({

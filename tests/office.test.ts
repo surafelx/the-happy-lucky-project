@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 
 import {
   badgeProgress,
+  checkPledge,
+  cleanReceiptLink,
   clubFor,
   isoDate,
   nextSundays,
@@ -17,6 +19,7 @@ import {
   weeklyCounts,
   weekStart,
 } from "../src/lib/office.ts";
+import { ETHIOPIA_BORDER, VIEW, inside, project, spread, toPath } from "../src/lib/geo.ts";
 
 test("sundaysOfMonth lists every Sunday of September 2026", () => {
   assert.deepEqual(sundaysOfMonth(2026, 8), [6, 13, 20, 27]);
@@ -122,4 +125,56 @@ test("pledgeTotals separates pledged from received and counts whole years covere
   assert.deepEqual(t, { pledged: 4950, received: 2376, count: 3, pct: 5, womenCovered: 2, remaining: 90090 });
   assert.equal(pledgeTotals([{ amount: 200000, status: "pledged" }], 95040, 2376).pct, 100);
   assert.equal(pledgeTotals([], 0, 0).pct, 0);
+});
+
+test("the map keeps Ethiopia inside the frame, north up and east right", () => {
+  for (const p of ETHIOPIA_BORDER) {
+    const { x, y } = project(p);
+    assert.ok(x >= 0 && x <= VIEW.w && y >= 0 && y <= VIEW.h, `${p} falls outside the view`);
+  }
+  const addis = project([38.75, 9.03]);
+  const mekelle = project([39.47, 13.5]);
+  const direDawa = project([41.87, 9.59]);
+  assert.ok(mekelle.y < addis.y);
+  assert.ok(direDawa.x > addis.x);
+  assert.ok(toPath(ETHIOPIA_BORDER).startsWith("M") && toPath(ETHIOPIA_BORDER).endsWith("Z"));
+});
+
+test("inside tells Ethiopian towns from their neighbours", () => {
+  for (const town of [[38.75, 9.03], [37.39, 11.59], [41.87, 9.59], [36.83, 7.67], [39.47, 13.5], [38.48, 7.05]] as const) assert.ok(inside(town), `${town}`);
+  assert.equal(inside([36.82, -1.29]), false); // Nairobi
+  assert.equal(inside([38.93, 15.33]), false); // Asmara
+  assert.equal(inside([43.15, 11.59]), false); // Djibouti
+});
+
+test("spread fans out pins that share a town and leaves the rest alone", () => {
+  const out = spread([{ x: 100, y: 100 }, { x: 104, y: 101 }, { x: 99, y: 103 }, { x: 400, y: 300 }]);
+  assert.deepEqual(out[3], { x: 400, y: 300 });
+  const near = out.slice(0, 3);
+  for (let i = 0; i < 3; i++) for (let j = i + 1; j < 3; j++) assert.ok(Math.hypot(near[i].x - near[j].x, near[i].y - near[j].y) > 20);
+});
+
+test("cleanReceiptLink keeps web links and refuses anything that could run", () => {
+  assert.equal(cleanReceiptLink("https://transactioninfo.ethiotelecom.et/receipt/ABC123"), "https://transactioninfo.ethiotelecom.et/receipt/ABC123");
+  assert.equal(cleanReceiptLink("  apps.cbe.com.et:100/?id=FT123  "), "https://apps.cbe.com.et:100/?id=FT123");
+  for (const bad of ["javascript:alert(1)", "data:text/html,hi", "file:///etc/passwd", "https://user:pw@bank.et/x", "not a link", "localhost", ""]) {
+    assert.equal(cleanReceiptLink(bad), null, bad);
+  }
+});
+
+test("checkPledge applies the same rules to the site and the office, except for the email", () => {
+  const tiers = ["One woman, one month", "My own amount"];
+  const good = { name: " Almaz ", email: "Almaz@Example.com", tier: "My own amount", amount: "500.4", anonymous: true, note: "cash" };
+  const site = checkPledge(good, tiers, { requireEmail: true });
+  assert.ok(site.ok);
+  if (site.ok) assert.deepEqual(site.value, { name: "Almaz", email: "almaz@example.com", phone: "", tier: "My own amount", amount: 500, anonymous: true, note: "cash" });
+
+  const noEmail = { ...good, email: "" };
+  assert.equal(checkPledge(noEmail, tiers, { requireEmail: true }).ok, false);
+  assert.equal(checkPledge(noEmail, tiers, { requireEmail: false }).ok, true);
+  assert.equal(checkPledge({ ...good, email: "nope" }, tiers, { requireEmail: false }).ok, false);
+  assert.equal(checkPledge({ ...good, amount: 5 }, tiers, { requireEmail: false }).ok, false);
+  assert.equal(checkPledge({ ...good, amount: "lots" }, tiers, { requireEmail: false }).ok, false);
+  assert.equal(checkPledge({ ...good, tier: "A whole village" }, tiers, { requireEmail: false }).ok, false);
+  assert.equal(checkPledge({ ...good, name: "A" }, tiers, { requireEmail: false }).ok, false);
 });

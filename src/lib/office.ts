@@ -218,7 +218,8 @@ export function supplyMath(p: SupplyPlan) {
   };
 }
 
-export const PLEDGE_STATUSES = ["pledged", "received"] as const;
+export const PLEDGE_STATUSES = ["pledged", "sent", "received"] as const; // sent = the giver showed proof, the office has not checked it yet
+export const PLEDGE_LABEL: Record<(typeof PLEDGE_STATUSES)[number], string> = { pledged: "Pledged", sent: "Proof sent", received: "Received" };
 export type PledgeStatus = (typeof PLEDGE_STATUSES)[number];
 
 /** Pledged counts everything promised; received only what has actually arrived. */
@@ -233,4 +234,50 @@ export function pledgeTotals(pledges: { amount: number; status: PledgeStatus }[]
     womenCovered: perWomanYear > 0 ? Math.floor(pledged / perWomanYear) : 0,
     remaining: Math.max(0, goal - pledged),
   };
+}
+
+/** A receipt link from a giver: http(s) only, so nothing clickable in the office can run script. */
+export function cleanReceiptLink(raw: string): string | null {
+  const text = raw.trim();
+  if (!text || text.length > 500 || /\s/.test(text)) return null;
+  try {
+    const url = new URL(/^[a-z][a-z0-9+.-]*:(?!\d)/i.test(text) ? text : `https://${text}`);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return null;
+    if (!url.hostname.includes(".") || url.username || url.password) return null;
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
+export type PledgeFields = { name: string; email: string; phone: string; tier: string; amount: number; anonymous: boolean; note: string };
+
+/**
+ * One set of rules for a pledge, wherever it comes from. The public form needs
+ * an email (that is how a giver is found again); the office may record a gift
+ * from someone who has none.
+ */
+export function checkPledge(
+  raw: Record<string, unknown>,
+  tiers: readonly string[],
+  opts: { requireEmail: boolean },
+): { ok: true; value: PledgeFields } | { ok: false; error: string } {
+  const text = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
+  const tier = text(raw.tier, 80);
+  const amount = Math.round(Number(raw.amount));
+  const value: PledgeFields = {
+    name: text(raw.name, 120),
+    email: text(raw.email, 254).toLowerCase(),
+    phone: text(raw.phone, 40),
+    tier,
+    amount,
+    anonymous: raw.anonymous === true,
+    note: text(raw.note, 1000),
+  };
+  if (!tiers.includes(tier)) return { ok: false, error: "Pick how much the pledge covers." };
+  if (!Number.isFinite(amount) || amount < 10 || amount > 10_000_000) return { ok: false, error: "Please enter an amount in birr." };
+  if (value.name.length < 2) return { ok: false, error: "Please enter a name." };
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(value.email);
+  if (opts.requireEmail ? !emailOk : value.email !== "" && !emailOk) return { ok: false, error: "Please enter a valid email address." };
+  return { ok: true, value };
 }
