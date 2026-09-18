@@ -12,6 +12,7 @@ const LINKS = [
     ? [
         { href: "/mentor", label: "Mentor" },
         { href: "/partners", label: "Organisations" },
+        { href: "/campaigns/a-year-covered", label: "Give" },
       ]
     : []),
 ];
@@ -19,7 +20,7 @@ const LINKS = [
 export function NavLinks() {
   const pathname = usePathname();
   return (
-    <div className="nav-links">
+    <div className={LINKS.length > 3 ? "nav-links many" : "nav-links"}>
       {LINKS.map((l) => {
         const active = l.href === "/" ? pathname === "/" : pathname.startsWith(l.href);
         return (

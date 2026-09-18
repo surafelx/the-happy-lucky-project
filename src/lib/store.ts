@@ -3,8 +3,9 @@ import path from "node:path";
 
 import type { MentorInterest } from "@/data/mentor";
 import type { PartnerRequest } from "@/data/partner";
-import { REQUEST_STATUSES, STATUSES, clubFor, isoDate, nextSundays, receiptId, sundayKind } from "@/lib/office";
-import type { MentorStatus, RequestStatus, SundayKind } from "@/lib/office";
+import type { PledgeInput } from "@/data/campaign";
+import { PLEDGE_STATUSES, REQUEST_STATUSES, STATUSES, clubFor, isoDate, nextSundays, receiptId, sundayKind } from "@/lib/office";
+import type { MentorStatus, PledgeStatus, RequestStatus, SundayKind } from "@/lib/office";
 
 /**
  * Local data store for the dashboards: JSON and JSONL files under data/.
@@ -280,4 +281,28 @@ export async function updatePartner(
   meta[id] = cur;
   await writeJson("partner-meta.json", meta);
   return cur;
+}
+
+// ---------- campaign pledges ----------
+export type PledgeRecord = PledgeInput & { kind: "pledge"; at: string; id: string; campaign: string };
+export type PledgeMeta = { status: PledgeStatus; updatedAt: string };
+export type Pledge = PledgeRecord & PledgeMeta;
+
+export async function readPledges(campaign?: string): Promise<Pledge[]> {
+  const rows = await readJsonl<PledgeRecord>("pledges.jsonl");
+  const meta = await readJson<Record<string, PledgeMeta>>("pledge-meta.json", {});
+  return rows
+    .filter((r) => !campaign || r.campaign === campaign)
+    .map((r) => ({ ...r, ...(meta[r.id] ?? { status: "pledged" as PledgeStatus, updatedAt: r.at }) }))
+    .sort((a, b) => b.at.localeCompare(a.at));
+}
+
+export async function updatePledge(id: string, status: PledgeStatus): Promise<PledgeMeta | null> {
+  if (!PLEDGE_STATUSES.includes(status)) return null;
+  const all = await readPledges();
+  if (!all.some((p) => p.id === id)) return null;
+  const meta = await readJson<Record<string, PledgeMeta>>("pledge-meta.json", {});
+  meta[id] = { status, updatedAt: new Date().toISOString() };
+  await writeJson("pledge-meta.json", meta);
+  return meta[id];
 }

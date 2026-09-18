@@ -31,6 +31,16 @@ type Summary = {
   receipts: { id: string; donor: string; place: string; campaign: string; amount: number; at: string; color: string }[];
   campaigns: { key: string; title: string; goal: number; raised: number; color: string }[];
   requests: Request[];
+  drive: {
+    key: string;
+    title: string;
+    home: string;
+    confirmed: boolean;
+    plan: { women: number; packsPerMonth: number; pricePerPack: number; months: number; bufferPct: number };
+    math: { packs: number; perWomanMonth: number; perWomanYear: number; goal: number };
+    totals: { pledged: number; received: number; count: number; pct: number; womenCovered: number; remaining: number };
+    pledges: { id: string; at: string; name: string; email: string; phone: string; tier: string; amount: number; anonymous: boolean; note: string; status: "pledged" | "received" }[];
+  };
 };
 
 const TABS = [
@@ -39,6 +49,7 @@ const TABS = [
   { key: "requests", label: "Requests", icon: "📨" },
   { key: "sundays", label: "Sundays", icon: "📅" },
   { key: "tasks", label: "To do", icon: "☑" },
+  { key: "drive", label: "Pad drive", icon: "🌸" },
   { key: "receipts", label: "Receipts", icon: "🧾" },
 ];
 const fmt = (n: number) => n.toLocaleString("en-US");
@@ -143,7 +154,7 @@ export function OfficeDashboard() {
   return (
     <AdminShell
       product="The office"
-      tabs={TABS.map((t) => ({ ...t, badge: t.key === "mentors" ? kpis.byStatus.new || undefined : t.key === "requests" ? newReqs || undefined : t.key === "tasks" ? openTasks || undefined : undefined }))}
+      tabs={TABS.map((t) => ({ ...t, badge: t.key === "mentors" ? kpis.byStatus.new || undefined : t.key === "requests" ? newReqs || undefined : t.key === "tasks" ? openTasks || undefined : t.key === "drive" ? data.drive.pledges.filter((p) => p.status === "pledged").length || undefined : undefined }))}
       active={tab}
       onTab={setTab}
       who={{ name: "Office", role: day(data.today, true), initial: "O" }}
@@ -373,6 +384,56 @@ export function OfficeDashboard() {
             <input id="new-task" type="text" value={newTask} onChange={(e) => setNewTask(e.target.value)} placeholder="Add a task…" />
             <button className="abtn primary" type="submit">Add</button>
           </form>
+        </div>
+      ) : null}
+
+      {tab === "drive" ? (
+        <div className="agrid">
+          <div className="akpis">
+            <div className="akpi"><span>Goal</span><b>{fmt(data.drive.math.goal)}<small> ETB</small></b><em>{data.drive.plan.women} women · {data.drive.plan.months} months</em></div>
+            <div className="akpi"><span>Pledged</span><b>{fmt(data.drive.totals.pledged)}<small> ETB</small></b><em>{data.drive.totals.pct}% · {data.drive.totals.count} {data.drive.totals.count === 1 ? "pledge" : "pledges"}</em></div>
+            <div className="akpi"><span>Received</span><b>{fmt(data.drive.totals.received)}<small> ETB</small></b><em>{fmt(data.drive.totals.pledged - data.drive.totals.received)} still to collect</em></div>
+            <div className="akpi"><span>Women covered</span><b>{data.drive.totals.womenCovered}<small> of {data.drive.plan.women}</small></b><em>{fmt(data.drive.math.perWomanYear)} ETB each for the year</em></div>
+          </div>
+          <div className="apanel span2">
+            <div className="ahead"><h2>{data.drive.title}</h2><span className="quiet">for {data.drive.home}</span><a className="abtn" href={`/campaigns/${data.drive.key}`} target="_blank" rel="noreferrer">Open the page ↗</a></div>
+            <div className="bar-track"><b style={{ width: `${data.drive.totals.pct}%`, background: "var(--rose)" }} /></div>
+            {data.drive.pledges.length === 0 ? (
+              <p className="quiet">No pledges yet. Share the page and they will land here.</p>
+            ) : (
+              <div className="tblwrap">
+                <table className="atable">
+                  <thead><tr><th>Who</th><th>Covers</th><th>When</th><th className="r">Amount</th><th>Status</th></tr></thead>
+                  <tbody>
+                    {data.drive.pledges.map((p) => (
+                      <tr key={p.id}>
+                        <td><b>{p.name}</b>{p.anonymous ? <span className="pill">anonymous</span> : null}<span className="sub">{p.email}{p.phone ? ` · ${p.phone}` : ""}</span>{p.note ? <span className="sub">“{p.note}”</span> : null}</td>
+                        <td>{p.tier}</td>
+                        <td>{new Date(p.at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</td>
+                        <td className="r num">{fmt(p.amount)} ETB</td>
+                        <td>
+                          <button type="button" className={`abtn${p.status === "received" ? " primary" : ""}`} onClick={() => void act("/api/office/pledge", { id: p.id, status: p.status === "received" ? "pledged" : "received" }, p.status === "received" ? "Back to pledged" : `${p.name.split(" ")[0]}’s gift received`, p.status !== "received")}>
+                            {p.status === "received" ? "✓ Received" : "Mark received"}
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+          <div className="apanel">
+            <div className="ahead"><h2>The numbers</h2>{data.drive.confirmed ? null : <span className="pill st-new">draft</span>}</div>
+            <ul className="aplain">
+              <li><b>{data.drive.plan.women}</b> women at the home</li>
+              <li><b>{data.drive.plan.packsPerMonth}</b> packs each, every month</li>
+              <li><b>{fmt(data.drive.plan.pricePerPack)} ETB</b> a pack today</li>
+              <li><b>{data.drive.plan.bufferPct}%</b> set aside for price rises</li>
+              <li><b>{fmt(data.drive.math.packs)}</b> packs across the year</li>
+            </ul>
+            {data.drive.confirmed ? null : <p className="quiet">Check the head count with the home and the price with a wholesaler, then update src/data/campaign.ts and set confirmed to true.</p>}
+          </div>
         </div>
       ) : null}
 

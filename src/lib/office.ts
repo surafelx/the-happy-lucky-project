@@ -201,3 +201,36 @@ export function suggestMentors<M extends { id: string; share: string[]; contribu
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
 }
+
+// ---------- campaigns ----------
+export type SupplyPlan = { women: number; packsPerMonth: number; pricePerPack: number; months: number; bufferPct: number };
+
+/** The arithmetic behind a supply campaign. The buffer covers price rises across the year. */
+export function supplyMath(p: SupplyPlan) {
+  const withBuffer = (n: number) => Math.ceil((n * (100 + p.bufferPct)) / 100) // integers, so 198 never becomes 199;
+  const perWomanMonth = withBuffer(p.packsPerMonth * p.pricePerPack);
+  const perWomanYear = perWomanMonth * p.months;
+  return {
+    packs: p.women * p.packsPerMonth * p.months,
+    perWomanMonth,
+    perWomanYear,
+    goal: perWomanYear * p.women,
+  };
+}
+
+export const PLEDGE_STATUSES = ["pledged", "received"] as const;
+export type PledgeStatus = (typeof PLEDGE_STATUSES)[number];
+
+/** Pledged counts everything promised; received only what has actually arrived. */
+export function pledgeTotals(pledges: { amount: number; status: PledgeStatus }[], goal: number, perWomanYear: number) {
+  const pledged = pledges.reduce((s, x) => s + x.amount, 0);
+  const received = pledges.filter((x) => x.status === "received").reduce((s, x) => s + x.amount, 0);
+  return {
+    pledged,
+    received,
+    count: pledges.length,
+    pct: goal > 0 ? Math.min(100, Math.round((pledged / goal) * 100)) : 0,
+    womenCovered: perWomanYear > 0 ? Math.floor(pledged / perWomanYear) : 0,
+    remaining: Math.max(0, goal - pledged),
+  };
+}

@@ -7,9 +7,11 @@ import {
   isoDate,
   nextSundays,
   onboardingSteps,
+  pledgeTotals,
   receiptId,
   skillCounts,
   suggestMentors,
+  supplyMath,
   sundayKind,
   sundaysOfMonth,
   weeklyCounts,
@@ -99,4 +101,25 @@ test("suggestMentors ranks skill matches above club matches and drops non-matche
   const art = suggestMentors(["Art or music", "One-time workshop"], pool);
   assert.equal(art[0].mentor.id, "b");
   assert.ok(art[0].because.includes("Art"));
+});
+
+test("supplyMath builds the goal from one woman's month, with the buffer rounded up", () => {
+  const m = supplyMath({ women: 40, packsPerMonth: 2, pricePerPack: 90, months: 12, bufferPct: 10 });
+  assert.deepEqual(m, { packs: 960, perWomanMonth: 198, perWomanYear: 2376, goal: 95040 });
+  assert.equal(supplyMath({ women: 1, packsPerMonth: 1, pricePerPack: 85, months: 12, bufferPct: 10 }).perWomanMonth, 94); // 93.5 rounds up
+});
+
+test("pledgeTotals separates pledged from received and counts whole years covered", () => {
+  const t = pledgeTotals(
+    [
+      { amount: 2376, status: "received" },
+      { amount: 2376, status: "pledged" },
+      { amount: 198, status: "pledged" },
+    ],
+    95040,
+    2376,
+  );
+  assert.deepEqual(t, { pledged: 4950, received: 2376, count: 3, pct: 5, womenCovered: 2, remaining: 90090 });
+  assert.equal(pledgeTotals([{ amount: 200000, status: "pledged" }], 95040, 2376).pct, 100);
+  assert.equal(pledgeTotals([], 0, 0).pct, 0);
 });
