@@ -17,7 +17,7 @@ export function Nav() {
         <NavLinks />
         {MENTOR_FORM_ENABLED ? (
           <Link className="enter-btn" href="/enter">
-            <span aria-hidden="true">🗝️</span> Enter
+            <span aria-hidden="true">🚪</span> Enter
           </Link>
         ) : null}
         <ThemeToggle />
