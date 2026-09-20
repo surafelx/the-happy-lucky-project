@@ -15,6 +15,8 @@
   .blob{position:absolute;border-radius:42% 58% 63% 37%/48% 40% 60% 52%}
   .lucky{font-family:"Luckiest Guy",cursive;font-weight:400;line-height:.86;letter-spacing:.01em}
   .logo{position:absolute}
+  .b4,.b5,.b6{display:none}
+  .f .b4,.f .b5,.f .b6{display:block}
   .pill{position:absolute;display:inline-flex;align-items:center;gap:14px;font-weight:800;font-size:34px;letter-spacing:.06em;text-transform:uppercase;border:5px solid var(--ink);border-radius:999px;padding:12px 30px;box-shadow:7px 7px 0 var(--ink)}
   .brand{position:absolute;font-family:"Luckiest Guy",cursive;font-size:36px;letter-spacing:.04em}
   .play{display:grid;place-items:center;border-radius:50%;border:6px solid var(--ink);box-shadow:9px 9px 0 var(--ink)}
@@ -94,16 +96,35 @@
   .e .one svg{position:absolute;inset:-18px -62px;width:calc(100% + 124px);height:calc(100% + 36px);color:var(--teal);overflow:visible}
   .e .pill{left:36px;top:528px;background:var(--gold);color:var(--ink);font-size:19px;padding:9px 16px;gap:10px;border-width:4px;box-shadow:5px 5px 0 var(--ink);letter-spacing:.04em}
   .e .brand{left:42px;top:622px;color:var(--ink);font-size:25px}
+
+  /* ---------- F: the photo is the whole thumbnail; blobs, text and logo sit on top of it ---------- */
+  body.f{background:#223;color:var(--ink)}
+  .f .bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 40%}
+  .f .blob{border:0}
+  .f .b1{width:430px;height:390px;left:-170px;top:-190px;background:var(--rose)}
+  .f .b2{width:660px;height:400px;left:-190px;bottom:-205px;background:var(--gold);border-radius:58% 42% 40% 60%/50% 62% 38% 50%}
+  .f .b3{width:380px;height:330px;right:-150px;top:-190px;background:var(--teal);border-radius:52% 48% 60% 40%/45% 55% 45% 55%}
+  .f .b4{width:590px;height:480px;right:-170px;top:136px;background:var(--mint);border-radius:47% 53% 44% 56%/56% 44% 56% 44%}
+  .f .b5{width:300px;height:250px;right:-120px;bottom:-150px;background:var(--rose);border-radius:58% 42% 40% 60%/50% 62% 38% 50%}
+  .f .b6{width:260px;height:150px;left:430px;top:-100px;background:var(--gold);border-radius:47% 53% 44% 56%/56% 44% 56% 44%}
+  .f .logo{width:170px;height:170px;left:44px;top:30px;transform:rotate(-10deg);z-index:3}
+  .f h1{position:absolute;left:884px;top:196px;font-size:94px;color:var(--ink);text-shadow:5px 5px 0 var(--gold);transform:rotate(-3deg)}
+  .f .one{position:absolute;left:968px;top:278px;width:210px;height:250px;display:grid;place-items:center}
+  .f .one b{font-family:"Luckiest Guy",cursive;font-weight:400;font-size:270px;line-height:1;color:var(--rose);text-shadow:9px 9px 0 var(--ink);transform:translateY(18px) rotate(6deg);display:block}
+  .f .one svg{position:absolute;inset:-18px -62px;width:calc(100% + 124px);height:calc(100% + 36px);color:var(--teal);overflow:visible}
+  .f .pill{left:40px;top:572px;background:var(--mint);color:var(--ink);font-size:24px;padding:9px 20px;gap:10px;border-width:4px;box-shadow:5px 5px 0 var(--ink)}
+  .f .brand{left:46px;top:654px;color:var(--ink);font-size:28px}
 </style>
 </head>
 <body>
 <script>
   const q = new URLSearchParams(location.search).get("v");
-  const v = ["b", "c", "d", "e"].includes(q) ? q : "a";
+  const v = ["b", "c", "d", "e", "f"].includes(q) ? q : "a";
   document.body.className = v;
 </script>
 
-<i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i>
+<script>if (v === "f") document.write('<img class="bg" src="sunday-1-full.jpg" alt="" />');</script>
+<i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i><i class="blob b5"></i><i class="blob b6"></i>
 
 <svg class="logo" viewBox="-8 -8 116 116" aria-hidden="true">
   <g transform="translate(50 50)" fill="#4B9B9D" stroke="#E47FC8" stroke-width="3.5" stroke-linejoin="round">
@@ -133,6 +154,19 @@
   <h1 class="lucky">SUNDAY <em>1</em></h1>
   <div class="env"><span class="play"></span></div>
   <span class="pill">A letter you can watch</span>
+  <span class="brand">HAPPY LUCKY CHACHO</span>
+</template>
+
+<!-- F -->
+<template id="tf">
+  <h1 class="lucky">SUNDAY</h1>
+  <div class="one">
+    <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" aria-hidden="true">
+      <path d="M26 96C30 28 176 14 184 92c6 72-132 110-166 34"/>
+    </svg>
+    <b>1</b>
+  </div>
+  <span class="pill">▶ A letter you can watch</span>
   <span class="brand">HAPPY LUCKY CHACHO</span>
 </template>
 
