@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Poppins:wght@600;700;800&display=block" rel="stylesheet" />
 <style>
-  /* 1280x720, the size YouTube asks for. Open with ?v=a (dark) or ?v=b (light). */
+  /* 1280x720, the size YouTube asks for. Open with ?v=a (dark), ?v=b (light) or ?v=c (dark, with the video still). */
   :root{--ink:#1F1A1C;--rose:#E47FC8;--rose-deep:#C75AA8;--teal:#4B9B9D;--gold:#F3BC29;--dark:#0F1D1E;--mint:#F6FFFA}
   *{box-sizing:border-box;margin:0}
   html,body{width:1280px;height:720px;overflow:hidden}
@@ -49,11 +49,27 @@
   .b .logo{width:160px;height:160px;right:26px;top:200px;transform:rotate(14deg);z-index:3}
   .b .pill{left:258px;top:392px;font-size:28px;padding:10px 24px;background:var(--mint);color:var(--ink)}
   .b .brand{left:84px;top:640px;color:var(--ink)}
+
+  /* ---------- C: the dark ground, with a still from the video ---------- */
+  body.c{background:var(--dark);color:var(--mint)}
+  .c .b1{width:560px;height:500px;left:-210px;top:-250px;background:var(--rose)}
+  .c .b2{width:430px;height:400px;left:-150px;bottom:-200px;background:var(--gold);border-radius:58% 42% 40% 60%/50% 62% 38% 50%}
+  .c .b3{width:640px;height:600px;right:-230px;top:-170px;background:var(--teal);border-radius:52% 48% 60% 40%/45% 55% 45% 55%}
+  .c .photo{position:absolute;right:66px;top:82px;width:560px;height:500px;border:9px solid var(--mint);border-radius:40px;box-shadow:16px 16px 0 var(--gold);transform:rotate(3deg);overflow:hidden;background:#223}
+  .c .photo img{width:100%;height:100%;object-fit:cover;object-position:42% 30%;display:block}
+  .c .logo{width:170px;height:170px;left:574px;top:14px;transform:rotate(-12deg);z-index:3}
+  .c h1{position:absolute;left:70px;top:150px;font-size:150px;color:var(--mint);text-shadow:8px 8px 0 #000}
+  .c .one{position:absolute;left:150px;top:268px;width:260px;height:270px;display:grid;place-items:center}
+  .c .one b{font-family:"Luckiest Guy",cursive;font-weight:400;font-size:300px;line-height:1;color:var(--rose);text-shadow:10px 10px 0 #000;transform:translateY(20px) rotate(6deg);display:block}
+  .c .one svg{position:absolute;inset:-24px -70px;width:calc(100% + 140px);height:calc(100% + 48px);color:var(--gold);overflow:visible}
+  .c .pill{left:70px;top:574px;background:var(--gold);color:var(--ink);font-size:30px;padding:10px 26px}
+  .c .brand{left:74px;top:662px;color:var(--mint);opacity:.92;font-size:32px}
 </style>
 </head>
 <body>
 <script>
-  const v = new URLSearchParams(location.search).get("v") === "b" ? "b" : "a";
+  const q = new URLSearchParams(location.search).get("v");
+  const v = q === "b" || q === "c" ? q : "a";
   document.body.className = v;
 </script>
 
@@ -87,6 +103,20 @@
   <h1 class="lucky">SUNDAY <em>1</em></h1>
   <div class="env"><span class="play"></span></div>
   <span class="pill">A letter you can watch</span>
+  <span class="brand">HAPPY LUCKY CHACHO</span>
+</template>
+
+<!-- C -->
+<template id="tc">
+  <div class="photo"><img src="sunday-1-still.jpg" alt="" /></div>
+  <h1 class="lucky">SUNDAY</h1>
+  <div class="one">
+    <svg viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="9" stroke-linecap="round" aria-hidden="true">
+      <path d="M26 96C30 28 176 14 184 92c6 72-132 110-166 34"/>
+    </svg>
+    <b>1</b>
+  </div>
+  <span class="pill">▶ A letter you can watch</span>
   <span class="brand">HAPPY LUCKY CHACHO</span>
 </template>
 
