@@ -7,70 +7,71 @@ import { countSubscribers } from "@/lib/store";
 export const runtime = "nodejs";
 
 /**
- * A starting number added to whatever the sheet reports (people who joined
- * before the counter existed). Override with JOIN_COUNT_BASE; set it to 0
- * once the sheet holds everyone.
+ * People who joined before the counter existed (they are on paper and in
+ * inboxes, not in any table). Override with JOIN_COUNT_BASE. When the
+ * database goes live, set it to the number of people in the sheet at that
+ * moment, or import them through the office and set it back to 0.
  */
 const BASE = Number(process.env.JOIN_COUNT_BASE ?? 18) || 0;
+/** The first-month goal shown under the counter. */
+const GOAL = Number(process.env.JOIN_GOAL ?? 50) || 50;
 
-/** Unique emails in the database, when there is one. */
-async function localFileCount(): Promise<number | null> {
-  if (!dbConfigured()) return null;
-  try {
-    return await countSubscribers();
-  } catch {
-    return null;
-  }
-}
-// The count is cached for a minute so a busy launch day doesn't hammer Google.
+/** Is there a trustworthy number to show? On Vercel: only with a database, or when switched on by hand. */
+const shown = () => !process.env.VERCEL || Boolean(process.env.DATABASE_URL?.trim()) || Boolean(process.env.JOIN_COUNT_ENABLED);
+
+// The count is cached for a minute so a busy launch day doesn't hammer anything.
 export const revalidate = 60;
 
 /**
- * How many people have joined so far, read from the same place the join
- * form writes to: the Apps Script web app (its doGet) or the Sheets API.
- * Returns { count: null } when nothing is configured.
+ * How many people have joined so far, and the goal. Sources, in order of
+ * trust: the Sheets API, the database, then the Apps Script's doGet.
+ * Returns { count: null } when nothing is configured or the counter is off.
  */
 export async function GET(req: Request) {
-  // Hidden in production for now: the cards hide themselves when count is null.
-  // Set JOIN_COUNT_ENABLED=1 in Vercel to switch it on.
-  if (process.env.VERCEL && !process.env.JOIN_COUNT_ENABLED) return NextResponse.json({ count: null });
+  if (!shown()) return NextResponse.json({ count: null, goal: GOAL });
   const debug = req.headers.get("x-join-debug") !== null;
   const webhook = process.env.JOIN_WEBHOOK_URL?.trim();
-  let raw: string | undefined;
-  try {
-    const sheets = sheetsConfig();
-    let count: number | null = null;
+  const errors: string[] = [];
+  let count: number | null = null;
+  let from = "none";
 
-    if (sheets) {
+  const sheets = sheetsConfig();
+  if (sheets) {
+    try {
       count = await readEmailCount(sheets);
-    } else if (webhook) {
-      const res = await fetch(webhook, { redirect: "follow", next: { revalidate: 60 } });
-      raw = await res.text();
-      if (!res.ok) throw new Error(`Webhook responded ${res.status}: ${raw.slice(0, 300)}`);
-      const data = JSON.parse(raw) as { count?: unknown };
-      if (typeof data.count === "number") count = data.count;
+      from = "sheets";
+    } catch (err) {
+      errors.push(`sheets: ${String(err instanceof Error ? err.message : err).slice(0, 200)}`);
     }
-
-    if (count === null) count = await localFileCount();
-    const total = BASE + (count ?? 0);
-    return NextResponse.json(debug ? { count: total, fromSource: count, base: BASE, raw: raw?.slice(0, 300) } : { count: total });
-  } catch (err) {
-    console.error("[join/count]", err);
-    const fallback = await localFileCount();
-    const total = BASE + (fallback ?? 0);
-    const detail = debug
-      ? String(err instanceof Error ? err.message : err).replace(webhook ?? " ", "<webhook>").slice(0, 400)
-      : undefined;
-    // Visible text only: Google error pages bury the message under a lot of script.
-    const rawText = debug
-      ? raw
-          ?.replace(/<script[\s\S]*?<\/script>/gi, " ")
-          .replace(/<style[\s\S]*?<\/style>/gi, " ")
-          .replace(/<[^>]+>/g, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .slice(0, 600)
-      : undefined;
-    return NextResponse.json({ count: total > 0 ? total : null, detail, raw: rawText });
   }
+  if (count === null && dbConfigured()) {
+    try {
+      count = await countSubscribers();
+      from = "database";
+    } catch (err) {
+      errors.push(`database: ${String(err instanceof Error ? err.message : err).slice(0, 200)}`);
+    }
+  }
+  if (count === null && webhook) {
+    try {
+      const res = await fetch(webhook, { redirect: "follow", next: { revalidate: 60 } });
+      const raw = await res.text();
+      if (!res.ok) throw new Error(`Webhook responded ${res.status}`);
+      const data = JSON.parse(raw) as { count?: unknown };
+      if (typeof data.count === "number") {
+        count = data.count;
+        from = "webhook";
+      }
+    } catch (err) {
+      errors.push(`webhook: ${String(err instanceof Error ? err.message : err).replace(webhook, "<webhook>").slice(0, 200)}`);
+    }
+  }
+
+  if (errors.length) console.error("[join/count]", errors.join(" | "));
+  const total = BASE + (count ?? 0);
+  return NextResponse.json({
+    count: total > 0 ? total : null,
+    goal: GOAL,
+    ...(debug ? { fromSource: count, from, base: BASE, errors } : {}),
+  });
 }

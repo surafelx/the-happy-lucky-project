@@ -1267,3 +1267,14 @@ body:has(.admin-page){padding-bottom:0}
 .shot.video{margin-top:1.2rem}
 .story-card .cover{position:relative}
 .draft-tag{position:absolute;top:.7rem;left:.7rem;font-style:normal;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:#1F1A1C;border:2px solid var(--ink);border-radius:999px;padding:.15rem .55rem}
+
+/* ---------- join counter with a goal ---------- */
+.join-count{display:grid;gap:.45rem}
+.join-count p{margin:0}
+.join-track{height:10px;border:2px solid var(--ink);border-radius:999px;background:var(--paper);overflow:hidden}
+.join-track i{display:block;height:100%;background:var(--rose);border-radius:999px;transition:width 1s var(--spring)}
+.join-count.reached .join-track i{background:var(--gold)}
+.join-count.reached b{color:var(--rose-deep)}
+.aimport{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.6rem;align-items:start}
+.aimport textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:.5rem .7rem;font:inherit;font-size:.85rem;background:var(--ground);color:var(--ink);resize:vertical;min-width:0}
+@media (max-width:600px){.aimport{grid-template-columns:minmax(0,1fr)}}

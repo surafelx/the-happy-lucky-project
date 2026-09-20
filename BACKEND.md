@@ -43,3 +43,16 @@ To use the hosted database from your laptop instead of the local one, put the sa
 - **The Google Sheet still gets a copy** of joins and forms when `JOIN_WEBHOOK_URL` is set. With a database in place, a webhook failure no longer fails the request.
 - **The mentor dashboard (`/me`) stays local-only.** It signs people in by email alone. Before it goes on the internet it needs sign-in by a link sent to that email.
 - **Timestamps are ISO strings in TEXT columns**, so both drivers return identical values and they sort correctly as text.
+
+## The join counter
+
+`/api/join/count` returns `{ count, goal }`. The count is `JOIN_COUNT_BASE` (people from
+before any table existed, default 18) plus the most trustworthy source available: the Sheets
+API, then the database, then the Apps Script's `doGet`. On Vercel it only shows once
+`DATABASE_URL` is set. The goal under the bar is `JOIN_GOAL` (default 50).
+
+When the database goes live, the emails already in the Google Sheet are not in it yet. In
+the office, Overview → **Bring in emails**: paste the sheet's email column. Duplicates are
+skipped, so it is safe to paste the whole column again later. Then set `JOIN_COUNT_BASE` to
+the number of people who joined before the sheet existed (or 0 if everyone is now in the
+database).

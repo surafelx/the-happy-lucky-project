@@ -47,35 +47,43 @@ export async function POST(req: Request) {
   const sheets = sheetsConfig();
   const webhook = process.env.JOIN_WEBHOOK_URL?.trim();
 
+  // The database is the record and feeds the counter; the sheet is a copy the
+  // team already reads. Once the record is safe, a sheet hiccup is only logged.
   let code = "STORE_FAILED";
+  let saved = false;
   try {
-    if (sheets) {
-      code = "SHEETS_FAILED";
-      await appendRow(sheets, [at, email, source]);
-    } else if (webhook) {
-      code = "WEBHOOK_FAILED";
-      // Google Apps Script answers a POST with a redirect to the real response,
-      // so follow it and check the final body rather than trusting the status alone.
-      const res = await fetch(webhook, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ email, at, source }),
-        redirect: "follow",
-      });
-      const text = await res.text();
-      if (!res.ok) throw new Error(`Webhook responded ${res.status}: ${text.slice(0, 200)}`);
-      const rejected =
-        /"ok"\s*:\s*false/.test(text) ||
-        /Script function not found|Authorization is required|accounts\.google\.com/i.test(text);
-      if (rejected) throw new Error(`Webhook rejected the request: ${text.slice(0, 200)}`);
-    } else if (!dbConfigured()) {
-      code = "NOT_CONFIGURED";
-      throw new Error("No destination configured. Set DATABASE_URL, JOIN_WEBHOOK_URL or the GOOGLE_* variables in the Vercel project and redeploy.");
-    }
-    // The database keeps its own copy whenever there is one: it feeds the counter and the office.
     if (dbConfigured()) {
       code = "DB_FAILED";
       await addSubscriber(email, source, at);
+      saved = true;
+    }
+    try {
+      if (sheets) {
+        code = "SHEETS_FAILED";
+        await appendRow(sheets, [at, email, source]);
+      } else if (webhook) {
+        code = "WEBHOOK_FAILED";
+        // Google Apps Script answers a POST with a redirect to the real response,
+        // so follow it and check the final body rather than trusting the status alone.
+        const res = await fetch(webhook, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ email, at, source }),
+          redirect: "follow",
+        });
+        const text = await res.text();
+        if (!res.ok) throw new Error(`Webhook responded ${res.status}: ${text.slice(0, 200)}`);
+        const rejected =
+          /"ok"\s*:\s*false/.test(text) ||
+          /Script function not found|Authorization is required|accounts\.google\.com/i.test(text);
+        if (rejected) throw new Error(`Webhook rejected the request: ${text.slice(0, 200)}`);
+      } else if (!saved) {
+        code = "NOT_CONFIGURED";
+        throw new Error("No destination configured. Set DATABASE_URL, JOIN_WEBHOOK_URL or the GOOGLE_* variables in the Vercel project and redeploy.");
+      }
+    } catch (copyErr) {
+      if (!saved) throw copyErr;
+      console.error(`[join] ${code} (the database has the record):`, copyErr);
     }
   } catch (err) {
     console.error(`[join] ${code}:`, err);

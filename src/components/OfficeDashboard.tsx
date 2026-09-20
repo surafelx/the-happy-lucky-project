@@ -84,6 +84,7 @@ export function OfficeDashboard() {
   const [openMentor, setOpenMentor] = useState<string | null>(null);
   const [openReq, setOpenReq] = useState<string | null>(null);
   const [newTask, setNewTask] = useState("");
+  const [paste, setPaste] = useState("");
 
   const load = useCallback(async () => {
     const res = await fetch("/api/office/summary", { cache: "no-store" });
@@ -215,6 +216,20 @@ export function OfficeDashboard() {
               ))}
             </div>
             <button type="button" className="abtn" onClick={() => setTab("tasks")}>All tasks</button>
+          </div>
+          <div className="apanel span2">
+            <div className="ahead"><h2>Bring in emails</h2><span className="quiet">paste the email column from the Google Sheet; duplicates are skipped</span></div>
+            <form
+              className="aimport"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!paste.trim()) return;
+                void act("/api/office/subscribers", { text: paste, source: "sheet-import" }, "Emails brought in").then(() => setPaste(""));
+              }}
+            >
+              <textarea rows={3} value={paste} onChange={(e) => setPaste(e.target.value)} placeholder="one@example.com&#10;two@example.com" aria-label="Emails to import" />
+              <button type="submit" className="abtn primary" disabled={!paste.trim()}>Add to the list</button>
+            </form>
           </div>
         </div>
       ) : null}
