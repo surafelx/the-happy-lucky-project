@@ -24,48 +24,6 @@
         "3100"
       ],
       "port": 3100
-    },
-    {
-      "name": "celerus-pay-web",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "--prefix",
-        "C:/Users/ADMIN/celerus-pay/web",
-        "run",
-        "dev",
-        "--",
-        "-p",
-        "3300"
-      ],
-      "port": 3300
-    },
-    {
-      "name": "autopilot-crm",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "--prefix",
-        "C:/Users/ADMIN/autopilot-crm",
-        "run",
-        "dev"
-      ],
-      "port": 3200
-    },
-    {
-      "name": "helm-frontend",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "C:/Users/ADMIN/helm-ai-pm/frontend", "run", "dev"],
-      "port": 5173
-    },
-    {
-      "name": "kit-showcase",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "--prefix",
-        "C:/Users/ADMIN/admin-kit/apps/showcase",
-        "run",
-        "dev"
-      ],
-      "port": 5180
     }
   ]
 }
