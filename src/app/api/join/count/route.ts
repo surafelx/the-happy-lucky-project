@@ -1,26 +1,17 @@
 import { NextResponse } from "next/server";
 
 import { dbConfigured } from "@/lib/db";
+import { JOIN_BASE as BASE, JOIN_GOAL as GOAL } from "@/lib/join-count";
 import { readEmailCount, sheetsConfig } from "@/lib/sheets";
 import { countSubscribers } from "@/lib/store";
 
 export const runtime = "nodejs";
 
-/**
- * People who joined before the counter existed (they are on paper and in
- * inboxes, not in any table). Override with JOIN_COUNT_BASE. When the
- * database goes live, set it to the number of people in the sheet at that
- * moment, or import them through the office and set it back to 0.
- */
-const BASE = Number(process.env.JOIN_COUNT_BASE ?? 18) || 0;
-/** The first-month goal shown under the counter. */
-const GOAL = Number(process.env.JOIN_GOAL ?? 50) || 50;
-
 /** Is there a trustworthy number to show? On Vercel: only with a database, or when switched on by hand. */
 const shown = () => !process.env.VERCEL || Boolean(process.env.DATABASE_URL?.trim()) || Boolean(process.env.JOIN_COUNT_ENABLED);
 
-// The count is cached for a minute so a busy launch day doesn't hammer anything.
-export const revalidate = 60;
+// Cached briefly: live enough to feel live, and a busy launch day doesn't hammer anything.
+export const revalidate = 15;
 
 /**
  * How many people have joined so far, and the goal. Sources, in order of

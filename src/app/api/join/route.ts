@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { dbConfigured } from "@/lib/db";
-import { addSubscriber } from "@/lib/store";
+import { JOIN_BASE } from "@/lib/join-count";
+import { addSubscriber, countSubscribers } from "@/lib/store";
 
 import { appendRow, sheetsConfig } from "@/lib/sheets";
 
@@ -51,11 +52,14 @@ export async function POST(req: Request) {
   // team already reads. Once the record is safe, a sheet hiccup is only logged.
   let code = "STORE_FAILED";
   let saved = false;
+  let fresh = true;
+  let position: number | null = null;
   try {
     if (dbConfigured()) {
       code = "DB_FAILED";
-      await addSubscriber(email, source, at);
+      fresh = await addSubscriber(email, source, at);
       saved = true;
+      position = JOIN_BASE + (await countSubscribers());
     }
     try {
       if (sheets) {
@@ -101,5 +105,6 @@ export async function POST(req: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true });
+  // `position` is which person they are; `already` means this email had joined before.
+  return NextResponse.json({ ok: true, position, already: !fresh });
 }

@@ -51,9 +51,10 @@ export async function readJoins(): Promise<Join[]> {
   return query<Join>("SELECT email, at, source FROM subscribers ORDER BY at DESC");
 }
 /** Adds someone to the letter. Joining twice is not an error and does not create a second row. */
-export async function addSubscriber(email: string, source: string, at = now()): Promise<void> {
+export async function addSubscriber(email: string, source: string, at = now()): Promise<boolean> {
   await prepared();
-  await query("INSERT INTO subscribers (email, source, at) VALUES ($1, $2, $3) ON CONFLICT (email) DO NOTHING", [email.toLowerCase(), source, at]);
+  const rows = await query("INSERT INTO subscribers (email, source, at) VALUES ($1, $2, $3) ON CONFLICT (email) DO NOTHING RETURNING id", [email.toLowerCase(), source, at]);
+  return rows.length > 0; // false: this email had already joined
 }
 export async function countSubscribers(): Promise<number> {
   await prepared();

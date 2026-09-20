@@ -28,8 +28,8 @@ test("migrations create the schema once and are safe to run again", async () => 
 });
 
 test("subscribers are unique by email, whatever the capitals", async () => {
-  await s.addSubscriber("Hana@Example.com", "sunday-0");
-  await s.addSubscriber("hana@example.com", "sunday-0");
+  assert.equal(await s.addSubscriber("Hana@Example.com", "sunday-0"), true);
+  assert.equal(await s.addSubscriber("hana@example.com", "sunday-0"), false); // same person again
   await s.addSubscriber("dawit@example.com", "sunday-0");
   assert.equal(await s.countSubscribers(), 2);
   assert.deepEqual((await s.readJoins()).map((j) => j.email).sort(), ["dawit@example.com", "hana@example.com"]);

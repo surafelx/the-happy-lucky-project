@@ -1278,3 +1278,5 @@ body:has(.admin-page){padding-bottom:0}
 .aimport{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.6rem;align-items:start}
 .aimport textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:.5rem .7rem;font:inherit;font-size:.85rem;background:var(--ground);color:var(--ink);resize:vertical;min-width:0}
 @media (max-width:600px){.aimport{grid-template-columns:minmax(0,1fr)}}
+.join-next{font-size:.88rem;font-weight:700;color:var(--rose-deep)}
+.join-next.mine{color:var(--teal-deep)}

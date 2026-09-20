@@ -281,3 +281,10 @@ export function checkPledge(
   if (opts.requireEmail ? !emailOk : value.email !== "" && !emailOk) return { ok: false, error: "Please enter a valid email address." };
   return { ok: true, value };
 }
+
+/** 1 -> "1st", 22 -> "22nd", 113 -> "113th". */
+export function ordinal(n: number): string {
+  const v = Math.abs(Math.trunc(n)) % 100;
+  const suffix = v >= 11 && v <= 13 ? "th" : (["th", "st", "nd", "rd"][v % 10] ?? "th");
+  return `${Math.trunc(n).toLocaleString("en-US")}${suffix}`;
+}

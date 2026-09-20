@@ -9,6 +9,7 @@ import {
   isoDate,
   nextSundays,
   onboardingSteps,
+  ordinal,
   pledgeTotals,
   receiptId,
   skillCounts,
@@ -177,4 +178,10 @@ test("checkPledge applies the same rules to the site and the office, except for 
   assert.equal(checkPledge({ ...good, amount: "lots" }, tiers, { requireEmail: false }).ok, false);
   assert.equal(checkPledge({ ...good, tier: "A whole village" }, tiers, { requireEmail: false }).ok, false);
   assert.equal(checkPledge({ ...good, name: "A" }, tiers, { requireEmail: false }).ok, false);
+});
+
+test("ordinal handles the teens and the thousands", () => {
+  assert.deepEqual([1, 2, 3, 4, 11, 12, 13, 21, 22, 23, 33, 50, 101, 111, 112, 1003].map(ordinal), [
+    "1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "23rd", "33rd", "50th", "101st", "111th", "112th", "1,003rd",
+  ]);
 });
