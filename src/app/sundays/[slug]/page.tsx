@@ -97,7 +97,7 @@ export default async function LetterPage({ params }: { params: Promise<Params> }
               <span className="eyebrow">Join</span>
               <h2 id="join-h">Come and build it with me</h2>
               <p className="note">
-                Not for me. With me. Leave your email and you&apos;ll hear from us as Happy Lucky takes
+                Not for me. With me. Leave your email and you&apos;ll hear from us as Happy Lucky Chacho takes
                 shape: the next Sunday letter, the first steps, the moments worth sharing.
               </p>
             </div>

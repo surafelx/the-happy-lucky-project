@@ -18,7 +18,7 @@ export default function SundaysPage() {
           <span className="eyebrow">Sundays</span>
           <h2>Letters, one Sunday at a time</h2>
           <p className="lede">
-            Happy Lucky is being built in the open. Each Sunday letter is a piece of the thinking,
+            Happy Lucky Chacho is being built in the open. Each Sunday letter is a piece of the thinking,
             written as it happens.
           </p>
         </div>

@@ -50,7 +50,7 @@ export default function HomePage() {
             <span className="eyebrow">Come and build it with me</span>
             <h2 id="join-h">Join</h2>
             <p className="note">
-              Leave your email and you&apos;ll hear from us as Happy Lucky takes shape.
+              Leave your email and you&apos;ll hear from us as Happy Lucky Chacho takes shape.
             </p>
             <JoinForm />
             <JoinCount />
