@@ -334,7 +334,7 @@ export function OfficeDashboard() {
                 <span>Office notes (private)</span>
                 <textarea key={selReq.id} defaultValue={selReq.notes} rows={5} placeholder="Who you wrote to, what was agreed…" onBlur={(e) => void act("/api/office/partner", { id: selReq.id, notes: e.target.value }, "Notes saved")} />
               </label>
-              <a className="abtn" href={`mailto:${selReq.email}?subject=${encodeURIComponent(`Your request to The Happy Lucky Project`)}`}>Write to {selReq.contact.split(" ")[0]}</a>
+              <a className="abtn" href={`mailto:${selReq.email}?subject=${encodeURIComponent(`Your request to Happy Lucky Chacho`)}`}>Write to {selReq.contact.split(" ")[0]}</a>
             </aside>
           ) : null}
         </div>

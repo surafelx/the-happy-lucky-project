@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CAMPAIGN } from "@/data/campaign";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 import { pledgeTotals, supplyMath } from "@/lib/office";
+import { dbConfigured } from "@/lib/db";
 import { readPledges } from "@/lib/store";
 import { CampaignPage } from "@/components/CampaignPage";
 
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 export default async function YearCoveredPage() {
   if (!MENTOR_FORM_ENABLED) notFound();
   const math = supplyMath(CAMPAIGN.plan);
-  const pledges = process.env.VERCEL ? [] : await readPledges(CAMPAIGN.key);
+  const pledges = dbConfigured() ? await readPledges(CAMPAIGN.key) : [];
   return (
     <div className="page page-enter campaign-page light" data-theme="light">
       <CampaignPage math={math} initial={pledgeTotals(pledges, math.goal, math.perWomanYear)} />

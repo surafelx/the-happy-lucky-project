@@ -4,7 +4,7 @@ import { CAMPAIGN, PLEDGE_TIERS } from "@/data/campaign";
 import { DASHBOARDS_ENABLED, forbidden, notAvailable, officeAllowed } from "@/lib/guard";
 import { PLEDGE_STATUSES, checkPledge, pledgeTotals, supplyMath } from "@/lib/office";
 import type { PledgeStatus } from "@/lib/office";
-import { createPledge, deletePledge, editPledge, readPledges } from "@/lib/store";
+import { createPledge, deletePledge, editPledge, readPledge, readPledges } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,7 +43,7 @@ export async function GET() {
     pledges: pledges.map((p) => ({
       id: p.id,
       at: p.at,
-      source: p.source ?? "site",
+      source: p.source,
       name: p.name,
       email: p.email,
       phone: p.phone,
@@ -65,7 +65,7 @@ export async function POST(req: Request) {
   if (!b) return bad("Bad request.");
   const checked = checkPledge(b, PLEDGE_TIERS, { requireEmail: false });
   if (!checked.ok) return bad(checked.error);
-  const pledge = await createPledge(CAMPAIGN.key, checked.value, asStatus(b.status) ?? "pledged");
+  const pledge = await createPledge(CAMPAIGN.key, checked.value, asStatus(b.status) ?? "pledged", "office");
   return NextResponse.json({ ok: true, id: pledge.id }, { status: 201 });
 }
 
@@ -75,7 +75,7 @@ export async function PATCH(req: Request) {
   const b = await body(req);
   const id = String(b?.id ?? "");
   if (!b || !id) return bad("Missing id.");
-  const current = (await readPledges()).find((p) => p.id === id);
+  const current = await readPledge(id);
   if (!current) return bad("No such pledge.", 404);
 
   const status = b.status === undefined ? undefined : asStatus(b.status);
@@ -87,8 +87,8 @@ export async function PATCH(req: Request) {
     if (!checked.ok) return bad(checked.error);
     fields = checked.value;
   }
-  const meta = await editPledge(id, { fields, status });
-  return NextResponse.json({ ok: true, meta });
+  const pledge = await editPledge(id, { fields, status });
+  return NextResponse.json({ ok: true, pledge });
 }
 
 export async function DELETE(req: Request) {

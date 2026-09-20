@@ -31,13 +31,13 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: { default: "The Happy Lucky Project", template: "%s · The Happy Lucky Project" },
+  title: { default: "Happy Lucky Chacho", template: "%s · Happy Lucky Chacho" },
   description:
     "A project about childhood, luck, and the people who show up. It began as a letter on a Sunday. Come and build it with me.",
   openGraph: {
-    title: "The Happy Lucky Project",
+    title: "Happy Lucky Chacho",
     description: "Come and build it with me. Not for me. With me.",
-    siteName: "The Happy Lucky Project",
+    siteName: "Happy Lucky Chacho",
     type: "website",
   },
 };

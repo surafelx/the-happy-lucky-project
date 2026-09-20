@@ -48,7 +48,7 @@ export function AdminShell({
           </Link>
           <div>
             <b>{product}</b>
-            <small>The Happy Lucky Project</small>
+            <small>Happy Lucky Chacho</small>
           </div>
         </div>
         <nav className="admin-nav" aria-label="Sections">

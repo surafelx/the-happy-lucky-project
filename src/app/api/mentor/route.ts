@@ -1,6 +1,7 @@
-import { appendFile, mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
 import { NextResponse } from "next/server";
+
+import { deliver } from "@/lib/intake";
+import { addMentor } from "@/lib/store";
 
 import { CONTRIBUTE_OPTIONS, SHARE_OPTIONS } from "@/data/mentor";
 import type { MentorInterest } from "@/data/mentor";
@@ -60,52 +61,8 @@ export async function POST(req: Request) {
   const payload = { kind: "mentor", at, id, ...record, photo };
   const webhook = (process.env.MENTOR_WEBHOOK_URL ?? process.env.JOIN_WEBHOOK_URL)?.trim();
 
-  let code = "STORE_FAILED";
-  try {
-    if (webhook) {
-      code = "WEBHOOK_FAILED";
-      const res = await fetch(webhook, {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(payload),
-        redirect: "follow",
-      });
-      const text = await res.text();
-      if (!res.ok) throw new Error(`Webhook responded ${res.status}: ${text.slice(0, 200)}`);
-      if (/"ok"\s*:\s*false|Script function not found|accounts\.google\.com/i.test(text)) {
-        throw new Error(`Webhook rejected the request: ${text.slice(0, 200)}`);
-      }
-    } else if (process.env.VERCEL) {
-      code = "NOT_CONFIGURED";
-      throw new Error("No destination configured. Set MENTOR_WEBHOOK_URL or JOIN_WEBHOOK_URL.");
-    }
-    if (!process.env.VERCEL) {
-      code = "FILE_FAILED";
-      const dir = path.join(process.cwd(), "data");
-      await mkdir(dir, { recursive: true });
-      let photoFile = "";
-      if (photo) {
-        await mkdir(path.join(dir, "mentor-photos"), { recursive: true });
-        photoFile = `mentor-photos/${id}.jpg`;
-        await writeFile(path.join(dir, photoFile), Buffer.from(photo.split(",")[1], "base64"));
-      }
-      await appendFile(
-        path.join(dir, "mentors.jsonl"),
-        JSON.stringify({ ...payload, photo: photoFile }) + "\n",
-        "utf8",
-      );
-    }
-  } catch (err) {
-    console.error(`[mentor] ${code}:`, err);
-    const detail =
-      req.headers.get("x-join-debug") !== null
-        ? String(err instanceof Error ? err.message : err).replace(webhook ?? " ", "<webhook>").slice(0, 400)
-        : undefined;
-    return NextResponse.json(
-      { ok: false, code, error: "Sorry, that didn’t go through on our side. Please try again in a moment.", detail },
-      { status: 500 },
-    );
-  }
+  const failed = await deliver({ tag: "mentor", req, payload, webhook, save: () => addMentor(record, photo, at, id) });
+  if (failed) return failed;
 
   return NextResponse.json({ ok: true });
 }

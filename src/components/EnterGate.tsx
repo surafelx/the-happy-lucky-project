@@ -8,9 +8,9 @@ import Link from "next/link";
 import { Logo } from "@/components/SvgDefs";
 
 /** The door: mentors go to their Sundays with their email, the office opens with its passcode. */
-export function EnterGate() {
+export function EnterGate({ mentors = true, office = true }: { mentors?: boolean; office?: boolean }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"mentor" | "office">("mentor");
+  const [mode, setMode] = useState<"mentor" | "office">(mentors ? "mentor" : "office");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");
   const [busy, setBusy] = useState(false);
@@ -46,7 +46,7 @@ export function EnterGate() {
         <Logo className="enter-logo" />
         <p className="eyebrow">Enter</p>
         <h1>Who&apos;s coming in?</h1>
-        <div className="enter-switch" role="tablist" aria-label="Sign in as">
+        <div className="enter-switch" role="tablist" aria-label="Sign in as" hidden={!mentors || !office}>
           <button type="button" role="tab" aria-selected={mode === "mentor"} className={mode === "mentor" ? "on" : ""} onClick={() => { setMode("mentor"); setErr(""); }}>
             🍀 I&apos;m a big sibling
           </button>

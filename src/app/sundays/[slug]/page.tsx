@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   return {
     title: l.title,
     description: l.summary,
-    openGraph: { title: `${l.title} · The Happy Lucky Project`, description: l.summary, type: "article" },
+    openGraph: { title: `${l.title} · Happy Lucky Chacho`, description: l.summary, type: "article" },
   };
 }
 

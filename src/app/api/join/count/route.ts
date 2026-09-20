@@ -1,8 +1,8 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
 import { NextResponse } from "next/server";
 
+import { dbConfigured } from "@/lib/db";
 import { readEmailCount, sheetsConfig } from "@/lib/sheets";
+import { countSubscribers } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -13,20 +13,11 @@ export const runtime = "nodejs";
  */
 const BASE = Number(process.env.JOIN_COUNT_BASE ?? 18) || 0;
 
-/** Local development only: unique emails in data/subscribers.jsonl (never present on Vercel). */
+/** Unique emails in the database, when there is one. */
 async function localFileCount(): Promise<number | null> {
-  if (process.env.VERCEL) return null;
+  if (!dbConfigured()) return null;
   try {
-    const text = await readFile(path.join(process.cwd(), "data", "subscribers.jsonl"), "utf8");
-    const emails = new Set<string>();
-    for (const line of text.split("\n")) {
-      if (!line.trim()) continue;
-      try {
-        const rec = JSON.parse(line) as { email?: string };
-        if (rec.email) emails.add(rec.email);
-      } catch {}
-    }
-    return emails.size;
+    return await countSubscribers();
   } catch {
     return null;
   }

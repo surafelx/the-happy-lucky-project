@@ -11,7 +11,7 @@ export function Nav() {
       <div className="wrap">
         <Link className="brand" href="/">
           <Logo />
-          <span className="full">The Happy Lucky Project</span>
+          <span className="full">Happy Lucky Chacho</span>
           <span className="short">Happy Lucky</span>
         </Link>
         <NavLinks />

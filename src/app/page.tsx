@@ -16,11 +16,10 @@ export default function HomePage() {
           <div>
             <Logo className="hero-logo pop" style={pop(0)} />
             <h1 className="pop" style={pop(1)}>
-              <span className="the">The</span>
               <span className="w">Happy</span> <span className="w">Lucky</span>
               <br />
               <span className="proj">
-                Project
+                Chacho
                 <svg viewBox="0 0 200 60" fill="none" stroke="currentColor" strokeWidth="6" strokeLinecap="round" aria-hidden="true">
                   <path d="M14 30c10-22 170-26 176-4 4 18-150 32-172 12" />
                 </svg>

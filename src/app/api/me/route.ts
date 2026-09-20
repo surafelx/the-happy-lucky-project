@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { DASHBOARDS_ENABLED, ME_COOKIE, meEmail, notAvailable } from "@/lib/guard";
+import { ME_ENABLED, ME_COOKIE, meEmail, notAvailable } from "@/lib/guard";
 import { KIND_LABEL, badgeProgress, onboardingSteps } from "@/lib/office";
 import { kidsFor, readMentors, readMessages, readRsvps, readSundays } from "@/lib/store";
 
@@ -11,7 +11,7 @@ const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 /** The signed-in mentor's dashboard data. */
 export async function GET() {
-  if (!DASHBOARDS_ENABLED) return notAvailable();
+  if (!ME_ENABLED) return notAvailable();
   const email = await meEmail();
   if (!email) return NextResponse.json({ ok: false, signedIn: false });
   const mentors = await readMentors();
@@ -60,7 +60,7 @@ export async function GET() {
 
 /** Sign in with the email used on the interest form. */
 export async function POST(req: Request) {
-  if (!DASHBOARDS_ENABLED) return notAvailable();
+  if (!ME_ENABLED) return notAvailable();
   let body: { email?: unknown };
   try {
     body = await req.json();

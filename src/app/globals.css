@@ -1218,3 +1218,35 @@ table.pool tr.detail td{background:color-mix(in srgb,var(--teal) 8%,transparent)
 .aproof{display:grid;gap:.4rem;padding:.7rem;border:1.5px dashed var(--ink);border-radius:12px;background:var(--teal-soft);font-size:.85rem}
 .aproof img{display:block;max-width:100%;max-height:260px;border:1.5px solid var(--ink);border-radius:8px;background:#fff}
 .aproof a{color:var(--teal-deep);font-weight:700;word-break:break-all}
+.enter-switch[hidden]{display:none}
+
+/* ---------- dashboards: no site chrome, and a calmer frame ---------- */
+body:has(.admin-page) .nav,body:has(.admin-page) .backdrop,body:has(.admin-page) .mob-nav,body:has(.admin-page) footer{display:none}
+body:has(.admin-page){padding-bottom:0}
+.admin-page.light{min-height:100dvh}
+.admin{grid-template-columns:212px minmax(0,1fr)}
+.admin-side{gap:.8rem;padding:.9rem .7rem}
+.admin-brand svg{width:32px;height:32px}
+.admin-brand small{display:none}
+.admin-nav button{font-weight:500;font-size:.9rem;padding:.5rem .65rem}
+.admin-nav button .ic{font-size:.9rem;opacity:.85}
+.admin-nav button.on{background:var(--side-2);color:#fff;box-shadow:inset 3px 0 0 var(--teal)}
+.admin-nav button em{background:transparent;color:var(--gold);border:1.5px solid var(--gold);font-weight:700}
+.admin-top{padding:.7rem 1.25rem}
+.admin-top h1{font-size:1.1rem}
+.admin-body{padding:1rem 1.25rem 2.5rem;gap:.9rem}
+.akpi{padding:.75rem .9rem;border-radius:12px}
+.akpi b{font-size:1.5rem;font-weight:700}
+.admin .kpi b{font-size:1.3rem;font-weight:700}
+.apanel{border-radius:12px;padding:.9rem 1rem}
+.apanel.hero-panel{border-color:var(--line);box-shadow:none}
+.apanel h2.big{font-family:var(--font-poppins),Poppins,sans-serif;font-weight:700;font-size:1.2rem;letter-spacing:0}
+.adetail{border-color:var(--line);box-shadow:var(--shadow);border-radius:12px}
+.admin .chart .cols{height:84px}
+.admin .chart{margin-top:.6rem}
+.abtn{font-size:.82rem;padding:.4rem .75rem;border-color:var(--line)}
+.abtn:hover{border-color:var(--ink)}
+.abtn.primary{border-color:var(--gold)}
+.atable{font-size:.82rem}
+.atable td{padding:.5rem .6rem}
+.admin .pill{font-size:.7rem;border-width:1px}

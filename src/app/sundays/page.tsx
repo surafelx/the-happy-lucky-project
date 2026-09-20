@@ -5,7 +5,7 @@ import { letters, readingMinutes } from "@/data/letter";
 
 export const metadata: Metadata = {
   title: "Sundays",
-  description: "Letters from The Happy Lucky Project, one Sunday at a time.",
+  description: "Letters from Happy Lucky Chacho, one Sunday at a time.",
 };
 
 const pop = (i: number) => ({ "--i": i }) as React.CSSProperties;

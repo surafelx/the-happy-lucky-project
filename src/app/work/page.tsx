@@ -6,7 +6,7 @@ import { WorkMap } from "@/components/WorkMap";
 
 export const metadata: Metadata = {
   title: "Our work",
-  description: "A map of the schools, children's homes and communities across Ethiopia that The Happy Lucky Project has worked with.",
+  description: "A map of the schools, children's homes and communities across Ethiopia that Happy Lucky Chacho has worked with.",
 };
 
 /** Where we have worked, on a map of Ethiopia. Local only until the places are real. */

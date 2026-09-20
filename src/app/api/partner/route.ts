@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { NEED_OPTIONS, ORG_TYPES, WHEN_OPTIONS, WHERE_OPTIONS } from "@/data/partner";
 import type { NeedOption, OrgType, PartnerRequest, WhenOption, WhereOption } from "@/data/partner";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
-import { appendJsonl } from "@/lib/store";
+import { deliver } from "@/lib/intake";
+import { addPartner } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -59,32 +60,8 @@ export async function POST(req: Request) {
   const payload = { kind: "partner", at, id, ...record };
   const webhook = (process.env.MENTOR_WEBHOOK_URL ?? process.env.JOIN_WEBHOOK_URL)?.trim();
 
-  let code = "STORE_FAILED";
-  try {
-    if (webhook) {
-      code = "WEBHOOK_FAILED";
-      const res = await fetch(webhook, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), redirect: "follow" });
-      const text = await res.text();
-      if (!res.ok) throw new Error(`Webhook responded ${res.status}: ${text.slice(0, 200)}`);
-      if (/"ok"\s*:\s*false|Script function not found|accounts\.google\.com/i.test(text)) throw new Error(`Webhook rejected the request: ${text.slice(0, 200)}`);
-    } else if (process.env.VERCEL) {
-      code = "NOT_CONFIGURED";
-      throw new Error("No destination configured. Set MENTOR_WEBHOOK_URL or JOIN_WEBHOOK_URL.");
-    }
-    if (!process.env.VERCEL) {
-      code = "FILE_FAILED";
-      await appendJsonl("partners.jsonl", payload);
-    }
-  } catch (err) {
-    console.error(`[partner] ${code}:`, err);
-    const detail =
-      req.headers.get("x-join-debug") !== null
-        ? String(err instanceof Error ? err.message : err).replace(webhook ?? " ", "<webhook>").slice(0, 400)
-        : undefined;
-    return NextResponse.json(
-      { ok: false, code, error: "Sorry, that didn’t go through on our side. Please try again in a moment.", detail },
-      { status: 500 },
-    );
-  }
+  const failed = await deliver({ tag: "partner", req, payload, webhook, save: () => addPartner(record, at, id) });
+  if (failed) return failed;
+
   return NextResponse.json({ ok: true, id });
 }

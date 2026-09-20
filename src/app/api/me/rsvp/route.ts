@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 
-import { DASHBOARDS_ENABLED, meEmail, notAvailable } from "@/lib/guard";
+import { ME_ENABLED, meEmail, notAvailable } from "@/lib/guard";
 import { readMentors, setRsvp } from "@/lib/store";
 
 export const runtime = "nodejs";
 
 /** "I'll be there" / "Can't make it" for a Sunday. */
 export async function POST(req: Request) {
-  if (!DASHBOARDS_ENABLED) return notAvailable();
+  if (!ME_ENABLED) return notAvailable();
   const email = await meEmail();
   const me = email ? (await readMentors()).find((m) => m.email === email) : undefined;
   if (!me) return NextResponse.json({ ok: false, error: "Sign in first." }, { status: 401 });

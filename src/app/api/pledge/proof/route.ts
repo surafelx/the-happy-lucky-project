@@ -1,9 +1,7 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import path from "node:path";
-
 import { NextResponse } from "next/server";
 
 import { CAMPAIGN } from "@/data/campaign";
+import { dbConfigured } from "@/lib/db";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 import { cleanReceiptLink } from "@/lib/office";
 import { attachProof, readPledges } from "@/lib/store";
@@ -20,7 +18,7 @@ const clean = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
  */
 export async function POST(req: Request) {
   if (!MENTOR_FORM_ENABLED) return NextResponse.json({ ok: false, error: "Not available." }, { status: 404 });
-  if (process.env.VERCEL) {
+  if (!dbConfigured()) {
     return NextResponse.json({ ok: false, code: "NOT_CONFIGURED", error: "Receipts can’t be uploaded here yet. Please reply to our email with your receipt." }, { status: 501 });
   }
   let body: Record<string, unknown>;
@@ -50,16 +48,9 @@ export async function POST(req: Request) {
   if (!pledge) return NextResponse.json({ ok: false, error: "Your gift is already confirmed as received. Thank you!" }, { status: 409 });
 
   try {
-    let file = "";
-    if (image) {
-      const dir = path.join(process.cwd(), "data", "pledge-proofs");
-      await mkdir(dir, { recursive: true });
-      file = `pledge-proofs/${pledge.id}.jpg`;
-      await writeFile(path.join(process.cwd(), "data", file), Buffer.from(image.split(",")[1], "base64"));
-    }
-    await attachProof(pledge.id, { link: link ?? "", image: file, ref: clean(body.ref, 80), at: new Date().toISOString() });
+    await attachProof(pledge.id, { link: link ?? "", imageDataUrl: image, ref: clean(body.ref, 80) });
   } catch (err) {
-    console.error("[pledge-proof] STORE_FAILED:", err);
+    console.error("[pledge-proof] DB_FAILED:", err);
     return NextResponse.json({ ok: false, error: "Sorry, that didn’t save on our side. Please try again in a moment." }, { status: 500 });
   }
   return NextResponse.json({ ok: true, amount: pledge.amount });

@@ -4,7 +4,9 @@ import { CAMPAIGN, PLEDGE_TIERS } from "@/data/campaign";
 import type { PledgeInput, PledgeTier } from "@/data/campaign";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 import { checkPledge, pledgeTotals, supplyMath } from "@/lib/office";
-import { appendJsonl, readPledges } from "@/lib/store";
+import { dbConfigured } from "@/lib/db";
+import { deliver } from "@/lib/intake";
+import { createPledge, readPledges } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +16,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   if (!MENTOR_FORM_ENABLED) return NextResponse.json({ ok: false }, { status: 404 });
   const math = supplyMath(CAMPAIGN.plan);
-  const pledges = process.env.VERCEL ? [] : await readPledges(CAMPAIGN.key);
+  const pledges = dbConfigured() ? await readPledges(CAMPAIGN.key) : [];
   return NextResponse.json({ ok: true, ...pledgeTotals(pledges, math.goal, math.perWomanYear), goal: math.goal });
 }
 
@@ -51,44 +53,8 @@ export async function POST(req: Request) {
   const payload = { kind: "pledge", at, id, campaign: CAMPAIGN.key, source: "site", ...record };
   const webhook = (process.env.MENTOR_WEBHOOK_URL ?? process.env.JOIN_WEBHOOK_URL)?.trim();
 
-  const send = async () => {
-    const res = await fetch(webhook!, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload), redirect: "follow" });
-    const text = await res.text();
-    if (!res.ok) throw new Error(`Webhook responded ${res.status}: ${text.slice(0, 200)}`);
-    if (/"ok"\s*:\s*false|Script function not found|accounts\.google\.com/i.test(text)) throw new Error(`Webhook rejected the request: ${text.slice(0, 200)}`);
-  };
+  const failed = await deliver({ tag: "pledge", req, payload, webhook, save: () => createPledge(CAMPAIGN.key, checked.value, "pledged", "site", at, id) });
+  if (failed) return failed;
 
-  let code = "STORE_FAILED";
-  try {
-    // Locally the file is the record, so it is written first and a webhook hiccup never loses a pledge.
-    if (!process.env.VERCEL) {
-      code = "FILE_FAILED";
-      await appendJsonl("pledges.jsonl", payload);
-    }
-    if (webhook) {
-      code = "WEBHOOK_FAILED";
-      try {
-        await send();
-      } catch (first) {
-        console.warn("[pledge] webhook failed once, retrying:", first);
-        try {
-          await send(); // Apps Script now and then answers 404 for a moment
-        } catch (second) {
-          if (process.env.VERCEL) throw second;
-          console.error("[pledge] webhook failed twice; kept locally only:", second);
-        }
-      }
-    } else if (process.env.VERCEL) {
-      code = "NOT_CONFIGURED";
-      throw new Error("No destination configured. Set MENTOR_WEBHOOK_URL or JOIN_WEBHOOK_URL.");
-    }
-  } catch (err) {
-    console.error(`[pledge] ${code}:`, err);
-    const detail =
-      req.headers.get("x-join-debug") !== null
-        ? String(err instanceof Error ? err.message : err).replace(webhook ?? " ", "<webhook>").slice(0, 400)
-        : undefined;
-    return NextResponse.json({ ok: false, code, error: "Sorry, that didn’t go through on our side. Please try again in a moment.", detail }, { status: 500 });
-  }
   return NextResponse.json({ ok: true, id, amount });
 }

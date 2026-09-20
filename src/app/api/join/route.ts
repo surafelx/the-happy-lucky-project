@@ -1,6 +1,7 @@
-import { appendFile, mkdir } from "node:fs/promises";
-import path from "node:path";
 import { NextResponse } from "next/server";
+
+import { dbConfigured } from "@/lib/db";
+import { addSubscriber } from "@/lib/store";
 
 import { appendRow, sheetsConfig } from "@/lib/sheets";
 
@@ -67,26 +68,14 @@ export async function POST(req: Request) {
         /"ok"\s*:\s*false/.test(text) ||
         /Script function not found|Authorization is required|accounts\.google\.com/i.test(text);
       if (rejected) throw new Error(`Webhook rejected the request: ${text.slice(0, 200)}`);
-    } else if (process.env.VERCEL) {
+    } else if (!dbConfigured()) {
       code = "NOT_CONFIGURED";
-      throw new Error(
-        "No destination configured. Set JOIN_WEBHOOK_URL (or the GOOGLE_* variables) in the Vercel project and redeploy.",
-      );
-    } else {
-      code = "FILE_FAILED";
-      const dir = path.join(process.cwd(), "data");
-      await mkdir(dir, { recursive: true });
-      await appendFile(
-        path.join(dir, "subscribers.jsonl"),
-        JSON.stringify({ email, at, source }) + "\n",
-        "utf8",
-      );
+      throw new Error("No destination configured. Set DATABASE_URL, JOIN_WEBHOOK_URL or the GOOGLE_* variables in the Vercel project and redeploy.");
     }
-    // Local development: keep a copy in data/subscribers.jsonl so the counter works offline.
-    if (!process.env.VERCEL && (sheets || webhook)) {
-      const dir = path.join(process.cwd(), "data");
-      await mkdir(dir, { recursive: true });
-      await appendFile(path.join(dir, "subscribers.jsonl"), JSON.stringify({ email, at, source }) + "\n", "utf8");
+    // The database keeps its own copy whenever there is one: it feeds the counter and the office.
+    if (dbConfigured()) {
+      code = "DB_FAILED";
+      await addSubscriber(email, source, at);
     }
   } catch (err) {
     console.error(`[join] ${code}:`, err);
