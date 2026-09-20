@@ -64,12 +64,27 @@
   .c .one svg{position:absolute;inset:-24px -70px;width:calc(100% + 140px);height:calc(100% + 48px);color:var(--gold);overflow:visible}
   .c .pill{left:70px;top:574px;background:var(--gold);color:var(--ink);font-size:30px;padding:10px 26px}
   .c .brand{left:74px;top:662px;color:var(--mint);opacity:.92;font-size:32px}
+
+  /* ---------- D: the still on a light ground ---------- */
+  body.d{background:var(--mint);color:var(--ink)}
+  .d .b1{width:560px;height:500px;left:-210px;top:-250px;background:var(--rose)}
+  .d .b2{width:430px;height:400px;left:-150px;bottom:-200px;background:var(--gold);border-radius:58% 42% 40% 60%/50% 62% 38% 50%}
+  .d .b3{width:640px;height:600px;right:-230px;top:-170px;background:var(--teal);border-radius:52% 48% 60% 40%/45% 55% 45% 55%}
+  .d .photo{position:absolute;right:66px;top:82px;width:560px;height:500px;border:8px solid var(--ink);border-radius:40px;box-shadow:16px 16px 0 var(--ink);transform:rotate(3deg);overflow:hidden;background:#223}
+  .d .photo img{width:100%;height:100%;object-fit:cover;object-position:42% 30%;display:block}
+  .d .logo{width:170px;height:170px;left:574px;top:14px;transform:rotate(-12deg);z-index:3}
+  .d h1{position:absolute;left:70px;top:150px;font-size:150px;color:var(--ink);text-shadow:7px 7px 0 var(--gold)}
+  .d .one{position:absolute;left:150px;top:268px;width:260px;height:270px;display:grid;place-items:center}
+  .d .one b{font-family:"Luckiest Guy",cursive;font-weight:400;font-size:300px;line-height:1;color:var(--rose);text-shadow:10px 10px 0 var(--ink);transform:translateY(20px) rotate(6deg);display:block}
+  .d .one svg{position:absolute;inset:-24px -70px;width:calc(100% + 140px);height:calc(100% + 48px);color:var(--teal);overflow:visible}
+  .d .pill{left:70px;top:574px;background:var(--gold);color:var(--ink);font-size:30px;padding:10px 26px}
+  .d .brand{left:74px;top:662px;color:var(--ink);font-size:32px}
 </style>
 </head>
 <body>
 <script>
   const q = new URLSearchParams(location.search).get("v");
-  const v = q === "b" || q === "c" ? q : "a";
+  const v = ["b", "c", "d"].includes(q) ? q : "a";
   document.body.className = v;
 </script>
 
@@ -121,7 +136,7 @@
 </template>
 
 <script>
-  document.body.appendChild(document.getElementById("t" + v).content.cloneNode(true));
+  document.body.appendChild(document.getElementById("t" + (v === "d" ? "c" : v)).content.cloneNode(true));
 </script>
 </body>
 </html>
