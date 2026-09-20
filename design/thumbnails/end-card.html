@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>End card</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Poppins:wght@500;600&display=block" rel="stylesheet" />
+<style>
+  /* The end title: black, the logo, the address, the letter's number.
+     Render at 1920x1080. Change the text with ?n=2 and ?site=example.org */
+  *{box-sizing:border-box;margin:0}
+  html,body{width:1920px;height:1080px;overflow:hidden;background:#000;color:#F6FFFA}
+  body{display:grid;place-items:center;align-content:center;gap:44px;font-family:Poppins,sans-serif;text-align:center}
+  svg{width:330px;height:330px}
+  h1{font-family:"Luckiest Guy",cursive;font-weight:400;font-size:150px;line-height:1;letter-spacing:.02em}
+  h1 em{font-style:normal;color:#E47FC8;margin-left:.12em}
+  p{font-size:54px;font-weight:500;letter-spacing:.02em;color:#F3BC29}
+</style>
+</head>
+<body>
+<svg viewBox="-8 -8 116 116" aria-hidden="true">
+  <g transform="translate(50 50)" fill="#4B9B9D" stroke="#E47FC8" stroke-width="3.5" stroke-linejoin="round">
+    <path id="leaf" d="M0 0C-14-9-27-21-23-34C-20-44-8-46 0-38C8-46 20-44 23-34C27-21 14-9 0 0Z" transform="rotate(-45) scale(1.12)"/>
+    <use href="#leaf" transform="rotate(90)"/><use href="#leaf" transform="rotate(180)"/><use href="#leaf" transform="rotate(270)"/>
+  </g>
+  <circle cx="50" cy="50" r="26" fill="#F3BC29" stroke="#E47FC8" stroke-width="3.5"/>
+  <circle cx="41.5" cy="45" r="2.6" fill="#E47FC8"/><circle cx="58.5" cy="45" r="2.6" fill="#E47FC8"/>
+  <path d="M39.5 56.5q10.5 10 21 0M38 55.5h3M59 55.5h3" fill="none" stroke="#E47FC8" stroke-width="3" stroke-linecap="round"/>
+</svg>
+<h1>SUNDAY<em id="n">#1</em></h1>
+<p id="site">happyluckychacho.org</p>
+<script>
+  const q = new URLSearchParams(location.search);
+  if (q.get("n")) document.getElementById("n").textContent = "#" + q.get("n");
+  if (q.get("site")) document.getElementById("site").textContent = q.get("site");
+</script>
+</body>
+</html>
