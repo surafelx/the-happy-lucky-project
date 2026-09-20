@@ -1250,3 +1250,20 @@ body:has(.admin-page){padding-bottom:0}
 .atable{font-size:.82rem}
 .atable td{padding:.5rem .6rem}
 .admin .pill{font-size:.7rem;border-width:1px}
+
+/* ---------- YouTube in a letter ---------- */
+.yt{position:relative;display:block;width:100%;aspect-ratio:16/9;border-radius:28px;border:2.5px solid var(--ink);overflow:hidden;background:#000;padding:0;cursor:pointer;font:inherit;color:#fff}
+.yt iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.yt-poster img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.85;transition:transform .6s var(--spring),opacity .3s}
+.yt-poster:hover img{transform:scale(1.03);opacity:1}
+.yt-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:clamp(64px,10vw,92px);height:clamp(64px,10vw,92px);border-radius:50%;background:var(--rose);color:#1F1A1C;border:2.5px solid var(--ink);box-shadow:5px 5px 0 var(--ink);display:grid;place-items:center;font-size:clamp(1.4rem,3vw,2rem);padding-left:.25em;transition:transform .3s var(--spring)}
+.yt.teal .yt-play{background:var(--teal);color:#fff}.yt.gold .yt-play{background:var(--gold)}
+.yt-poster:hover .yt-play,.yt-poster:focus-visible .yt-play{transform:translate(-50%,-50%) scale(1.1) rotate(-4deg)}
+.yt-poster:focus-visible{outline:4px solid var(--gold);outline-offset:3px}
+.yt-label{position:absolute;left:1rem;bottom:1rem;background:rgba(31,26,28,.85);padding:.35rem .8rem;border-radius:999px;font-weight:700;font-size:.85rem}
+.yt-empty{display:grid;place-items:center;align-content:center;gap:.8rem;background:var(--rose-soft);color:var(--ink);cursor:default;font-weight:700}
+.yt-empty.teal{background:var(--teal-soft)}.yt-empty.gold{background:var(--gold-soft)}
+.yt-empty .yt-play{position:static;transform:none}
+.shot.video{margin-top:1.2rem}
+.story-card .cover{position:relative}
+.draft-tag{position:absolute;top:.7rem;left:.7rem;font-style:normal;font-size:.68rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;background:var(--gold);color:#1F1A1C;border:2px solid var(--ink);border-radius:999px;padding:.15rem .55rem}

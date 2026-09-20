@@ -3,7 +3,9 @@ export type Block =
   | { type: "key"; text: string }
   | { type: "sign"; text: string }
   /** A full-width photo. Leave `src` empty and a labelled placeholder is shown. */
-  | { type: "image"; caption: string; alt: string; src?: string; tone?: "teal" | "rose" | "gold" };
+  | { type: "image"; caption: string; alt: string; src?: string; tone?: "teal" | "rose" | "gold" }
+  /** A YouTube video. `youtubeId` is the part after `v=` in the video's address; leave it empty for a placeholder. */
+  | { type: "video"; youtubeId: string; title: string; caption?: string; tone?: "teal" | "rose" | "gold" };
 
 const p = (text: string): Block => ({ type: "p", text });
 const key = (text: string): Block => ({ type: "key", text });
@@ -14,6 +16,8 @@ export type Letter = {
   date: string;
   summary: string;
   body: Block[];
+  /** A draft is only visible while NEXT_PUBLIC_MENTOR_FORM=1 (local). Remove the flag to publish. */
+  draft?: boolean;
 };
 
 export const letter: Letter = {
@@ -63,7 +67,31 @@ export const letter: Letter = {
   ] as Block[],
 };
 
-export const letters: Letter[] = [letter];
+/**
+ * Sunday 1. Put the YouTube id in the video block, replace the placeholder
+ * paragraphs with the letter, then delete `draft: true` to publish.
+ */
+export const sunday1: Letter = {
+  slug: "sunday-1",
+  title: "Sunday 1",
+  date: "September 20, 2026",
+  summary: "The second letter, and the first one you can watch as well as read.",
+  draft: true,
+  body: [
+    { type: "video", youtubeId: "", title: "Sunday 1", caption: "Watch first, or read first. Both say the same thing.", tone: "rose" },
+    p("[Draft] The letter for Sunday 1 goes here. Paragraphs are plain text; the important lines get their own paragraph with key()."),
+    key("[Draft] A key line, on its own."),
+    p("[Draft] Another paragraph. The video above is a YouTube embed that loads only when someone presses play."),
+    { type: "sign", text: "See you next Sunday." },
+  ] as Block[],
+};
+
+export const letters: Letter[] = [letter, sunday1];
+
+/** The letters people can see: drafts only while the preview flag is on. */
+export const visibleLetters = (preview: boolean): Letter[] => letters.filter((l) => preview || !l.draft);
+
+export const hasVideo = (l: Letter) => l.body.some((b) => b.type === "video");
 
 export const readingMinutes = (l: Letter) =>
   Math.max(2, Math.round(l.body.map((b) => ("text" in b ? b.text : "")).join(" ").split(/\s+/).length / 180));

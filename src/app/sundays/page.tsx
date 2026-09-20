@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { letters, readingMinutes } from "@/data/letter";
+import { hasVideo, readingMinutes, visibleLetters } from "@/data/letter";
+import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 
 export const metadata: Metadata = {
   title: "Sundays",
@@ -23,15 +24,16 @@ export default function SundaysPage() {
           </p>
         </div>
         <div className="stories">
-          {letters.map((l, i) => (
+          {visibleLetters(MENTOR_FORM_ENABLED).map((l, i) => (
             <Link
               key={l.slug}
               className={`story-card pop${i === 0 ? " feature" : ""}`}
               style={pop(i + 1)}
               href={`/sundays/${l.slug}`}
             >
-              <div className="cover" style={{ background: "var(--rose)" }}>
-                <span>✉️</span>
+              <div className="cover" style={{ background: hasVideo(l) ? "var(--teal)" : "var(--rose)" }}>
+                <span>{hasVideo(l) ? "▶" : "✉️"}</span>
+                {l.draft ? <em className="draft-tag">draft</em> : null}
               </div>
               <div className="body">
                 <span className="kicker">{l.date}</span>

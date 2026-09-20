@@ -2,22 +2,23 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { letters, readingMinutes } from "@/data/letter";
+import { hasVideo, readingMinutes, visibleLetters } from "@/data/letter";
 import { JoinForm } from "@/components/JoinForm";
 import { JoinCount } from "@/components/JoinCount";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 import { Reveal } from "@/components/Reveal";
+import { YouTubeEmbed } from "@/components/YouTubeEmbed";
 import { renderInline } from "@/lib/inline";
 
 type Params = { slug: string };
 
 export function generateStaticParams(): Params[] {
-  return letters.map((l) => ({ slug: l.slug }));
+  return visibleLetters(MENTOR_FORM_ENABLED).map((l) => ({ slug: l.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { slug } = await params;
-  const l = letters.find((x) => x.slug === slug);
+  const l = visibleLetters(MENTOR_FORM_ENABLED).find((x) => x.slug === slug);
   if (!l) return {};
   return {
     title: l.title,
@@ -30,7 +31,7 @@ const pop = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
 export default async function LetterPage({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
-  const l = letters.find((x) => x.slug === slug);
+  const l = visibleLetters(MENTOR_FORM_ENABLED).find((x) => x.slug === slug);
   if (!l) notFound();
 
   return (
@@ -41,7 +42,7 @@ export default async function LetterPage({ params }: { params: Promise<Params> }
             ← All Sundays
           </Link>
           <div className="pop" style={pop(1)}>
-            <span className="kicker">A letter</span>
+            <span className="kicker">{l.draft ? "Draft · only visible locally" : hasVideo(l) ? "A letter, and a video" : "A letter"}</span>
             <h1>{l.title}</h1>
           </div>
           <div className="byline pop" style={pop(2)}>
@@ -53,6 +54,14 @@ export default async function LetterPage({ params }: { params: Promise<Params> }
 
           <Reveal className="letter">
             {l.body.map((b, i) => {
+              if (b.type === "video") {
+                return (
+                  <figure className={`shot video ${b.tone ?? "rose"}`} key={i}>
+                    <YouTubeEmbed id={b.youtubeId} title={b.title} tone={b.tone ?? "rose"} />
+                    {b.caption ? <figcaption>{b.caption}</figcaption> : null}
+                  </figure>
+                );
+              }
               if (b.type === "image") {
                 return (
                   <figure className={`shot ${b.tone ?? "teal"}`} key={i}>
