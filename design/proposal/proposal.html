@@ -5,44 +5,63 @@
 <title>Happy Lucky Chacho · የምሥረታ ፕሮፖዛል</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Noto+Sans+Ethiopic:wght@400;600;700&family=Poppins:wght@400;500;600;700&display=block" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;600;700&family=Poppins:wght@400;500;600;700&display=block" rel="stylesheet" />
 <style>
-  /* A4, printed with headless Chrome. Formal enough for an office desk, in the project's colours. */
-  @page{size:A4;margin:16mm 17mm 18mm}
-  :root{--ink:#1F1A1C;--ink-2:#4F484B;--rose:#E47FC8;--rose-deep:#C75AA8;--teal:#4B9B9D;--teal-deep:#2F7476;--gold:#F3BC29;--soft:#F6FFFA;--line:#DDE7E3}
+  /* A4, printed with headless Chrome (--print-to-pdf). The wordmark is an image so printing can never drop the display font. */
+  @page{size:A4;margin:15mm 16mm 17mm;@bottom-left{content:"Happy Lucky Chacho · happyluckychacho.org";font:500 7.6pt Poppins,sans-serif;color:#7A7477}@bottom-right{content:counter(page) " / " counter(pages);font:600 8pt Poppins,sans-serif;color:#7A7477}}
+  :root{--ink:#1F1A1C;--ink-2:#4F484B;--rose:#E47FC8;--rose-deep:#C75AA8;--rose-soft:#FBE9F5;--teal:#4B9B9D;--teal-deep:#2F7476;--teal-soft:#E2F2F1;--gold:#F3BC29;--gold-soft:#FFF4D1;--soft:#F6FFFA;--line:#D5E0DB}
   *{box-sizing:border-box}
-  html{font-size:10.4pt}
-  body{margin:0;color:var(--ink);font-family:"Noto Sans Ethiopic",Poppins,"Nyala","Ebrima",sans-serif;line-height:1.62}
-  [lang=en]{font-family:Poppins,"Segoe UI",sans-serif;line-height:1.55}
-  .cover{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;padding:14px 18px;border:2.5px solid var(--ink);border-radius:18px;background:var(--soft);box-shadow:5px 5px 0 var(--gold)}
-  .cover svg{width:74px;height:74px}
-  .brand{font-family:"Luckiest Guy",cursive;font-size:22pt;line-height:1;letter-spacing:.02em}
-  .brand em{font-style:normal;color:var(--rose-deep)}
-  .cover p{margin:.25em 0 0;font-size:9.6pt;color:var(--ink-2)}
-  h1{font-size:15pt;line-height:1.3;margin:18px 0 4px}
-  .sub{color:var(--ink-2);margin:0 0 12px;font-size:9.8pt}
-  .to{border-left:5px solid var(--teal);padding:6px 0 6px 12px;margin:12px 0 16px;font-size:10pt}
-  .to b{display:inline-block;min-width:5.2em}
-  h2{font-size:12pt;margin:17px 0 5px;padding-bottom:3px;border-bottom:2px solid var(--line);break-after:avoid}
-  h2 span{display:inline-grid;place-items:center;min-width:1.75em;height:1.75em;margin-right:.45em;border-radius:50%;background:var(--gold);border:1.6px solid var(--ink);font-size:9.4pt;font-weight:700;font-family:Poppins,sans-serif}
-  h3{font-size:10.4pt;margin:10px 0 3px;color:var(--teal-deep);break-after:avoid}
-  p{margin:0 0 7px}
-  ul,ol{margin:3px 0 8px;padding-left:1.4em}
-  li{margin:0 0 3px}
-  table{width:100%;border-collapse:collapse;margin:6px 0 10px;font-size:9.5pt;break-inside:avoid}
-  th,td{border:1px solid var(--line);padding:5px 7px;text-align:left;vertical-align:top}
+  html{font-size:10.1pt}
+  body{margin:0;color:var(--ink);font-family:"Noto Sans Ethiopic","Ebrima","Nyala",Poppins,sans-serif;line-height:1.58;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  [lang=en]{font-family:Poppins,"Segoe UI",sans-serif;line-height:1.46;font-size:9.35pt}
+  [lang=en] table{font-size:8.8pt}[lang=en] .who ul,[lang=en] .brief div{font-size:8.7pt}[lang=en] h2{font-size:11.4pt;margin-top:12px}
+  p{margin:0 0 6px;orphans:3;widows:3}
+  ul,ol{margin:2px 0 7px;padding-left:1.35em}
+  li{margin:0 0 2.5px}
+
+  .cover{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;padding:11px 16px;border:2.2px solid var(--ink);border-radius:16px;background:var(--soft);box-shadow:4px 4px 0 var(--gold);margin-right:4px}
+  .cover svg{width:60px;height:60px}
+  .cover img{height:25px;display:block}
+  .cover p{margin:4px 0 0;font-size:8.8pt;color:var(--ink-2)}
+  h1{font-size:15.5pt;line-height:1.28;margin:15px 0 3px}
+  .sub{color:var(--ink-2);margin:0 0 10px;font-size:9.2pt}
+  .to{border-left:4.5px solid var(--teal);padding:4px 0 4px 11px;margin:9px 0 11px;font-size:9.8pt;display:grid;grid-template-columns:auto 1fr;gap:3px 10px}
+  .to b{white-space:nowrap}
+  .fill{display:inline-block;min-width:9em;border-bottom:1.1px solid var(--ink)}
+
+  .brief{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 6px;break-inside:avoid}
+  .brief div{border:1.6px solid var(--ink);border-radius:12px;padding:7px 10px;font-size:9.2pt;line-height:1.45}
+  .brief div:nth-child(1){background:var(--teal-soft)}.brief div:nth-child(2){background:var(--gold-soft)}.brief div:nth-child(3){background:var(--rose-soft)}
+  .brief b{display:block;font-size:8.2pt;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin-bottom:1px}
+
+  h2{font-size:12pt;margin:14px 0 5px;padding-bottom:3px;border-bottom:1.8px solid var(--line);break-after:avoid;display:flex;align-items:center;gap:.5em}
+  h2 span{flex:none;display:inline-grid;place-items:center;width:1.7em;height:1.7em;border-radius:50%;background:var(--gold);border:1.5px solid var(--ink);font:700 9pt Poppins,sans-serif}
+  h3{font-size:10.1pt;margin:8px 0 2px;color:var(--teal-deep);break-after:avoid}
+
+  table{width:100%;border-collapse:collapse;margin:5px 0 9px;font-size:9.3pt}
+  tr{break-inside:avoid}
+  thead{display:table-header-group}
+  th,td{border:1px solid var(--line);padding:4.5px 7px;text-align:left;vertical-align:top}
   th{background:var(--soft);font-weight:700}
-  td.n{width:2.2em;text-align:center;font-family:Poppins,sans-serif;font-weight:600}
-  td.w{width:24%;white-space:nowrap}
-  .box{border:2px solid var(--ink);border-radius:14px;padding:9px 13px;margin:9px 0 11px;background:#FFF8E1;break-inside:avoid}
-  .box.rose{background:#FBE9F5}
-  .box b.t{display:block;margin-bottom:2px}
-  .ask li{margin-bottom:5px}
-  .sign{display:grid;grid-template-columns:1fr 1fr;gap:8px 28px;margin-top:14px;break-inside:avoid}
-  .sign div{border-bottom:1.3px solid var(--ink);padding:14px 0 2px;font-size:9.4pt;color:var(--ink-2)}
-  .note{font-size:8.8pt;color:var(--ink-2);margin-top:10px}
+  td.n,th.n{width:2.1em;text-align:center;font-family:Poppins,sans-serif;font-weight:600}
+  td.w,th.w{width:23%}
+  td.k{width:27%;font-weight:600}
+
+  .who{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:6px 0 9px}
+  .who div{border:1.6px solid var(--ink);border-radius:13px;padding:8px 11px 5px;break-inside:avoid;background:#fff;border-top-width:6px}
+  .who div:nth-child(1){border-top-color:var(--rose)}.who div:nth-child(2){border-top-color:var(--gold)}.who div:nth-child(3){border-top-color:var(--teal)}.who div:nth-child(4){border-top-color:var(--ink)}
+  .who b{display:block;font-size:10.3pt;margin-bottom:2px}
+  .who ul{font-size:9.2pt;margin-bottom:3px}
+
+  .box{border:1.8px solid var(--ink);border-radius:13px;padding:8px 12px;margin:7px 0 9px;background:var(--gold-soft);break-inside:avoid}
+  .box.rose{background:var(--rose-soft)}
+  .box b.t{display:block;margin-bottom:1px}
+  .ask li{margin-bottom:4px}
+  .end{break-inside:avoid}
+  .sign{display:grid;grid-template-columns:1fr 1fr;gap:6px 28px;margin-top:10px}
+  .sign div{border-bottom:1.2px solid var(--ink);padding:15px 0 2px;font-size:9pt;color:var(--ink-2)}
+  .note{font-size:8.4pt;color:var(--ink-2);margin-top:9px}
   .en{break-before:page}
-  .fill{display:inline-block;min-width:9em;border-bottom:1.2px solid var(--ink)}
 </style>
 </head>
 <body>
@@ -60,7 +79,7 @@
       <path d="M39.5 56.5q10.5 10 21 0M38 55.5h3M59 55.5h3" fill="none" stroke="#E47FC8" stroke-width="3" stroke-linecap="round"/>
     </svg>
     <div>
-      <div class="brand">HAPPY LUCKY <em>CHACHO</em></div>
+      <img src="wordmark.png" alt="Happy Lucky Chacho" />
       <p>ሃፒ ላኪ ቻቾ · happyluckychacho.org · ባሕር ዳር</p>
     </div>
   </div>
@@ -69,13 +88,19 @@
   <p class="sub">«ወጣቶችን ለማደራጀት የተዘጋጀ የአደረጃጀት ማንዋል» (ታህሳስ 2015 ዓ.ም) መሠረት በማድረግ የተዘጋጀ · መስከረም 2019 ዓ.ም</p>
 
   <div class="to">
-    <div><b>ለ፦</b> <span class="fill">&nbsp;</span> ጽ/ቤት፣ ባሕር ዳር</div>
-    <div><b>ጉዳዩ፦</b> የወጣቶች በጎ ፈቃድ አደረጃጀት ለመመሥረት የቀረበ ፕሮፖዛልና ከሕፃናት ድጋፍ ተቋማት ጋር ለመሥራት የሚያስችል የድጋፍ ደብዳቤ ጥያቄ</div>
+    <b>ለ፦</b><div><span class="fill">&nbsp;</span> ጽ/ቤት፣ ባሕር ዳር</div>
+    <b>ጉዳዩ፦</b><div>የወጣቶች በጎ ፈቃድ አደረጃጀት ለመመሥረት የቀረበ ፕሮፖዛልና ከሕፃናት ድጋፍ ተቋማት ጋር ለመሥራት የሚያስችል የድጋፍ ደብዳቤ ጥያቄ</div>
+  </div>
+
+  <div class="brief">
+    <div><b>ማን ነን</b>ለሕፃናት ትምህርት፣ ክህሎትና አርአያነት የሚያካፍሉ በጎ ፈቃደኛ ወጣቶች።</div>
+    <div><b>የምንጠይቀው</b>የድጋፍ ደብዳቤ፣ የምሥረታ ምክርና የሕፃናት ጥበቃ ገለጻ።</div>
+    <div><b>ዋስትናችን</b>ወላጆች፣ ሽማግሌዎችና ተቋማት የሚቆጣጠሩት፣ የሕፃናት ደኅንነትን የሚያስቀድም አሠራር።</div>
   </div>
 
   <h2><span>1</span>መግቢያ</h2>
   <p>ሃፒ ላኪ ቻቾ በወጣቶች የተጀመረ የበጎ ፈቃድ እንቅስቃሴ ነው። መነሻ ሐሳባችን ቀላል ነው፤ እኛና በእኛ ዕድሜ ያሉ ወጣቶች የተማርነውን ትምህርትና ክህሎት ለሕፃናትና ለታዳጊዎች በማካፈል፣ በማስጠናትና አርአያ በመሆን ልንጠቅም እንችላለን ብለን እናምናለን። ሕፃንነት ለአዋቂነት መጠበቂያ ክፍል ሳይሆን የሰው ልጅ ሕይወት ወሳኝ ምዕራፍ ነው፤ የማወቅ ጉጉት፣ በራስ መተማመንና መታመን የሚጀምሩት በዚያ ነው።</p>
-  <p>ሥራችንን በየሳምንቱ እሑድ በግልጽ የምንጽፍበት ድረ ገጽ አለን፤ እስካሁን ከ30 በላይ ሰዎች ለመሳተፍ ተመዝግበዋል። ይህ ፕሮፖዛል የተዘጋጀው ከቢሯችሁ በተሰጠን የአደረጃጀት ማንዋል መሠረት ሲሆን፣ የማንዋሉን ቅደም ተከተል ይከተላል።</p>
+  <p>ሕፃን የሚያድገው ግን በወጣቶች ብቻ አይደለም፤ በወላጆቹ፣ በአሳዳጊዎቹ፣ በሽማግሌዎችና በሚንከባከቡት ተቋማት መካከል ነው። ስለዚህ ይህ አደረጃጀት ወጣቶች የሚመሩት ቢሆንም ሦስቱንም ትውልድ የሚያገናኝ እንዲሆን ታስቧል። ሥራችንን በየሳምንቱ እሑድ በግልጽ የምንጽፍበት ድረ ገጽ አለን፤ እስካሁን ከ30 በላይ ሰዎች ለመሳተፍ ተመዝግበዋል።</p>
 
   <h2><span>2</span>ለምን እንደራጃለን?</h2>
   <p>ማንዋሉ (ክፍል 1) እንደሚገልጸው መደራጀት በተናጠል ሊፈቱ የማይችሉ ችግሮችን በጋራ አቅም ለመፍታት፣ ለአካባቢው ኅብረተሰብ የበጎ ፈቃድ አገልግሎት ለመስጠት፣ ለኅብረተሰቡ አርአያ ለመሆን እንዲሁም ከመንግሥትና ከሌሎች አካላት ዕውቅናና የአቅም ግንባታ ድጋፍ ለማግኘት ያስችላል።</p>
@@ -84,108 +109,142 @@
   <h2><span>3</span>ስም፣ ራዕይና ዓላማ</h2>
   <p><b>ስም (ረቂቅ)፦</b> ሃፒ ላኪ ቻቾ የወጣቶች በጎ ፈቃድ ማኅበር &nbsp;·&nbsp; <b>አድራሻ፦</b> ባሕር ዳር ከተማ፣ <span class="fill">&nbsp;</span> ክ/ከተማ፣ <span class="fill">&nbsp;</span> ቀበሌ</p>
   <p><b>ራዕይ፦</b> እያንዳንዱ ሕፃን ደኅንነቱ ተጠብቆ፣ ተወዶና ተምሮ የወደፊት ሕይወቱ የራሱ መሆኑን የሚያውቅበት ማኅበረሰብ ማየት።</p>
-  <h3>ዓላማዎች</h3>
   <ul>
-    <li>በሕፃናት ማሳደጊያዎችና በድጋፍ ተቋማት ውስጥ ላሉ ሕፃናትና ታዳጊዎች የትምህርት ድጋፍ (ማስጠናት) መስጠት፤</li>
+    <li>በሕፃናት ማሳደጊያዎች፣ በድጋፍ ተቋማትና በማኅበረሰቡ ውስጥ ላሉ ሕፃናትና ታዳጊዎች የትምህርት ድጋፍ (ማስጠናት) መስጠት፤</li>
     <li>ወጣቶች ያላቸውን ክህሎት (ኮምፒውተር፣ ቋንቋ፣ ሒሳብ፣ ሳይንስ፣ ሥነ ጥበብ፣ ሙዚቃ ወዘተ) ለሕፃናት እንዲያካፍሉ ማድረግ፤</li>
     <li>ለታዳጊዎች የረጅም ጊዜ አማካሪ (እንደ ታላቅ ወንድም ወይም እህት) ማዘጋጀት፤</li>
+    <li>ወላጆችን፣ አሳዳጊዎችንና ሽማግሌዎችን የሥራው ባለቤትና ተቆጣጣሪ ማድረግ፤ ትውልድን ከትውልድ ማገናኘት፤</li>
     <li>ወጣቶች በበጎ ፈቃድ አገልግሎት መልካም ዜጋ፣ ኃላፊነት የሚሰማቸውና አርአያ እንዲሆኑ ማድረግ፤</li>
     <li>ተቋማቱ የሚያስፈልጋቸውን ቁሳቁስ በግልጽና ተጠያቂነት ባለው መንገድ ማሰባሰብ።</li>
   </ul>
 
   <h2><span>4</span>የምንሠራው ሥራ</h2>
   <table>
-    <tr><th>ተግባር</th><th>ማብራሪያ</th><th>ጊዜ</th></tr>
-    <tr><td>የእሑድ ክበባት</td><td>ንባብ፣ ኮምፒውተር/ኮዲንግ፣ ሥነ ጥበብ፣ ሳይንስና የቤት ሥራ ድጋፍ</td><td class="w">በየሳምንቱ እሑድ</td></tr>
-    <tr><td>ማስጠናት</td><td>በተቋማቱ ፍላጎት መሠረት በትምህርት ዓይነት የሚሰጥ ድጋፍ</td><td class="w">በሳምንት 1–2 ጊዜ</td></tr>
-    <tr><td>የክህሎት ወርክሾፕ</td><td>አንድ ባለሙያ ወጣት የሚመራው የአንድ ቀን ሥልጠና</td><td class="w">በወር አንድ ጊዜ</td></tr>
-    <tr><td>አማካሪነት</td><td>ከማጣራትና ከሥልጠና በኋላ ብቻ የሚጀመር የረጅም ጊዜ ግንኙነት</td><td class="w">ቀጣይነት ያለው</td></tr>
-    <tr><td>የቁሳቁስ ድጋፍ</td><td>ተቋሙ በጠየቀው መሠረት፤ እያንዳንዱ ደረሰኝ በግልጽ ይታተማል</td><td class="w">እንደ አስፈላጊነቱ</td></tr>
+    <thead><tr><th>ተግባር</th><th>ማብራሪያ</th><th class="w">ጊዜ</th></tr></thead>
+    <tr><td class="k">የእሑድ ክበባት</td><td>ንባብ፣ ኮምፒውተር/ኮዲንግ፣ ሥነ ጥበብ፣ ሳይንስና የቤት ሥራ ድጋፍ</td><td class="w">በየሳምንቱ እሑድ</td></tr>
+    <tr><td class="k">ማስጠናት</td><td>በተቋማቱ ፍላጎት መሠረት በትምህርት ዓይነት የሚሰጥ ድጋፍ</td><td class="w">በሳምንት 1–2 ጊዜ</td></tr>
+    <tr><td class="k">የክህሎት ወርክሾፕ</td><td>አንድ ባለሙያ ወጣት የሚመራው የአንድ ቀን ሥልጠና</td><td class="w">በወር አንድ ጊዜ</td></tr>
+    <tr><td class="k">አማካሪነት</td><td>ከማጣራትና ከሥልጠና በኋላ ብቻ የሚጀመር የረጅም ጊዜ ግንኙነት</td><td class="w">ቀጣይነት ያለው</td></tr>
+    <tr><td class="k">የወላጆችና አሳዳጊዎች መድረክ</td><td>ወላጆች፣ አሳዳጊዎችና የተቋም ሠራተኞች ሥራውን የሚገመግሙበትና ሐሳብ የሚሰጡበት ስብሰባ</td><td class="w">በወር አንድ ጊዜ</td></tr>
+    <tr><td class="k">የሽማግሌዎች ሰዓት</td><td>ሽማግሌዎች ለሕፃናት ታሪክ፣ ተረትና ባህል የሚያካፍሉበት፤ ለወጣት በጎ ፈቃደኞች ምክር የሚሰጡበት</td><td class="w">በወር አንድ ጊዜ</td></tr>
+    <tr><td class="k">የቁሳቁስ ድጋፍ</td><td>ተቋሙ በጠየቀው መሠረት፤ እያንዳንዱ ደረሰኝ በግልጽ ይታተማል</td><td class="w">እንደ አስፈላጊነቱ</td></tr>
   </table>
-  <p>ሁሉም ሥራ የሚከናወነው በተቋማቱ ፈቃድ፣ በተቋማቱ ግቢ ውስጥና የተቋሙ ሠራተኛ ባለበት ነው።</p>
+  <p>ሁሉም ሥራ የሚከናወነው በተቋማቱ ወይም በወላጆች ፈቃድ፣ በተፈቀደ ቦታና ኃላፊነት ያለው አዋቂ ባለበት ነው።</p>
 
-  <h2><span>5</span>የሕፃናት ደኅንነት ጥበቃ</h2>
+  <h2><span>5</span>አብረውን የሚሠሩ፦ ወላጆች፣ ሽማግሌዎችና የሕፃናት ማሳደጊያዎች</h2>
+  <p>ማንዋሉ (ክፍል 9.1፣ ደረጃ 3) ደጋፊና አጋር አካላትን ለይቶ ማሳተፍን ይጠይቃል፤ ክፍል 8 ደግሞ ከ29 ዓመት በላይ የሆኑ ሰዎች በክብር ወይም በተባባሪ አባልነት እንዲያገለግሉ ይፈቅዳል። በዚህ መሠረት፦</p>
+  <div class="who">
+    <div><b>ወላጆችና አሳዳጊዎች</b>
+      <ul>
+        <li>ልጁ ከመሳተፉ በፊት የጽሑፍ ፈቃድ ይሰጣሉ፤ በማንኛውም ጊዜ ፈቃዳቸውን ማንሳት ይችላሉ።</li>
+        <li>በወርሃዊው መድረክ ይሳተፋሉ፤ ስለ ልጃቸው ለውጥ አስተያየት፣ ቅሬታም ካለ በቀጥታ ያቀርባሉ።</li>
+        <li>በአማካሪ ምክር ቤቱ ሁለት ተወካዮች ይኖሯቸዋል።</li>
+      </ul></div>
+    <div><b>ሽማግሌዎችና አረጋውያን</b>
+      <ul>
+        <li>የአገር ሽማግሌዎች፣ የሃይማኖት አባቶችና ጡረተኛ መምህራን በአማካሪ ምክር ቤት በክብር አባልነት ያገለግላሉ።</li>
+        <li>ለወጣት በጎ ፈቃደኞች ምክርና ሥነ ምግባራዊ አቅጣጫ ይሰጣሉ፤ አለመግባባት ሲፈጠር ያስታርቃሉ።</li>
+        <li>ለሕፃናት የታሪክ፣ የተረትና የባህል ሰዓት ይመራሉ፤ ለአዳዲስ በጎ ፈቃደኞች ምስክር ሊሆኑ ይችላሉ።</li>
+      </ul></div>
+    <div><b>የሕፃናት ማሳደጊያዎችና የድጋፍ ተቋማት</b>
+      <ul>
+        <li>ሥራው የሚመራው በእነርሱ ፍላጎትና የጊዜ ሰሌዳ ነው፤ የሚያስፈልገውን እነርሱ ይወስናሉ።</li>
+        <li>ከእያንዳንዱ ተቋም ጋር የመግባቢያ ሰነድ እንፈራረማለን፤ ተቋሙ አንድ ተጠሪ ሠራተኛ ይመድባል።</li>
+        <li>በየሦስት ወሩ ሥራውን አብረን እንገመግማለን፤ በአማካሪ ምክር ቤቱ ተወካይ ይኖራቸዋል።</li>
+      </ul></div>
+    <div><b>ቢሯችሁ</b>
+      <ul>
+        <li>የድጋፍ ደብዳቤ፣ ክትትልና ቁጥጥር።</li>
+        <li>ለበጎ ፈቃደኞች የሕፃናት ጥበቃ ገለጻ።</li>
+        <li>የሩብ ዓመት ሪፖርታችንን ይቀበላል፤ አስፈላጊ ሲሆን ሥራውን ያስቆማል።</li>
+      </ul></div>
+  </div>
+
+  <h2><span>6</span>የሕፃናት ደኅንነት ጥበቃ</h2>
   <div class="box rose"><b class="t">ከምንም ነገር በፊት የሕፃናት ደኅንነት ይቀድማል።</b>መርዳት እፈልጋለሁ ስላለ ብቻ ማንም ሰው፣ እኛንም ጨምሮ፣ ከመንገድ ገብቶ ከሕፃናት ጋር መሆን የለበትም።</div>
   <ol>
-    <li>ያለ ቢሯችሁ የድጋፍ ደብዳቤና ያለ ተቋሙ የጽሑፍ ፈቃድ ምንም ሥራ አንጀምርም።</li>
-    <li>እያንዳንዱ በጎ ፈቃደኛ መታወቂያውንና ሁለት ምስክር (አስተያየት ሰጪ) አቅርቦ፣ የሥነ ምግባር ደንብ ፈርሞ ብቻ ይሳተፋል።</li>
-    <li>ማንኛውም በጎ ፈቃደኛ ከአንድ ሕፃን ጋር ለብቻው አይሆንም፤ ሥራው ሁልጊዜ በቡድንና የተቋሙ ሠራተኛ ባለበት ይከናወናል።</li>
+    <li>ያለ ቢሯችሁ የድጋፍ ደብዳቤና ያለ ተቋሙ ወይም ያለ ወላጅ/አሳዳጊ የጽሑፍ ፈቃድ ምንም ሥራ አንጀምርም።</li>
+    <li>እያንዳንዱ ተሳታፊ፣ ሽማግሌዎችንና ተባባሪ አባላትንም ጨምሮ፣ መታወቂያውንና ሁለት ምስክር አቅርቦ የሥነ ምግባር ደንብ ፈርሞ ብቻ ይሳተፋል።</li>
+    <li>ማንኛውም ተሳታፊ ከአንድ ሕፃን ጋር ለብቻው አይሆንም፤ ሥራው ሁልጊዜ በቡድንና ኃላፊነት ያለው የተቋም ሠራተኛ ወይም አሳዳጊ ባለበት ይከናወናል።</li>
     <li>ከሕፃናት ጋር በቀጥታ የሚሠሩት ዕድሜያቸው 18 ዓመትና ከዚያ በላይ የሆኑ አባላት ብቻ ናቸው።</li>
-    <li>ያለ አሳዳጊ ወይም ያለ ተቋሙ የጽሑፍ ፈቃድ የሕፃናት ፎቶ፣ ስም ወይም ታሪክ አይታተምም።</li>
-    <li>በበጎ ፈቃደኛና በሕፃን መካከል በቀጥታ ገንዘብ፣ ስጦታ ወይም የግል ግንኙነት (ስልክ፣ ማኅበራዊ ሚዲያ) አይደረግም።</li>
-    <li>ማንኛውም ስጋት ወይም ጥርጣሬ ወዲያውኑ ለተቋሙ ኃላፊና ለቢሯችሁ ሪፖርት ይደረጋል።</li>
-    <li>በጎ ፈቃደኞች ሥራ ከመጀመራቸው በፊት የሕፃናት ጥበቃ ገለጻ ይወስዳሉ።</li>
+    <li>ያለ ወላጅ፣ ያለ አሳዳጊ ወይም ያለ ተቋሙ የጽሑፍ ፈቃድ የሕፃናት ፎቶ፣ ስም ወይም ታሪክ አይታተምም።</li>
+    <li>በተሳታፊና በሕፃን መካከል በቀጥታ ገንዘብ፣ ስጦታ ወይም የግል ግንኙነት (ስልክ፣ ማኅበራዊ ሚዲያ) አይደረግም።</li>
+    <li>ማንኛውም ስጋት ወይም ጥርጣሬ ወዲያውኑ ለተቋሙ ኃላፊ፣ ለወላጅ/አሳዳጊና ለቢሯችሁ ሪፖርት ይደረጋል።</li>
+    <li>ተሳታፊዎች ሥራ ከመጀመራቸው በፊት የሕፃናት ጥበቃ ገለጻ ይወስዳሉ።</li>
   </ol>
   <div class="box"><b class="t">የመጀመሪያው ኃላፊነት፦ አርአያ መሆን</b>ከማስጠናትና ከክህሎት በፊት የመጀመሪያው ሥራችን አርአያ መሆን ነው፤ ሰውን እንዴት እንደምንንከባከብ፣ እንዴት እንደምንናገር፣ ቃላችንን እንዴት እንደምንጠብቅ። በሕፃናቱ ላይ ማየት የምንፈልገውን ነገር መጀመሪያ እኛ ራሳችን ማድረግ አለብን።</div>
 
-  <h2><span>6</span>አባልነት</h2>
+  <h2><span>7</span>አባልነት</h2>
   <ul>
     <li>በብሔራዊ የወጣቶች ፖሊሲ መሠረት ዕድሜያቸው ከ15 እስከ 29 ዓመት ለሆኑ ወጣቶች ሁሉ ክፍት ነው፤ አባልነት በፈቃደኝነት ላይ የተመሠረተ ነው።</li>
     <li>የጾታ፣ የሃይማኖት፣ የብሔር፣ የፖለቲካ አመለካከት፣ የትምህርት ወይም የገቢ ልዩነት የአባልነት መስፈርት አይሆንም።</li>
-    <li>የአባላት ዓይነት (ማንዋሉ ክፍል 8)፦ ንቁ ተሳታፊ፣ ተራ፣ ተባባሪና የክብር አባላት። ዕድሜያቸው ከ29 ዓመት በላይ የሆኑ ደጋፊዎች በተባባሪ ወይም በክብር አባልነት ያገለግላሉ።</li>
+    <li>የአባላት ዓይነት (ማንዋሉ ክፍል 8)፦ ንቁ ተሳታፊ፣ ተራ፣ ተባባሪና የክብር አባላት። <b>ወላጆች፣ አሳዳጊዎች፣ ሽማግሌዎችና የተቋም ሠራተኞች በተባባሪ ወይም በክብር አባልነት ይሳተፋሉ፤</b> ድምፅ የመስጠትና የመምራት ሥልጣን የወጣት አባላት ነው።</li>
     <li>ግዴታዎች፦ የሥነ ምግባርና የሕፃናት ጥበቃ ደንቡን ማክበር፣ በስብሰባ መገኘት፣ የተቀበሉትን ኃላፊነት መወጣት፣ የማኅበሩን ንብረት መጠበቅ።</li>
     <li>የአባልነት መዋጮ በውስጠ ደንብ ይወሰናል፤ አቅም የሌለውን ወጣት እንዳያግድ ዝቅተኛ ይሆናል።</li>
   </ul>
 
-  <h2><span>7</span>አደረጃጀትና አሠራር</h2>
+  <h2><span>8</span>አደረጃጀትና አሠራር</h2>
   <p>በሲቪል ማኅበረሰብ ድርጅቶች አዋጅ ቁጥር 1113/2011 እና በማንዋሉ ክፍል 5 መሠረት፦</p>
   <table>
-    <tr><th>አካል</th><th>ኃላፊነት</th></tr>
-    <tr><td>ጠቅላላ ጉባኤ</td><td>የበላይ ውሳኔ ሰጪ አካል፤ በዓመት ቢያንስ ሁለት ጊዜ ይሰበሰባል፤ መሪዎችን ይመርጣል፣ ይገመግማል፣ ያወርዳል</td></tr>
-    <tr><td>የሥራ አስፈጻሚ ኮሚቴ (5 አባላት)</td><td>ሰብሳቢ፣ ምክትል ሰብሳቢ፣ ጸሐፊ፣ ገንዘብ ያዥ፣ የፕሮግራምና የሕፃናት ጥበቃ ኃላፊ፤ የአገልግሎት ዘመን ሁለት ዓመት</td></tr>
-    <tr><td>ኦዲተር</td><td>ከኮሚቴው ነፃ ሆኖ ሒሳብና ንብረት ይመረምራል፣ ለጉባኤው ሪፖርት ያቀርባል</td></tr>
-    <tr><td>ንዑስ ኮሚቴዎች</td><td>የትምህርት ድጋፍ፤ የክህሎት ሥልጠና፤ የሀብት ማሰባሰብና ግልጽነት</td></tr>
+    <thead><tr><th>አካል</th><th>ኃላፊነት</th></tr></thead>
+    <tr><td class="k">ጠቅላላ ጉባኤ</td><td>የበላይ ውሳኔ ሰጪ አካል፤ በዓመት ቢያንስ ሁለት ጊዜ ይሰበሰባል፤ መሪዎችን ይመርጣል፣ ይገመግማል፣ ያወርዳል</td></tr>
+    <tr><td class="k">የሥራ አስፈጻሚ ኮሚቴ (5)</td><td>ሰብሳቢ፣ ምክትል ሰብሳቢ፣ ጸሐፊ፣ ገንዘብ ያዥ፣ የፕሮግራምና የሕፃናት ጥበቃ ኃላፊ፤ የአገልግሎት ዘመን ሁለት ዓመት</td></tr>
+    <tr><td class="k">የአማካሪ ምክር ቤት</td><td>ሽማግሌዎች፣ የወላጆችና አሳዳጊዎች ተወካዮች፣ የተቋማት ተወካዮች፤ ይመክራል፣ ይቆጣጠራል፣ ያስታርቃል፤ ድምፅ አይሰጥም</td></tr>
+    <tr><td class="k">ኦዲተር</td><td>ከኮሚቴው ነፃ ሆኖ ሒሳብና ንብረት ይመረምራል፣ ለጉባኤው ሪፖርት ያቀርባል</td></tr>
+    <tr><td class="k">ንዑስ ኮሚቴዎች</td><td>የትምህርት ድጋፍ፤ የክህሎት ሥልጠና፤ የቤተሰብና የማኅበረሰብ ግንኙነት፤ የሀብት ማሰባሰብና ግልጽነት</td></tr>
   </table>
   <ul>
     <li>ውሳኔዎች በውይይትና በድምፅ ብልጫ ይተላለፋሉ፤ እያንዳንዱ አባል ሐሳቡን በነፃነት ይገልጻል።</li>
     <li>ማኅበሩ ከማንኛውም የፖለቲካ ድርጅት ነፃ ነው፤ የማንም ድርጅት ቅጥያ አይደለም።</li>
-    <li>አባላት ሲመለመሉ በግልጽ በተቀመጠ መመዘኛ መሠረት ይሆናል።</li>
   </ul>
 
-  <h2><span>8</span>የምሥረታ ሂደትና የጊዜ ሰሌዳ</h2>
-  <p>ማንዋሉ (ክፍል 9.1) ያስቀመጣቸውን ስምንት ደረጃዎች እንከተላለን፦</p>
+  <h2><span>9</span>የምሥረታ ሂደትና የጊዜ ሰሌዳ</h2>
   <table>
-    <tr><th class="n">#</th><th>ደረጃ</th><th>ጊዜ</th></tr>
+    <thead><tr><th class="n">#</th><th>ደረጃ (ማንዋሉ ክፍል 9.1)</th><th class="w">ጊዜ</th></tr></thead>
     <tr><td class="n">1</td><td>ማኅበር የመመሥረት ሐሳብ በመሥራች አባላት መካከል ማዳበር</td><td class="w">ተከናውኗል</td></tr>
     <tr><td class="n">2</td><td>የማኅበሩን ዓላማና ግብ መወሰን</td><td class="w">ሳምንት 1–2</td></tr>
-    <tr><td class="n">3</td><td>ደጋፊና አጋር አካላትን መለየት (ቢሯችሁ፣ የሕፃናት ድጋፍ ተቋማት)</td><td class="w">ተጀምሯል</td></tr>
+    <tr><td class="n">3</td><td>ደጋፊና አጋር አካላትን መለየት፦ ቢሯችሁ፣ የሕፃናት ማሳደጊያዎች፣ ወላጆችና ሽማግሌዎች</td><td class="w">ተጀምሯል</td></tr>
     <tr><td class="n">4</td><td>አስፈላጊ መረጃ ማሰባሰብ፤ ከነባር ማኅበራት ልምድ መቅሰም</td><td class="w">ሳምንት 2–3</td></tr>
-    <tr><td class="n">5</td><td>ረቂቅ የማቋቋሚያ ደንብና ውስጠ ደንብ ማዘጋጀት</td><td class="w">ሳምንት 3–4</td></tr>
-    <tr><td class="n">6</td><td>ተጨማሪ አባላትን ማሳመንና መመልመል (ቢያንስ አምስት መሥራች አባላት)</td><td class="w">ሳምንት 2–5</td></tr>
+    <tr><td class="n">5</td><td>ረቂቅ የማቋቋሚያ ደንብ፣ ውስጠ ደንብና የሕፃናት ጥበቃ ደንብ ማዘጋጀት</td><td class="w">ሳምንት 3–4</td></tr>
+    <tr><td class="n">6</td><td>ተጨማሪ አባላትን መመልመል (ቢያንስ አምስት መሥራች አባላት)፤ የአማካሪ ምክር ቤት አባላትን መጋበዝ</td><td class="w">ሳምንት 2–5</td></tr>
     <tr><td class="n">7</td><td>የመሥራች ጉባኤ ማካሄድ፤ በደንቡ ላይ መወያየትና ማጽደቅ</td><td class="w">ሳምንት 6</td></tr>
     <tr><td class="n">8</td><td>ቃለ ጉባኤ፣ ደንብና የምዝገባ ቅጽ አቅርቦ በ30 ቀናት ውስጥ ማስመዝገብ</td><td class="w">ሳምንት 7–10</td></tr>
   </table>
 
-  <h2><span>9</span>እስካሁን የተሠራ</h2>
+  <h2><span>10</span>እስካሁን የተሠራ</h2>
   <ul>
-    <li>በባሕር ዳር የሚገኙ ሦስት የሕፃናት ድጋፍ ተቋማትን ጎብኝተን ከኃላፊዎቻቸው ጋር ተነጋግረናል፤ ከመካከላቸው አንዱ ዕድሜያቸው ከ8 እስከ 20 ዓመት የሆኑ ወደ 40 የሚጠጉ ሕፃናትንና ታዳጊዎችን ይንከባከባል።</li>
+    <li>በባሕር ዳር የሚገኙ ሦስት የሕፃናት ድጋፍ ተቋማትን ጎብኝተን ከሠራተኞቻቸው ጋር ተነጋግረናል፤ ከመካከላቸው አንዱ ዕድሜያቸው ከ8 እስከ 20 ዓመት የሆኑ ወደ 40 የሚጠጉ ሕፃናትንና ታዳጊዎችን ይንከባከባል።</li>
     <li>ተቋማቱ ሥራ ከመጀመራችን በፊት ከቢሯችሁ የድጋፍ ደብዳቤ እንድናመጣ ጠይቀውናል።</li>
     <li>ድረ ገጽና የተሳታፊዎች መመዝገቢያ ተዘጋጅቷል፤ እንቅስቃሴው በየሳምንቱ በግልጽ ይዘገባል።</li>
   </ul>
 
-  <h2><span>10</span>ሀብትና ግልጽነት</h2>
+  <h2><span>11</span>ሀብትና ግልጽነት</h2>
   <ul>
     <li>ሥራው በበጎ ፈቃድ ነው፤ ለአባላት የሚከፈል ክፍያ የለም።</li>
-    <li>ማንኛውም የገንዘብ ወይም የቁሳቁስ ድጋፍ በደረሰኝ ይመዘገባል፤ ሪፖርቱ ለአባላትና ለሕዝብ ይገለጻል፤ በኦዲተር ይመረመራል።</li>
+    <li>ማንኛውም የገንዘብ ወይም የቁሳቁስ ድጋፍ በደረሰኝ ይመዘገባል፤ ሪፖርቱ ለአባላት፣ ለአማካሪ ምክር ቤቱና ለሕዝብ ይገለጻል፤ በኦዲተር ይመረመራል።</li>
     <li>ከምዝገባ በኋላ ገንዘብ የሚንቀሳቀሰው በማኅበሩ ስም በተከፈተ የባንክ ሒሳብ ብቻ ነው።</li>
   </ul>
 
-  <h2><span>11</span>ከቢሯችሁ የምንጠይቀው</h2>
-  <ol class="ask">
-    <li>ከሕፃናት ድጋፍ ተቋማት ጋር በበጎ ፈቃድ ለመሥራት የሚያስችል <b>የድጋፍ (የትብብር) ደብዳቤ</b>፤</li>
-    <li>አደረጃጀቱን ለመመሥረትና ለማስመዝገብ የሙያ ምክርና ክትትል፤</li>
-    <li>ለበጎ ፈቃደኞቻችን የሕፃናት ጥበቃ ገለጻ፤</li>
-    <li>በየሦስት ወሩ የሥራ ሪፖርት የምናቀርብለት ተጠሪ ባለሙያ እንዲመደብልን።</li>
-  </ol>
-
-  <h2><span>12</span>አባሪ፦ ረቂቅ የማቋቋሚያ ደንብ ይዘት</h2>
-  <p>በማንዋሉ ክፍል 10.1 በቀረበው ሞዴል መሠረት፦ አንቀጽ 1 ስም፣ አድራሻና ዓላማ · አንቀጽ 2 አባልነት (ቅድመ ሁኔታ፣ መዋጮ፣ ኃላፊነት) · አንቀጽ 3 አመራሮችና አመራረጣቸው · አንቀጽ 4 ኮሚቴዎች · አንቀጽ 5 ተቀጣሪ ሠራተኞች (ለጊዜው የሉም) · አንቀጽ 6 የማኅበሩ ፕሮግራም · አንቀጽ 7 ቋሚና ተንቀሳቃሽ ንብረት · አንቀጽ 8 የስብሰባ ሥነ ሥርዓት · አንቀጽ 9 ደንቡ የሚጸናበት ጊዜ · አንቀጽ 10 ደንቡን ስለማሻሻል። የስብሰባ ብዛት፣ ምልዓተ ጉባኤ፣ የምርጫ ሂደትና የመዋጮ መጠን በውስጠ ደንብ (ክፍል 10.2) ይወሰናሉ። <b>የሕፃናት ጥበቃ ደንቡ የማቋቋሚያ ደንቡ አካል ይሆናል።</b></p>
-
-  <div class="sign">
-    <div>የአቅራቢው ስም</div><div>ፊርማ</div>
-    <div>ስልክ / ኢሜይል</div><div>ቀን</div>
+  <div class="end">
+    <h2><span>12</span>ከቢሯችሁ የምንጠይቀው</h2>
+    <ol class="ask">
+      <li>ከሕፃናት ማሳደጊያዎችና ከድጋፍ ተቋማት ጋር በበጎ ፈቃድ ለመሥራት የሚያስችል <b>የድጋፍ (የትብብር) ደብዳቤ</b>፤</li>
+      <li>አደረጃጀቱን ለመመሥረትና ለማስመዝገብ የሙያ ምክርና ክትትል፤</li>
+      <li>ለተሳታፊዎቻችን የሕፃናት ጥበቃ ገለጻ፤</li>
+      <li>በአማካሪ ምክር ቤቱ ሊያገለግሉ የሚችሉ ሽማግሌዎችንና የወላጆች ተወካዮችን እንድትጠቁሙን፤</li>
+      <li>በየሦስት ወሩ የሥራ ሪፖርት የምናቀርብለት ተጠሪ ባለሙያ እንዲመደብልን።</li>
+    </ol>
   </div>
-  <p class="note">ማጣቀሻ፦ ወጣቶችን ለማደራጀት የተዘጋጀ የአደረጃጀት ማንዋል (ታህሳስ 2015 ዓ.ም፣ ባሕር ዳር)፤ የሲቪል ማኅበረሰብ ድርጅቶች አዋጅ ቁጥር 1113/2011፤ የወጣቶች ብሔራዊ ፖሊሲ (1996 ዓ.ም)።</p>
+
+  <div class="end">
+    <h2><span>13</span>አባሪ፦ ረቂቅ የማቋቋሚያ ደንብ ይዘት</h2>
+    <p>በማንዋሉ ክፍል 10.1 በቀረበው ሞዴል መሠረት፦ አንቀጽ 1 ስም፣ አድራሻና ዓላማ · አንቀጽ 2 አባልነት (ቅድመ ሁኔታ፣ መዋጮ፣ ኃላፊነት) · አንቀጽ 3 አመራሮችና አመራረጣቸው · አንቀጽ 4 ኮሚቴዎችና የአማካሪ ምክር ቤት · አንቀጽ 5 ተቀጣሪ ሠራተኞች (ለጊዜው የሉም) · አንቀጽ 6 የማኅበሩ ፕሮግራም · አንቀጽ 7 ቋሚና ተንቀሳቃሽ ንብረት · አንቀጽ 8 የስብሰባ ሥነ ሥርዓት · አንቀጽ 9 ደንቡ የሚጸናበት ጊዜ · አንቀጽ 10 ደንቡን ስለማሻሻል። የስብሰባ ብዛት፣ ምልዓተ ጉባኤ፣ የምርጫ ሂደትና የመዋጮ መጠን በውስጠ ደንብ (ክፍል 10.2) ይወሰናሉ። <b>የሕፃናት ጥበቃ ደንቡ የማቋቋሚያ ደንቡ አካል ይሆናል።</b></p>
+    <div class="sign">
+      <div>የአቅራቢው ስም</div><div>ፊርማ</div>
+      <div>ስልክ / ኢሜይል</div><div>ቀን</div>
+    </div>
+    <p class="note">ማጣቀሻ፦ ወጣቶችን ለማደራጀት የተዘጋጀ የአደረጃጀት ማንዋል (ታህሳስ 2015 ዓ.ም፣ ባሕር ዳር)፤ የሲቪል ማኅበረሰብ ድርጅቶች አዋጅ ቁጥር 1113/2011፤ የወጣቶች ብሔራዊ ፖሊሲ (1996 ዓ.ም)።</p>
+  </div>
 </section>
 
 <!-- ======================= English ======================= -->
@@ -200,7 +259,7 @@
       <path d="M39.5 56.5q10.5 10 21 0M38 55.5h3M59 55.5h3" fill="none" stroke="#E47FC8" stroke-width="3" stroke-linecap="round"/>
     </svg>
     <div>
-      <div class="brand">HAPPY LUCKY <em>CHACHO</em></div>
+      <img src="wordmark.png" alt="Happy Lucky Chacho" />
       <p>English version, for reference · happyluckychacho.org · Bahir Dar</p>
     </div>
   </div>
@@ -209,13 +268,19 @@
   <p class="sub">Prepared in line with the “Organisational Manual for Organising Youth” (Tahsas 2015 E.C.) · September 2026</p>
 
   <div class="to">
-    <div><b>To:</b> <span class="fill">&nbsp;</span> Office, Bahir Dar</div>
-    <div><b>Subject:</b> Proposal to form a youth volunteer association, and a request for a letter of support to work with institutions that care for children</div>
+    <b>To:</b><div><span class="fill">&nbsp;</span> Office, Bahir Dar</div>
+    <b>Subject:</b><div>Proposal to form a youth volunteer association, and a request for a letter of support to work with institutions that care for children</div>
+  </div>
+
+  <div class="brief">
+    <div><b>Who we are</b>Young volunteers who share learning, skills and example with children.</div>
+    <div><b>What we ask</b>A letter of support, advice on forming, and a child protection briefing.</div>
+    <div><b>Our guarantee</b>Work overseen by parents, elders and the institutions, with children’s safety first.</div>
   </div>
 
   <h2><span>1</span>Introduction</h2>
   <p>Happy Lucky Chacho is a volunteer movement started by young people. The idea is simple: we, and people our age, can be useful to children and teenagers by sharing what we have learned, by tutoring, and by being role models. Childhood is not a waiting room for adulthood. It is where curiosity, confidence and trust begin.</p>
-  <p>We write openly about the work every Sunday on our website, and more than 30 people have signed up to take part so far. This proposal follows the structure of the manual your office gave us.</p>
+  <p>But a child is not raised by young people alone. A child grows up among parents, guardians, elders and the institutions that care for them. So although young people lead this association, it is designed to connect all three generations. We write openly about the work every Sunday on our website, and more than 30 people have signed up so far.</p>
 
   <h2><span>2</span>Why organise</h2>
   <p>As the manual says (section 1), organising lets young people solve together what they cannot solve alone, serve their community as volunteers, set an example, and earn recognition and capacity-building support from government and others.</p>
@@ -225,103 +290,139 @@
   <p><b>Name (draft):</b> Happy Lucky Chacho Youth Volunteer Association · <b>Address:</b> Bahir Dar, <span class="fill">&nbsp;</span> sub-city, <span class="fill">&nbsp;</span> kebele</p>
   <p><b>Vision:</b> a community where every child is safe, loved and learning, and knows that their future belongs to them.</p>
   <ul>
-    <li>Give learning support (tutoring) to children and teenagers in children’s homes and support institutions.</li>
+    <li>Give learning support (tutoring) to children and teenagers in orphanages, support institutions and the community.</li>
     <li>Have young people pass on their skills: computing, languages, maths, science, art, music.</li>
     <li>Prepare long-term mentors, in the spirit of an older brother or sister.</li>
+    <li>Make parents, guardians and elders owners and overseers of the work, and connect the generations.</li>
     <li>Help young volunteers grow into responsible citizens and role models.</li>
     <li>Gather the materials institutions ask for, openly and accountably.</li>
   </ul>
 
   <h2><span>4</span>What we will do</h2>
   <table>
-    <tr><th>Activity</th><th>Description</th><th>When</th></tr>
-    <tr><td>Sunday clubs</td><td>Reading, computing and coding, art, science, homework help</td><td class="w">Every Sunday</td></tr>
-    <tr><td>Tutoring</td><td>By school subject, as each institution asks</td><td class="w">1–2 times a week</td></tr>
-    <tr><td>Skills workshop</td><td>A one-day session led by a young professional</td><td class="w">Monthly</td></tr>
-    <tr><td>Mentoring</td><td>Long-term, and only after screening and training</td><td class="w">Ongoing</td></tr>
-    <tr><td>Material support</td><td>What the institution asks for; every receipt published</td><td class="w">As needed</td></tr>
+    <thead><tr><th>Activity</th><th>Description</th><th class="w">When</th></tr></thead>
+    <tr><td class="k">Sunday clubs</td><td>Reading, computing and coding, art, science, homework help</td><td class="w">Every Sunday</td></tr>
+    <tr><td class="k">Tutoring</td><td>By school subject, as each institution asks</td><td class="w">1–2 times a week</td></tr>
+    <tr><td class="k">Skills workshop</td><td>A one-day session led by a young professional</td><td class="w">Monthly</td></tr>
+    <tr><td class="k">Mentoring</td><td>Long-term, and only after screening and training</td><td class="w">Ongoing</td></tr>
+    <tr><td class="k">Parents’ and guardians’ forum</td><td>Parents, guardians and institution staff review the work and give direction</td><td class="w">Monthly</td></tr>
+    <tr><td class="k">Elders’ hour</td><td>Elders share history, stories and culture with the children, and advise the young volunteers</td><td class="w">Monthly</td></tr>
+    <tr><td class="k">Material support</td><td>What the institution asks for; every receipt published</td><td class="w">As needed</td></tr>
   </table>
-  <p>All work happens with the institution’s permission, on its premises, with a member of its staff present.</p>
+  <p>All work happens with the permission of the institution or the parents, in an approved place, with a responsible adult present.</p>
 
-  <h2><span>5</span>Child safeguarding</h2>
+  <h2><span>5</span>Who works with us: parents, elders and orphanages</h2>
+  <p>The manual (section 9.1, step 3) asks founders to identify and involve supporters and partners, and section 8 allows people over 29 to serve as honorary or associate members. On that basis:</p>
+  <div class="who">
+    <div><b>Parents and guardians</b>
+      <ul>
+        <li>Give written consent before a child takes part, and may withdraw it at any time.</li>
+        <li>Join the monthly forum, give feedback on their child’s progress, and raise complaints directly.</li>
+        <li>Hold two seats on the advisory council.</li>
+      </ul></div>
+    <div><b>Elders</b>
+      <ul>
+        <li>Community elders, religious fathers and retired teachers serve on the advisory council as honorary members.</li>
+        <li>They guide the young volunteers on conduct and values, and mediate when there is disagreement.</li>
+        <li>They lead a monthly hour of history, stories and culture, and may act as referees for new volunteers.</li>
+      </ul></div>
+    <div><b>Orphanages and support institutions</b>
+      <ul>
+        <li>The work follows their needs and their timetable. They decide what is needed.</li>
+        <li>We sign a memorandum of understanding with each one, and it names one member of staff as our contact.</li>
+        <li>We review the work together every three months, and they hold a seat on the advisory council.</li>
+      </ul></div>
+    <div><b>Your office</b>
+      <ul>
+        <li>The letter of support, follow-up and oversight.</li>
+        <li>A child protection briefing for volunteers.</li>
+        <li>Receives our quarterly report, and may stop the work if it sees cause.</li>
+      </ul></div>
+  </div>
+
+  <h2><span>6</span>Child safeguarding</h2>
   <div class="box rose"><b class="t">Keeping children safe comes before anything we want to do for them.</b>Nobody, ourselves included, should be able to walk in off the street and be around children just because they say they want to help.</div>
   <ol>
-    <li>No work begins without your office’s letter of support and the institution’s written permission.</li>
-    <li>Every volunteer presents an ID and two referees and signs a code of conduct before taking part.</li>
-    <li>No volunteer is ever alone with a child. Work is done in groups with institution staff present.</li>
+    <li>No work begins without your office’s letter of support and written permission from the institution or the parent or guardian.</li>
+    <li>Every participant, elders and associate members included, presents an ID and two referees and signs a code of conduct first.</li>
+    <li>No participant is ever alone with a child. Work is done in groups with a responsible member of staff or a guardian present.</li>
     <li>Only members aged 18 and over work directly with children.</li>
-    <li>No child’s photo, name or story is published without written consent from a guardian or the institution.</li>
-    <li>No money, gifts or private contact (phone, social media) directly between a volunteer and a child.</li>
-    <li>Any concern is reported at once to the head of the institution and to your office.</li>
-    <li>Volunteers receive a child protection briefing before they start.</li>
+    <li>No child’s photo, name or story is published without written consent from a parent, a guardian or the institution.</li>
+    <li>No money, gifts or private contact (phone, social media) directly between a participant and a child.</li>
+    <li>Any concern is reported at once to the head of the institution, the parent or guardian, and your office.</li>
+    <li>Participants receive a child protection briefing before they start.</li>
   </ol>
   <div class="box"><b class="t">The first responsibility: be a role model</b>Before tutoring, before any skill, the first job is to be a role model: how we care for someone, how we speak, how we keep our word. Whatever we hope to see in the children, we have to do ourselves first.</div>
 
-  <h2><span>6</span>Membership</h2>
+  <h2><span>7</span>Membership</h2>
   <ul>
     <li>Open to all young people aged 15 to 29, as defined by the National Youth Policy. Membership is voluntary.</li>
     <li>No distinction of sex, religion, ethnicity, political view, education or income.</li>
-    <li>Member types (manual, section 8): active, ordinary, associate and honorary. Supporters over 29 serve as associate or honorary members.</li>
+    <li>Member types (manual, section 8): active, ordinary, associate and honorary. <b>Parents, guardians, elders and institution staff take part as associate or honorary members.</b> Voting and leadership belong to the youth members.</li>
     <li>Duties: keep the code of conduct and the safeguarding rules, attend meetings, carry out accepted responsibilities, look after the association’s property.</li>
     <li>Any membership fee is set in the internal rules and kept low so that it excludes nobody.</li>
   </ul>
 
-  <h2><span>7</span>Structure and how we work</h2>
+  <h2><span>8</span>Structure and how we work</h2>
   <p>In line with Civil Society Organisations Proclamation No. 1113/2019 (2011 E.C.) and section 5 of the manual:</p>
   <table>
-    <tr><th>Body</th><th>Responsibility</th></tr>
-    <tr><td>General assembly</td><td>The highest decision-making body. Meets at least twice a year. Elects, reviews and removes leaders.</td></tr>
-    <tr><td>Executive committee (5)</td><td>Chair, vice chair, secretary, treasurer, programme and child-safeguarding lead. Two-year term.</td></tr>
-    <tr><td>Auditor</td><td>Independent of the committee. Examines accounts and property and reports to the assembly.</td></tr>
-    <tr><td>Sub-committees</td><td>Learning support; skills training; resources and transparency.</td></tr>
+    <thead><tr><th>Body</th><th>Responsibility</th></tr></thead>
+    <tr><td class="k">General assembly</td><td>The highest decision-making body. Meets at least twice a year. Elects, reviews and removes leaders.</td></tr>
+    <tr><td class="k">Executive committee (5)</td><td>Chair, vice chair, secretary, treasurer, programme and child-safeguarding lead. Two-year term.</td></tr>
+    <tr><td class="k">Advisory council</td><td>Elders, representatives of parents and guardians, representatives of the institutions. Advises, oversees and mediates. Does not vote.</td></tr>
+    <tr><td class="k">Auditor</td><td>Independent of the committee. Examines accounts and property and reports to the assembly.</td></tr>
+    <tr><td class="k">Sub-committees</td><td>Learning support; skills training; family and community relations; resources and transparency.</td></tr>
   </table>
   <ul>
     <li>Decisions are made by discussion and majority vote, and every member may speak freely.</li>
     <li>The association is independent of every political organisation and is an extension of none.</li>
-    <li>Members are recruited against clear, written criteria.</li>
   </ul>
 
-  <h2><span>8</span>Founding steps and timeline</h2>
+  <h2><span>9</span>Founding steps and timeline</h2>
   <table>
-    <tr><th class="n">#</th><th>Step (manual, section 9.1)</th><th>When</th></tr>
+    <thead><tr><th class="n">#</th><th>Step (manual, section 9.1)</th><th class="w">When</th></tr></thead>
     <tr><td class="n">1</td><td>Develop the idea among founding members</td><td class="w">Done</td></tr>
     <tr><td class="n">2</td><td>Agree the association’s aims and goals</td><td class="w">Weeks 1–2</td></tr>
-    <tr><td class="n">3</td><td>Identify supporters and partners (your office, children’s institutions)</td><td class="w">Under way</td></tr>
+    <tr><td class="n">3</td><td>Identify supporters and partners: your office, orphanages, parents and elders</td><td class="w">Under way</td></tr>
     <tr><td class="n">4</td><td>Gather information; learn from existing associations</td><td class="w">Weeks 2–3</td></tr>
-    <tr><td class="n">5</td><td>Draft the founding rules and internal rules</td><td class="w">Weeks 3–4</td></tr>
-    <tr><td class="n">6</td><td>Recruit further members (at least five founders)</td><td class="w">Weeks 2–5</td></tr>
+    <tr><td class="n">5</td><td>Draft the founding rules, internal rules and safeguarding rules</td><td class="w">Weeks 3–4</td></tr>
+    <tr><td class="n">6</td><td>Recruit further members (at least five founders); invite the advisory council</td><td class="w">Weeks 2–5</td></tr>
     <tr><td class="n">7</td><td>Hold the founding assembly; discuss and adopt the rules</td><td class="w">Week 6</td></tr>
     <tr><td class="n">8</td><td>Submit minutes, rules and the form; register within 30 days</td><td class="w">Weeks 7–10</td></tr>
   </table>
 
-  <h2><span>9</span>What has been done so far</h2>
+  <h2><span>10</span>What has been done so far</h2>
   <ul>
     <li>We visited three institutions that support children in Bahir Dar and spoke with their staff. One of them cares for around 40 children and teenagers aged 8 to 20.</li>
     <li>They asked us to bring a letter of support from your office before starting any work.</li>
     <li>The website and sign-up are running, and the work is reported openly every week.</li>
   </ul>
 
-  <h2><span>10</span>Resources and transparency</h2>
+  <h2><span>11</span>Resources and transparency</h2>
   <ul>
     <li>The work is voluntary. Members are not paid.</li>
-    <li>Every gift of money or materials is recorded with a receipt, reported to members and the public, and audited.</li>
+    <li>Every gift of money or materials is recorded with a receipt, reported to members, the advisory council and the public, and audited.</li>
     <li>After registration, money moves only through a bank account in the association’s name.</li>
   </ul>
 
-  <h2><span>11</span>What we ask of your office</h2>
-  <ol class="ask">
-    <li>A <b>letter of support</b> that allows us to work as volunteers with institutions that care for children.</li>
-    <li>Professional advice and follow-up as we form and register the association.</li>
-    <li>A child protection briefing for our volunteers.</li>
-    <li>A named officer to whom we report every three months.</li>
-  </ol>
+  <div class="end">
+    <h2><span>12</span>What we ask of your office</h2>
+    <ol class="ask">
+      <li>A <b>letter of support</b> that allows us to work as volunteers with orphanages and support institutions.</li>
+      <li>Professional advice and follow-up as we form and register the association.</li>
+      <li>A child protection briefing for our participants.</li>
+      <li>Your suggestions of elders and parent representatives who could serve on the advisory council.</li>
+      <li>A named officer to whom we report every three months.</li>
+    </ol>
+  </div>
 
-  <h2><span>12</span>Annex: outline of the draft founding rules</h2>
-  <p>Following the model in section 10.1 of the manual: Article 1 name, address and purpose · Article 2 membership (conditions, fee, responsibilities) · Article 3 leaders and their election · Article 4 committees · Article 5 paid staff (none for now) · Article 6 programme · Article 7 fixed and movable property · Article 8 meeting procedure · Article 9 entry into force · Article 10 amendment. The number of meetings, quorum, election procedure and fee amount go in the internal rules (section 10.2). <b>The child safeguarding rules form part of the founding rules.</b></p>
-
-  <div class="sign">
-    <div>Name</div><div>Signature</div>
-    <div>Phone / email</div><div>Date</div>
+  <div class="end">
+    <h2><span>13</span>Annex: outline of the draft founding rules</h2>
+    <p>Following the model in section 10.1 of the manual: Article 1 name, address and purpose · Article 2 membership (conditions, fee, responsibilities) · Article 3 leaders and their election · Article 4 committees and the advisory council · Article 5 paid staff (none for now) · Article 6 programme · Article 7 fixed and movable property · Article 8 meeting procedure · Article 9 entry into force · Article 10 amendment. The number of meetings, quorum, election procedure and fee amount go in the internal rules (section 10.2). <b>The child safeguarding rules form part of the founding rules.</b></p>
+    <div class="sign">
+      <div>Name</div><div>Signature</div>
+      <div>Phone / email</div><div>Date</div>
+    </div>
   </div>
 </section>
 </body>
