@@ -107,6 +107,9 @@ export const letters: Letter[] = [letter, sunday1];
 /** The letters people can see: drafts only while the preview flag is on. */
 export const visibleLetters = (preview: boolean): Letter[] => letters.filter((l) => preview || !l.draft);
 
+/** The newest letter people can see: what the home page points at. */
+export const latestLetter = (preview: boolean): Letter => visibleLetters(preview).at(-1) ?? letter;
+
 export const hasVideo = (l: Letter) => l.body.some((b) => b.type === "video");
 
 /** "6 min read" for a written letter, "a video letter" when the video is the letter. */

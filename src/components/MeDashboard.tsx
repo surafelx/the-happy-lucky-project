@@ -174,7 +174,7 @@ export function MeDashboard() {
         <div className="apanel narrow">
           <div className="ahead"><h2>From the centre</h2></div>
           <div className="msgs">{data.messages.map((m, i) => <div className="msg" key={i}>{m.text}<small>{m.from} · {new Date(m.at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</small></div>)}</div>
-          <div className="office-actions"><span className="abtn">Club plan (PDF)</span><Link className="abtn" href="/sundays/sunday-0">Read Sunday 0</Link></div>
+          <div className="office-actions"><span className="abtn">Club plan (PDF)</span><Link className="abtn" href="/sundays">Read the Sunday letters</Link></div>
         </div>
       ) : null}
     </AdminShell>

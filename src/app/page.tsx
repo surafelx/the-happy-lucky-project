@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { letter } from "@/data/letter";
+import { latestLetter } from "@/data/letter";
 import { JoinForm } from "@/components/JoinForm";
 import { JoinCount } from "@/components/JoinCount";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
@@ -9,6 +9,7 @@ import { Logo } from "@/components/SvgDefs";
 const pop = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
 export default function HomePage() {
+  const latest = latestLetter(MENTOR_FORM_ENABLED);
   return (
     <div className="page page-enter">
       <header className="hero full">
@@ -30,8 +31,8 @@ export default function HomePage() {
               Sunday, and it is still becoming.
             </p>
             <div className="hero-cta pop" style={pop(3)}>
-              <Link className="btn rose" href={`/sundays/${letter.slug}`}>
-                Read {letter.title}
+              <Link className="btn rose" href={`/sundays/${latest.slug}`}>
+                Read {latest.title}
               </Link>
               {MENTOR_FORM_ENABLED ? (
                 <Link className="btn gold" href="/mentor">

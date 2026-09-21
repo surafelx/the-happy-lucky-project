@@ -31,6 +31,8 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
+  // The site's own address, so shared links and previews point at the new domain.
+  metadataBase: new URL("https://www.happyluckychacho.org"),
   title: { default: "Happy Lucky Chacho", template: "%s · Happy Lucky Chacho" },
   description:
     "A project about childhood, luck, and the people who show up. It began as a letter on a Sunday. Come and build it with me.",

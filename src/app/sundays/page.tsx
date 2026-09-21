@@ -24,7 +24,7 @@ export default function SundaysPage() {
           </p>
         </div>
         <div className="stories">
-          {visibleLetters(MENTOR_FORM_ENABLED).map((l, i) => (
+          {[...visibleLetters(MENTOR_FORM_ENABLED)].reverse().map((l, i) => (
             <Link
               key={l.slug}
               className={`story-card pop${i === 0 ? " feature" : ""}`}

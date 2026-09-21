@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { dbConfigured } from "@/lib/db";
+import { latestLetter } from "@/data/letter";
 import { JOIN_BASE } from "@/lib/join-count";
 import { addSubscriber, countSubscribers } from "@/lib/store";
 
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
   }
 
   const at = new Date().toISOString();
-  const source = "sunday-0";
+  const source = latestLetter(false).slug; // which letter was current when they joined
   const sheets = sheetsConfig();
   const webhook = process.env.JOIN_WEBHOOK_URL?.trim();
 
