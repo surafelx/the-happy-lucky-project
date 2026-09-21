@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { hasVideo, readingMinutes, visibleLetters } from "@/data/letter";
+import { hasVideo, letterLength, visibleLetters } from "@/data/letter";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 
 export const metadata: Metadata = {
@@ -39,7 +39,7 @@ export default function SundaysPage() {
                 <span className="kicker">{l.date}</span>
                 <h3>{l.title}</h3>
                 <p>{l.summary}</p>
-                <span className="meta">{readingMinutes(l)} min read</span>
+                <span className="meta">{letterLength(l)}</span>
               </div>
             </Link>
           ))}

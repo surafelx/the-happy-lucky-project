@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { hasVideo, readingMinutes, visibleLetters } from "@/data/letter";
+import { hasVideo, letterLength, visibleLetters } from "@/data/letter";
 import { JoinForm } from "@/components/JoinForm";
 import { JoinCount } from "@/components/JoinCount";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
@@ -48,7 +48,7 @@ export default async function LetterPage({ params }: { params: Promise<Params> }
           <div className="byline pop" style={pop(2)}>
             <i>S</i>
             <span>
-              <b>Surafel</b> · {l.date} · {readingMinutes(l)} min read
+              <b>Surafel</b> · {l.date} · {letterLength(l)}
             </span>
           </div>
 

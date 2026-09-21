@@ -68,20 +68,36 @@ export const letter: Letter = {
 };
 
 /**
- * Sunday 1. Put the YouTube id in the video block, replace the placeholder
- * paragraphs with the letter, then delete `draft: true` to publish.
+ * Sunday 1: the first letter that is also a video. Written from Bahir Dar.
+ * People are left unnamed on purpose; organisations are named as the author met them.
  */
 export const sunday1: Letter = {
   slug: "sunday-1",
   title: "Sunday 1",
   date: "September 20, 2026",
-  summary: "The second letter, and the first one you can watch as well as read.",
-  draft: true,
+  summary:
+    "A week in Bahir Dar: a wrong pin on the map, three bajaj rides, and the first children's homes I walked into. And why a referral, and being a role model, come before anything else.",
   body: [
-    { type: "video", youtubeId: "", title: "Sunday 1", caption: "Watch first, or read first. Both say the same thing.", tone: "rose" },
-    p("[Draft] The letter for Sunday 1 goes here. Paragraphs are plain text; the important lines get their own paragraph with key()."),
-    key("[Draft] A key line, on its own."),
-    p("[Draft] Another paragraph. The video above is a YouTube embed that loads only when someone presses play."),
+    { type: "video", youtubeId: "_SG_nWzx8ro", title: "Sunday 1", tone: "rose" },
+    p("I am in [[Bahir Dar]]. I didn't plan to be here when I first started this, and I don't even know if I'm staying. That stalled the first couple of days of the week for me. But that is not going to stop the dream."),
+    p("I realise I'm a bit flawed myself, because it took me until Friday to finally decide what I could do. I went out after a long, sleepless night and went straight to Google to look for charities that could be a good fit for Happy Lucky Chacho. My idea was to wing it."),
+    p("I got out of my hotel and took the first bajaj I saw to a place pinned on the map as New Day Children's Centre. I went to the exact location, and to my utter disappointment it was a youth centre. You know, one of those centres you'd find in every woreda. You can play pool, drink coffee, learn Taekwondo. Obviously this was not it. I checked the website and the Google profile, only to find that the last updates were three years old. No local phone number, no real way of contacting them."),
+    p("I still went inside, and I found a small office with a sign that said Bahir Dar Borderless Charity Association. A man was sitting there preparing the first gursha of what looked like his breakfast. I apologised for interrupting him and said አሁን ነው የበላሁት to all his እንብላs and ኧረ ተውs. I told him what I was trying to do, and he immediately started talking about a place called [[Grace]]."),
+    p("So I went back out and found the same bajaj waiting for me at the door. I mentioned the name, the driver knew it straight away, and off we went. When we arrived I could see a big compound with a couple of buildings, and little kids sitting on little chairs far ahead inside it. I didn't go in. The guard stopped me and told me there would be no one in the offices until eight thirty."),
+    p("I left, got into another bajaj, and sat in the back of it for almost ten minutes trying to figure out where to go. See, the thing about me is that I often just tell everyone near me my thoughts. What I'm doing, what I'm trying to do. It's like scribbling your thoughts down until they become something coherent."),
+    key("I bounce them off people so they sound less absurd and more possible."),
+    p("So I started telling the driver what was going on, and he mentioned a charity that had been here for longer. Not as big as Grace, but it had helped kids, mostly orphaned children. We ventured off there. I had found its website, which showed a sign out front. When I got there, the same sign from the photo had faded to white, and there was no way you could tell it had ever said anything."),
+    p("I asked the guard if there was anyone I could talk to, and he led me inside to the secretary's office."),
+    p("I think the hardest part of any of this is the pitching. Telling people why you came, without acting like you have some hidden motive, or like you're better than anyone. I rambled on about how I, and people my age, feel like we could help by tutoring, or by teaching a skill we have learned."),
+    key("And I told them that you were a part of this. Yes, you, the one reading this. I told them you had a role to play."),
+    p("He told me they had around forty kids. The youngest is eight and the oldest is twenty. He told me the organisation had survived for __forty years__. And honestly, as obscure and as mysterious as the place looked, it looked like it was thriving."),
+    p("I set an appointment with the operations manager for Monday, and then we just walked around the compound. He showed me the dorms and the auditorium. He told me the kids use the place for sleeping and eating, and that their school and their learning happen outside. I asked what they needed, and he told me they accept donations."),
+    p("When I went back to both charities, I was told the same thing: I need a referral first, something from the Women and Children's Affairs office, before I can work on anything. Which totally makes sense."),
+    key("These are children, and keeping them safe comes before anything we want to do for them."),
+    p("That is what safeguarding means. Nobody should be able to walk in off the street and be around kids just because they say they want to help, and that includes me. So I will get the referral, and anyone who comes with me will go through the same door."),
+    p("And the first thing, before tutoring, before any skill, is to be a {{role model}}. How you care for someone. How you speak to them. How you show up. Whatever you hope to see in them, you have to do yourself first."),
+    p("On Saturday night I discovered one more place, [[One Heart Wholeness Center]], and on Sunday morning I texted the woman behind it."),
+    p("So the plan for tomorrow is the Women and Children's Affairs office first, and then back again to all three charities, if I have enough time before my work shift."),
     { type: "sign", text: "See you next Sunday." },
   ] as Block[],
 };
@@ -92,6 +108,13 @@ export const letters: Letter[] = [letter, sunday1];
 export const visibleLetters = (preview: boolean): Letter[] => letters.filter((l) => preview || !l.draft);
 
 export const hasVideo = (l: Letter) => l.body.some((b) => b.type === "video");
+
+/** "6 min read" for a written letter, "a video letter" when the video is the letter. */
+export const letterLength = (l: Letter): string => {
+  const words = l.body.map((b) => ("text" in b ? b.text : "")).join(" ").split(/\s+/).filter(Boolean).length;
+  if (hasVideo(l) && words < 120) return "a video letter";
+  return hasVideo(l) ? `${readingMinutes(l)} min read, with a video` : `${readingMinutes(l)} min read`;
+};
 
 export const readingMinutes = (l: Letter) =>
   Math.max(2, Math.round(l.body.map((b) => ("text" in b ? b.text : "")).join(" ").split(/\s+/).length / 180));

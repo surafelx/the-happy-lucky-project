@@ -1280,3 +1280,6 @@ body:has(.admin-page){padding-bottom:0}
 @media (max-width:600px){.aimport{grid-template-columns:minmax(0,1fr)}}
 .join-next{font-size:.88rem;font-weight:700;color:var(--rose-deep)}
 .join-next.mine{color:var(--teal-deep)}
+
+/* Amharic inside a letter: name the Ethiopic fonts each platform ships, after Poppins. */
+.letter{font-family:var(--font-poppins),Poppins,"Noto Sans Ethiopic","Kefa","Ebrima","Nyala","Segoe UI",sans-serif}
