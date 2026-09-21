@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Happy Lucky Chacho · Mentorship guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Ethiopic:wght@400;600;700&family=Poppins:wght@400;500;600;700&display=block" rel="stylesheet" />
+<style>
+  /* A4, printed with headless Chrome (--print-to-pdf). The wordmark is an image so printing can never drop the display font. */
+  @page{size:A4;margin:15mm 16mm 17mm;@bottom-left{content:"Happy Lucky Chacho · happyluckychacho.org";font:500 7.6pt Poppins,sans-serif;color:#7A7477}@bottom-right{content:counter(page) " / " counter(pages);font:600 8pt Poppins,sans-serif;color:#7A7477}}
+  :root{--ink:#1F1A1C;--ink-2:#4F484B;--rose:#E47FC8;--rose-deep:#C75AA8;--rose-soft:#FBE9F5;--teal:#4B9B9D;--teal-deep:#2F7476;--teal-soft:#E2F2F1;--gold:#F3BC29;--gold-soft:#FFF4D1;--soft:#F6FFFA;--line:#D5E0DB}
+  *{box-sizing:border-box}
+  html{font-size:10.1pt}
+  body{margin:0;color:var(--ink);font-family:"Noto Sans Ethiopic","Ebrima","Nyala",Poppins,sans-serif;line-height:1.58;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  [lang=en]{font-family:Poppins,"Segoe UI",sans-serif;line-height:1.46;font-size:9.35pt}
+  [lang=en] table{font-size:8.8pt}[lang=en] .who ul,[lang=en] .brief div{font-size:8.7pt}[lang=en] h2{font-size:11.4pt;margin-top:12px}
+  p{margin:0 0 6px;orphans:3;widows:3}
+  ul,ol{margin:2px 0 7px;padding-left:1.35em}
+  li{margin:0 0 2.5px}
+
+  .cover{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center;padding:11px 16px;border:2.2px solid var(--ink);border-radius:16px;background:var(--soft);box-shadow:4px 4px 0 var(--gold);margin-right:4px}
+  .cover svg{width:60px;height:60px}
+  .cover img{height:25px;display:block}
+  .cover p{margin:4px 0 0;font-size:8.8pt;color:var(--ink-2)}
+  h1{font-size:15.5pt;line-height:1.28;margin:15px 0 3px}
+  .sub{color:var(--ink-2);margin:0 0 10px;font-size:9.2pt}
+  .to{padding:4px 0;margin:9px 0 11px;font-size:9.8pt;display:grid;grid-template-columns:auto 1fr;gap:3px 10px}
+  .to b{white-space:nowrap}
+  .fill{display:inline-block;min-width:9em;border-bottom:1.1px solid var(--ink)}
+
+  .brief{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 0 6px;break-inside:avoid}
+  .brief div{border:1.6px solid var(--ink);border-radius:12px;padding:7px 10px;font-size:9.2pt;line-height:1.45}
+  .brief div:nth-child(1){background:var(--teal-soft)}.brief div:nth-child(2){background:var(--gold-soft)}.brief div:nth-child(3){background:var(--rose-soft)}
+  .brief b{display:block;font-size:8.2pt;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin-bottom:1px}
+
+  h2{font-size:12pt;margin:14px 0 5px;padding-bottom:3px;border-bottom:1.8px solid var(--line);break-after:avoid;display:flex;align-items:center;gap:.5em}
+  h2 span{flex:none;display:inline-grid;place-items:center;width:1.7em;height:1.7em;border-radius:50%;background:var(--gold);border:1.5px solid var(--ink);font:700 9pt Poppins,sans-serif}
+  h3{font-size:10.1pt;margin:8px 0 2px;color:var(--teal-deep);break-after:avoid}
+
+  table{width:100%;border-collapse:collapse;margin:5px 0 9px;font-size:9.3pt}
+  tr{break-inside:avoid}
+  thead{display:table-header-group}
+  th,td{border:1px solid var(--line);padding:4.5px 7px;text-align:left;vertical-align:top}
+  th{background:var(--soft);font-weight:700}
+  td.n,th.n{width:2.1em;text-align:center;font-family:Poppins,sans-serif;font-weight:600}
+  td.w,th.w{width:23%}
+  td.k{width:27%;font-weight:600}
+
+  .who{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:6px 0 9px}
+  .who div{border:1.6px solid var(--ink);border-radius:13px;padding:8px 11px 5px;break-inside:avoid;background:#fff;border-top-width:6px}
+  .who div:nth-child(1){border-top-color:var(--rose)}.who div:nth-child(2){border-top-color:var(--gold)}.who div:nth-child(3){border-top-color:var(--teal)}.who div:nth-child(4){border-top-color:var(--ink)}
+  .who b{display:block;font-size:10.3pt;margin-bottom:2px}
+  .who ul{font-size:9.2pt;margin-bottom:3px}
+
+  .box{border:1.8px solid var(--ink);border-radius:13px;padding:8px 12px;margin:7px 0 9px;background:var(--gold-soft);break-inside:avoid}
+  .box.rose{background:var(--rose-soft)}
+  .box b.t{display:block;margin-bottom:1px}
+  .ask li{margin-bottom:4px}
+  .end{break-inside:avoid}
+  .sign{display:grid;grid-template-columns:1fr 1fr;gap:6px 28px;margin-top:10px}
+  .sign div{border-bottom:1.2px solid var(--ink);padding:15px 0 2px;font-size:9pt;color:var(--ink-2)}
+  .note{font-size:8.4pt;color:var(--ink-2);margin-top:9px}
+  .en{break-before:page}
+</style>
+<style>
+  /* guide-only additions */
+  .plans{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:6px 0 9px}
+  .plan{border:1.6px solid var(--ink);border-radius:13px;padding:8px 11px 6px;break-inside:avoid;background:#fff;border-top-width:6px}
+  .plan.t1{border-top-color:var(--gold)}.plan.t2{border-top-color:var(--teal)}.plan.t3{border-top-color:var(--rose)}.plan.t4{border-top-color:var(--ink)}
+  .plan h4{margin:0;font-size:10.6pt;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+  .plan h4 small{font-weight:600;font-size:8.2pt;color:var(--teal-deep);white-space:nowrap}
+  .plan p{margin:2px 0 3px;font-size:8.8pt}
+  .plan .row{display:grid;grid-template-columns:5.6em 1fr;gap:1px 6px;font-size:8.6pt;margin:0}
+  .plan .row b{color:var(--ink-2);font-weight:600}
+  .steps{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:6px 0 9px;counter-reset:s;break-inside:avoid}
+  .steps div{counter-increment:s;border:1.5px solid var(--ink);border-radius:11px;padding:16px 7px 6px;font-size:8.3pt;line-height:1.35;position:relative;background:var(--soft)}
+  .steps div::before{content:counter(s);position:absolute;top:-9px;left:8px;width:19px;height:19px;border-radius:50%;background:var(--gold);border:1.5px solid var(--ink);display:grid;place-items:center;font:700 8pt Poppins,sans-serif}
+  .steps b{display:block;font-size:8.8pt}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:4px 22px}
+  .two ul{margin-top:0}
+  .tag{display:inline-block;border:1.2px solid var(--ink);border-radius:999px;padding:0 7px;font-size:7.8pt;font-weight:600;background:var(--gold-soft);margin-left:4px}
+  [lang=am]{font-family:"Noto Sans Ethiopic","Ebrima","Nyala",sans-serif;font-size:10pt;line-height:1.6}
+  [lang=am] table{font-size:9.2pt}
+  section[lang=en]{font-size:9.9pt}section[lang=en] table{font-size:9.2pt}section[lang=en] .brief div{font-size:9pt}
+  table.keep{break-inside:avoid}.plan p{font-size:9.1pt}.plan .row{font-size:8.9pt}.steps div{font-size:8.5pt}
+</style>
+</head>
+<body>
+<section lang="en">
+  <div class="cover">
+    <svg viewBox="-8 -8 116 116" aria-hidden="true">
+      <g transform="translate(50 50)" fill="#4B9B9D" stroke="#E47FC8" stroke-width="3.5" stroke-linejoin="round">
+        <path id="leaf" d="M0 0C-14-9-27-21-23-34C-20-44-8-46 0-38C8-46 20-44 23-34C27-21 14-9 0 0Z" transform="rotate(-45) scale(1.12)"/>
+        <use href="#leaf" transform="rotate(90)"/><use href="#leaf" transform="rotate(180)"/><use href="#leaf" transform="rotate(270)"/>
+      </g>
+      <circle cx="50" cy="50" r="26" fill="#F3BC29" stroke="#E47FC8" stroke-width="3.5"/>
+      <circle cx="41.5" cy="45" r="2.6" fill="#E47FC8"/><circle cx="58.5" cy="45" r="2.6" fill="#E47FC8"/>
+      <path d="M39.5 56.5q10.5 10 21 0M38 55.5h3M59 55.5h3" fill="none" stroke="#E47FC8" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <img src="wordmark.png" alt="Happy Lucky Chacho" />
+      <p>Mentorship guide · happyluckychacho.org · Bahir Dar</p>
+    </div>
+  </div>
+
+  <h1>The mentorship guide</h1>
+  <p class="sub">The ways to show up, what each one asks of you, and what it can do for a child · September 2026 · first edition</p>
+
+  <div class="brief">
+    <div><b>Give time</b>Six plans, from one afternoon to a full year. Pick the one your life can actually hold.</div>
+    <div><b>Give monthly</b>Four supporter plans for people who can’t be in the room but want to keep it running.</div>
+    <div><b>Non-negotiable</b>Children’s safety first. Everyone is screened, briefed and never alone with a child.</div>
+  </div>
+
+  <h2><span>1</span>What a mentor is here</h2>
+  <p>A mentor at Happy Lucky Chacho is not a teacher, a sponsor or a saviour. You are an older brother or sister who shows up when you said you would. Before tutoring, before any skill, <b>the first job is to be a role model</b>: how you care for someone, how you speak, how you keep your word. Whatever you hope to see in a child, you have to do yourself first.</p>
+  <p>The honest promise is small and real. One reliable adult, over time, changes what a child expects from the world. We would rather have you for one hour every week for a year than for a whole weekend once.</p>
+
+  <h2><span>2</span>Give time: the mentor plans</h2>
+  <p>These match the choices on the sign-up form. You can change plan at any time. The only thing we ask is that you finish what you started with the children who were expecting you.</p>
+  <div class="plans">
+    <div class="plan t1"><h4>Spark <small>one-time workshop</small></h4>
+      <p>One afternoon on something you know well: how a phone works, how to draw a face, what a nurse does all day.</p>
+      <div class="row"><b>Time</b><span>2–3 hours, once</span><b>Screening</b><span>ID, code of conduct, briefing. Staff in the room.</span><b>Helps with</b><span>Curiosity and exposure. A child meets a job or an idea they did not know existed.</span></div></div>
+    <div class="plan t2"><h4>Monthly <small>monthly workshop</small></h4>
+      <p>The same group once a month, building one skill across a school term.</p>
+      <div class="row"><b>Time</b><span>3 hours a month, for at least 3 months</span><b>Screening</b><span>Full: ID, two referees, code of conduct, briefing</span><b>Helps with</b><span>A real skill with a finish line: a first program, a song, a short story, a small business plan.</span></div></div>
+    <div class="plan t3"><h4>Weekly <small>weekly group mentor</small></h4>
+      <p>You lead or co-lead a Sunday club: reading, coding, art, science or the homework hour.</p>
+      <div class="row"><b>Time</b><span>2 hours a week, for at least one term</span><b>Screening</b><span>Full, plus one Sunday shadowing another mentor</span><b>Helps with</b><span>Schoolwork, reading level and routine. The children know who is coming on Sunday.</span></div></div>
+    <div class="plan t4"><h4>Big sibling <small>long-term mentor</small></h4>
+      <p>You stay with the same small group for a year and know each child by name, strengths and worries.</p>
+      <div class="row"><b>Time</b><span>2–3 hours a week, for 6 to 12 months</span><b>Screening</b><span>Full, an interview, and a check-in with the office every 3 months</span><b>Helps with</b><span>Confidence, staying in school, and the big decisions: what to study, where to apply, what comes after the home.</span></div></div>
+    <div class="plan t2"><h4>Remote <small>help remotely</small></h4>
+      <p>For people outside Bahir Dar or abroad. Always through the institution’s staff, never one-to-one with a child.</p>
+      <div class="row"><b>Time</b><span>1 hour a week, online</span><b>Screening</b><span>Full. Group calls only, with staff present.</span><b>Helps with</b><span>English practice, university and scholarship guidance, reviewing applications, career talks.</span></div></div>
+    <div class="plan t1"><h4>Behind the scenes <small>materials and events</small></h4>
+      <p>You never need to be in the room. You make the worksheets, plan the showcase, find the projector.</p>
+      <div class="row"><b>Time</b><span>Flexible, a few hours a month</span><b>Screening</b><span>ID and code of conduct</span><b>Helps with</b><span>Everything the mentors in the room rely on: lesson material, event days, transport, photos with consent.</span></div></div>
+  </div>
+
+  <h2><span>3</span>What you share, and what it can help with</h2>
+  <table>
+    <thead><tr><th>If you can share</th><th>You would join</th><th>What it can do for a child</th></tr></thead>
+    <tr><td class="k">Technology, programming, engineering</td><td>Coding club</td><td>Typing, logic, a first program. Proof that they can build something, not only use it.</td></tr>
+    <tr><td class="k">Languages, writing</td><td>Reading club</td><td>Reading level, spoken English, the confidence to read aloud and to write their own story.</td></tr>
+    <tr><td class="k">Art, music</td><td>Art club</td><td>A way to say things that are hard to say. Something finished to show at the monthly showcase.</td></tr>
+    <tr><td class="k">Science, mathematics, medicine</td><td>Science corner</td><td>Exam subjects made less frightening. Answers to “why”, and a picture of what studying science leads to.</td></tr>
+    <tr><td class="k">Business, entrepreneurship</td><td>Homework hour and workshops</td><td>Money sense, planning, and the idea that work can be something you create.</td></tr>
+    <tr><td class="k">Career and university guidance</td><td>Big sibling, remote</td><td>The older children’s questions: what to study, how to apply, what life after the home looks like.</td></tr>
+  </table>
+  <p>What mentoring cannot do: replace a parent, fix a school, or promise an outcome. We measure ourselves by showing up, not by miracles.</p>
+
+  <h2><span>4</span>The mentor’s path</h2>
+  <div class="steps">
+    <div><b>Sign up</b>Tell us what you can share and how.</div>
+    <div><b>Screening</b>ID, two referees, code of conduct.</div>
+    <div><b>Briefing</b>Child protection session.</div>
+    <div><b>Shadow</b>One Sunday beside a mentor.</div>
+    <div><b>Start</b>Your own club or group.</div>
+    <div><b>Badge</b>After induction and four Sundays.</div>
+  </div>
+
+  <div class="end">
+  <h2><span>5</span>Give monthly: the supporter plans</h2>
+  <div class="box"><b class="t">Opens after registration</b>Monthly giving starts once the association is registered and has a bank account in its own name. Until then we only run one-off campaigns with published receipts. The amounts below are <b>examples to be confirmed against real prices</b> before launch.</div>
+  <table class="keep">
+    <thead><tr><th>Plan</th><th class="w">Each month</th><th>What it keeps running</th></tr></thead>
+    <tr><td class="k">Pencil</td><td class="w">100 birr</td><td>Exercise books and pens for one child.</td></tr>
+    <tr><td class="k">Club</td><td class="w">300 birr</td><td>One club’s supplies for a month: paper, paint, printed worksheets, science materials.</td></tr>
+    <tr><td class="k">Sunday</td><td class="w">750 birr</td><td>One full Sunday: snacks for the children and transport for the mentors.</td></tr>
+    <tr><td class="k">Cornerstone</td><td class="w">2,000 birr</td><td>The running costs that nobody likes to fund: data, printing, a shared laptop’s repairs, the showcase day.</td></tr>
+  </table>
+  </div>
+  <div class="two">
+    <ul>
+      <li>Paid by Telebirr or bank transfer. No card details are ever taken on the website.</li>
+      <li>Every birr gets a receipt, and the receipts are published.</li>
+    </ul>
+    <ul>
+      <li>Cancel any month, no questions. Your name stays private if you ask.</li>
+      <li>Money never goes to a child or a mentor directly. It goes through the institution.</li>
+    </ul>
+  </div>
+
+  <h2><span>6</span>The rules everyone keeps</h2>
+  <div class="two">
+    <ul>
+      <li>You are never alone with a child. Work happens in groups, with staff or a guardian present.</li>
+      <li>Only mentors aged 18 and over work directly with children.</li>
+      <li>No photos, names or stories of children without written consent.</li>
+    </ul>
+    <ul>
+      <li>No gifts, money or private contact (phone, social media) with a child.</li>
+      <li>Any worry is reported the same day to the institution and to our safeguarding lead.</li>
+      <li>If you must stop, tell us first. Children notice who disappears.</li>
+    </ul>
+  </div>
+
+  <div class="end">
+    <h2><span>7</span>How to start</h2>
+    <p>Join at <b>happyluckychacho.org</b> and tell us which plan fits your life. If you are not sure, choose “not sure yet” and we will talk it through. Parents, guardians and elders are welcome too, as advisers and as the people who keep us honest.</p>
+  </div>
+</section>
+
+<!-- ======================= አማርኛ ማጠቃለያ ======================= -->
+<section lang="am" class="en">
+  <div class="cover">
+    <svg viewBox="-8 -8 116 116" aria-hidden="true">
+      <g transform="translate(50 50)" fill="#4B9B9D" stroke="#E47FC8" stroke-width="3.5" stroke-linejoin="round">
+        <use href="#leaf"/><use href="#leaf" transform="rotate(90)"/><use href="#leaf" transform="rotate(180)"/><use href="#leaf" transform="rotate(270)"/>
+      </g>
+      <circle cx="50" cy="50" r="26" fill="#F3BC29" stroke="#E47FC8" stroke-width="3.5"/>
+      <circle cx="41.5" cy="45" r="2.6" fill="#E47FC8"/><circle cx="58.5" cy="45" r="2.6" fill="#E47FC8"/>
+      <path d="M39.5 56.5q10.5 10 21 0M38 55.5h3M59 55.5h3" fill="none" stroke="#E47FC8" stroke-width="3" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <img src="wordmark.png" alt="Happy Lucky Chacho" />
+      <p>የአማካሪነት መመሪያ · አጭር ማጠቃለያ</p>
+    </div>
+  </div>
+
+  <h1>የአማካሪነት መመሪያ፦ አጭር ማጠቃለያ</h1>
+  <p class="sub">እንዴት መሳተፍ ይቻላል፣ እያንዳንዱ ምርጫ ምን ይጠይቃል፣ ለአንድ ሕፃንስ ምን ሊጠቅም ይችላል</p>
+
+  <div class="box"><b class="t">የመጀመሪያው ሥራ አርአያ መሆን ነው።</b>አማካሪ ማለት መምህር ወይም ለጋሽ አይደለም፤ ቃሉን የሚጠብቅ ታላቅ ወንድም ወይም እህት ነው። በሕፃናቱ ላይ ማየት የምንፈልገውን ነገር መጀመሪያ እኛ ራሳችን ማድረግ አለብን።</div>
+
+  <h2><span>1</span>ጊዜን መስጠት፦ የአማካሪነት ምርጫዎች</h2>
+  <table>
+    <thead><tr><th>ምርጫ</th><th class="w">የሚጠይቀው ጊዜ</th><th>ለሕፃኑ የሚጠቅመው</th></tr></thead>
+    <tr><td class="k">የአንድ ጊዜ ወርክሾፕ</td><td class="w">2–3 ሰዓት፣ አንድ ጊዜ</td><td>የማወቅ ጉጉት፤ ያላወቁትን ሙያ ወይም ሐሳብ ማየት</td></tr>
+    <tr><td class="k">ወርሃዊ ወርክሾፕ</td><td class="w">በወር 3 ሰዓት፣ ቢያንስ 3 ወር</td><td>መጨረሻ ያለው ክህሎት፦ የመጀመሪያ ፕሮግራም፣ ዘፈን፣ አጭር ታሪክ</td></tr>
+    <tr><td class="k">ሳምንታዊ የቡድን አማካሪ</td><td class="w">በሳምንት 2 ሰዓት፣ አንድ ሴሚስተር</td><td>የትምህርት ድጋፍ፣ የንባብ ደረጃ፣ እሑድ ማን እንደሚመጣ ማወቅ</td></tr>
+    <tr><td class="k">የረጅም ጊዜ አማካሪ (ታላቅ ወንድም/እህት)</td><td class="w">በሳምንት 2–3 ሰዓት፣ 6–12 ወር</td><td>በራስ መተማመን፣ በትምህርት መቀጠል፣ ስለ ወደፊት ውሳኔዎች ምክር</td></tr>
+    <tr><td class="k">በርቀት መርዳት</td><td class="w">በሳምንት 1 ሰዓት፣ በኢንተርኔት</td><td>የእንግሊዝኛ ልምምድ፣ የዩኒቨርሲቲና የስኮላርሺፕ ምክር (በቡድን፣ ሠራተኛ ባለበት)</td></tr>
+    <tr><td class="k">ከመድረክ ጀርባ</td><td class="w">በወር ጥቂት ሰዓት</td><td>የትምህርት መሣሪያ ማዘጋጀት፣ ዝግጅቶችን ማስተባበር</td></tr>
+  </table>
+
+  <h2><span>2</span>በየወሩ መደገፍ</h2>
+  <p class="sub">ማኅበሩ ከተመዘገበና በስሙ የባንክ ሒሳብ ከከፈተ በኋላ የሚጀመር፤ መጠኖቹ ምሳሌ ናቸው።</p>
+  <table>
+    <thead><tr><th>ዕቅድ</th><th class="w">በወር</th><th>የሚሸፍነው</th></tr></thead>
+    <tr><td class="k">እርሳስ</td><td class="w">100 ብር</td><td>ለአንድ ሕፃን ደብተርና እስክሪብቶ</td></tr>
+    <tr><td class="k">ክበብ</td><td class="w">300 ብር</td><td>የአንድ ክበብ የወር ቁሳቁስ</td></tr>
+    <tr><td class="k">እሑድ</td><td class="w">750 ብር</td><td>የአንድ እሑድ መክሰስና የአማካሪዎች ትራንስፖርት</td></tr>
+    <tr><td class="k">የማዕዘን ድንጋይ</td><td class="w">2,000 ብር</td><td>የሥራ ማስኬጃ፦ ዳታ፣ ኅትመት፣ የላፕቶፕ ጥገና፣ የዐውደ ርዕይ ቀን</td></tr>
+  </table>
+  <p>ክፍያ በቴሌብር ወይም በባንክ፤ እያንዳንዱ ብር ደረሰኝ አለው፣ ደረሰኙም በግልጽ ይታተማል። ገንዘብ በቀጥታ ለሕፃን ወይም ለአማካሪ አይሰጥም።</p>
+
+  <h2><span>3</span>ሁሉም የሚጠብቃቸው ደንቦች</h2>
+  <ul>
+    <li>ማንም ከአንድ ሕፃን ጋር ለብቻው አይሆንም፤ ሥራው በቡድንና ኃላፊነት ያለው አዋቂ ባለበት ይከናወናል።</li>
+    <li>ከሕፃናት ጋር በቀጥታ የሚሠሩት ዕድሜያቸው 18 ዓመትና ከዚያ በላይ የሆኑ ብቻ ናቸው፤ ሁሉም መታወቂያና ሁለት ምስክር ያቀርባል።</li>
+    <li>ያለ ጽሑፍ ፈቃድ የሕፃናት ፎቶ፣ ስም ወይም ታሪክ አይታተምም፤ ስጦታ፣ ገንዘብ ወይም የግል ግንኙነት አይፈቀድም።</li>
+    <li>ማንኛውም ስጋት በዕለቱ ሪፖርት ይደረጋል። ማቆም ካለብዎት አስቀድመው ያሳውቁን፤ ሕፃናት የሚጠፋውን ሰው ያስተውላሉ።</li>
+  </ul>
+  <p><b>ለመጀመር፦</b> happyluckychacho.org</p>
+</section>
+</body>
+</html>
