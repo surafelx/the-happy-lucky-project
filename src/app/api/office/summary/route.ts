@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 import { DASHBOARDS_ENABLED, forbidden, notAvailable, officeAllowed } from "@/lib/guard";
 import { CAMPAIGN } from "@/data/campaign";
-import { daysUntil, isoDate, skillCounts, suggestMentors, weeklyCounts } from "@/lib/office";
-import { kidsTotal, readJoins, readMentors, readActivity, readPartners, readPledges, readReceipts, readSubscriptions, readRsvps, readSundays, readTasks } from "@/lib/store";
+import { daysUntil, isoDate, ledgerTotals, skillCounts, suggestMentors, weeklyCounts } from "@/lib/office";
+import { kidsTotal, readJoins, readMentors, readActivity, readGoals, readLedger, readPartners, readPledges, readSubscriptions, readRsvps, readSundays, readTasks } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +14,7 @@ export async function GET() {
   if (!(await officeAllowed())) return forbidden();
 
   const now = new Date();
-  const [joins, mentors, tasks, rsvps, ledger, partners, pledges, subs, reminders] = await Promise.all([readJoins(), readMentors(), readTasks(), readRsvps(), readReceipts(), readPartners(), readPledges(CAMPAIGN.key), readSubscriptions(), readActivity({ open: true, limit: 500 })]);
+  const [joins, mentors, tasks, rsvps, ledger, goals, partners, pledges, subs, reminders] = await Promise.all([readJoins(), readMentors(), readTasks(), readRsvps(), readLedger(), readGoals(), readPartners(), readPledges(CAMPAIGN.key), readSubscriptions(), readActivity({ open: true, limit: 500 })]);
   const today = isoDate(now);
   const sundays = await readSundays(mentors, now);
 
@@ -23,7 +23,8 @@ export async function GET() {
   const byStatus = { new: 0, contacted: 0, inducted: 0, active: 0 };
   for (const m of mentors) byStatus[m.status]++;
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const raisedThisMonth = ledger.receipts.filter((r) => new Date(r.at) >= monthStart).reduce((s, r) => s + r.amount, 0);
+  const raisedThisMonth = ledger.filter((e) => e.kind === "in" && new Date(e.occurredAt) >= monthStart).reduce((t, e) => t + e.amount, 0);
+  const books = ledgerTotals(ledger, goals);
 
   const thisSunday = sundays[0];
   const going = Object.entries(rsvps[thisSunday.date] ?? {}).filter(([, a]) => a === "yes").map(([id]) => id);
@@ -41,7 +42,9 @@ export async function GET() {
       supportersDue: subs.filter((x) => x.status === "active" && x.nextDue && daysUntil(x.nextDue, today) <= 0).length + subs.filter((x) => x.status === "pending").length,
       remindersDue: reminders.filter((a) => a.dueAt && daysUntil(a.dueAt, today) <= 0).length,
       requestsOpen: partners.filter((p) => p.status !== "done").length,
-      campaignsOpen: ledger.campaigns.length,
+      campaignsOpen: goals.filter((g) => g.status === "open").length,
+      balance: books.balance,
+      needed: books.needed,
       raisedThisMonth,
       yearTarget: 8_000_000,
     },
@@ -71,8 +74,6 @@ export async function GET() {
       notGoing: Object.entries(rsvps[s.date] ?? {}).filter(([, a]) => a === "no").length,
     })),
     thisSunday: { ...thisSunday, goingIds: going, kidsTotal: kidsTotal() },
-    receipts: ledger.receipts.slice(0, 6),
-    campaigns: ledger.campaigns,
     requests: partners.map((p) => ({
       id: p.id,
       at: p.at,

@@ -153,4 +153,43 @@ export const MIGRATIONS: { id: string; statements: string[] }[] = [
       `CREATE INDEX activity_due ON activity (due_at) WHERE done_at IS NULL`,
     ],
   },
+  {
+    id: "003_open_books",
+    statements: [
+      // What the money is for: a target, why it is needed and what will be done with it.
+      `CREATE TABLE goals (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        target INTEGER NOT NULL CHECK (target >= 0),
+        color TEXT NOT NULL,
+        about TEXT NOT NULL DEFAULT '',
+        plan TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'open' CHECK (status IN ('open', 'done')),
+        position SERIAL,
+        at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`,
+
+      // The public ledger, logged by hand in the office. Nothing here is connected to a bank.
+      // `ref` is the receipt number a giver is told; it never changes once given.
+      `CREATE TABLE ledger (
+        id SERIAL PRIMARY KEY,
+        ref TEXT NOT NULL DEFAULT '',
+        kind TEXT NOT NULL CHECK (kind IN ('in', 'out')),
+        amount INTEGER NOT NULL CHECK (amount > 0),
+        name TEXT NOT NULL,
+        anonymous BOOLEAN NOT NULL DEFAULT FALSE,
+        goal_id TEXT REFERENCES goals(id) ON DELETE SET NULL,
+        method TEXT NOT NULL DEFAULT '',
+        note TEXT NOT NULL DEFAULT '',
+        receipt_file TEXT REFERENCES files(id) ON DELETE SET NULL,
+        occurred_at TEXT NOT NULL,
+        at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        deleted_at TEXT
+      )`,
+      `CREATE INDEX ledger_when ON ledger (occurred_at DESC) WHERE deleted_at IS NULL`,
+      `CREATE INDEX ledger_ref ON ledger (ref)`,
+    ],
+  },
 ];

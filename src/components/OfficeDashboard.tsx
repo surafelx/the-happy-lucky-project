@@ -5,6 +5,7 @@ import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { OfficeActivity, Timeline } from "@/components/OfficeActivity";
+import { OfficeLedger } from "@/components/OfficeLedger";
 import { OfficePledges } from "@/components/OfficePledges";
 import { OfficeSupporters } from "@/components/OfficeSupporters";
 import { AdminShell, useHashTab } from "@/components/AdminShell";
@@ -24,15 +25,13 @@ type Request = {
 type Sunday = { date: string; kind: SundayKind; kidsExpected: number; slots: { time: string; title: string; lead: string }[]; going: number; notGoing: number };
 type Summary = {
   today: string;
-  kpis: { joined: number; joinedThisWeek: number; pool: number; byStatus: Record<MentorStatus, number>; requestsOpen: number; pledgesToVerify: number; supportersActive: number; supportersMonthly: number; supportersDue: number; remindersDue: number; campaignsOpen: number; raisedThisMonth: number; yearTarget: number };
+  kpis: { joined: number; joinedThisWeek: number; pool: number; byStatus: Record<MentorStatus, number>; requestsOpen: number; pledgesToVerify: number; supportersActive: number; supportersMonthly: number; supportersDue: number; remindersDue: number; campaignsOpen: number; raisedThisMonth: number; yearTarget: number; balance: number; needed: number };
   weekly: { week: string; count: number }[];
   skills: { skill: string; count: number }[];
   mentors: Mentor[];
   tasks: { id: string; text: string; sub?: string; done: boolean }[];
   sundays: Sunday[];
   thisSunday: Sunday & { goingIds: string[]; kidsTotal: number };
-  receipts: { id: string; donor: string; place: string; campaign: string; amount: number; at: string; color: string }[];
-  campaigns: { key: string; title: string; goal: number; raised: number; color: string }[];
   requests: Request[];
 };
 
@@ -45,7 +44,7 @@ const TABS = [
   { key: "pledges", label: "Pledges", icon: "🤝" },
   { key: "supporters", label: "Supporters", icon: "💛" },
   { key: "activity", label: "Activity", icon: "⚡" },
-  { key: "receipts", label: "Receipts", icon: "🧾" },
+  { key: "ledger", label: "Ledger", icon: "🧾" },
 ];
 const fmt = (n: number) => n.toLocaleString("en-US");
 const day = (iso: string, long = false) =>
@@ -168,7 +167,7 @@ export function OfficeDashboard() {
             <div className="akpi"><span>Joined (emails)</span><b className="num">{fmt(kpis.joined)}</b><em>+{kpis.joinedThisWeek} this week</em></div>
             <div className="akpi"><span>Mentor pool</span><b className="num">{fmt(kpis.pool)}</b><em>{kpis.byStatus.new} new · {kpis.byStatus.active} active</em></div>
             <div className="akpi"><span>Open requests</span><b className="num">{kpis.requestsOpen}</b><em>{newReqs} waiting for a reply</em></div>
-            <div className="akpi"><span>Raised this month</span><b className="num">{fmt(kpis.raisedThisMonth)} <small>ETB</small></b><em>example ledger</em></div>
+            <div className="akpi"><span>Raised this month</span><b className="num">{fmt(kpis.raisedThisMonth)} <small>ETB</small></b><em>balance {fmt(kpis.balance)} ETB</em></div>
           </div>
 
           <div className="apanel span2">
@@ -403,31 +402,7 @@ export function OfficeDashboard() {
       {tab === "supporters" ? <OfficeSupporters toast={toast} onChanged={() => void load()} /> : null}
       {tab === "activity" ? <OfficeActivity toast={toast} onChanged={() => void load()} /> : null}
 
-      {tab === "receipts" ? (
-        <div className="agrid">
-          <div className="apanel span2">
-            <div className="ahead"><h2>Latest receipts</h2><span className="quiet">example ledger until a payment provider is connected</span></div>
-            <div className="tblwrap">
-              <table className="atable">
-                <thead><tr><th>Receipt</th><th>Donor</th><th>For</th><th>Date</th><th className="r">Amount</th></tr></thead>
-                <tbody>
-                  {data.receipts.map((r) => (
-                    <tr key={r.id}><td className="mono">{r.id}</td><td>{r.donor}, {r.place}</td><td><i className="dot" style={{ background: r.color }} />{data.campaigns.find((c) => c.key === r.campaign)?.title}</td><td>{new Date(r.at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</td><td className="r num">{fmt(r.amount)} ETB</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div className="apanel">
-            <div className="ahead"><h2>Campaigns</h2></div>
-            <div className="camps one">
-              {data.campaigns.map((c) => (
-                <div key={c.key}><b className="sub">{c.title}</b><div className="bar-track"><b style={{ width: `${Math.min(100, (c.raised / c.goal) * 100)}%`, background: c.color }} /></div><span className="quiet num">{fmt(c.raised)} of {fmt(c.goal)} ETB · {Math.round((c.raised / c.goal) * 100)}%</span></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      {tab === "ledger" ? <OfficeLedger toast={toast} onChanged={() => void load()} /> : null}
     </AdminShell>
   );
 }

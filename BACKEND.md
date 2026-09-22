@@ -44,6 +44,24 @@ To use the hosted database from your laptop instead of the local one, put the sa
 - **The mentor dashboard (`/me`) stays local-only.** It signs people in by email alone. Before it goes on the internet it needs sign-in by a link sent to that email.
 - **Timestamps are ISO strings in TEXT columns**, so both drivers return identical values and they sort correctly as text.
 
+## The audit (the public ledger)
+
+`/audit` shows what the foundation has, what it needs and where every birr went, as a
+sky of stars: each goal is a constellation, each gift a star, each payment a hollow star.
+It is **not connected to any bank**. The office logs every entry by hand under **Ledger**.
+
+- **Balance** is money in minus money out. **Still needed** is the sum of what open goals
+  are short of their target; a goal marked done stops counting.
+- Start the ledger with one "in" entry named "Starting balance" for the money already held.
+- Every entry gets a receipt number (`HLP-YYMM-NNNN`) when it is logged. It never changes,
+  so a giver can be told it and search for it on the page.
+- Names show in full unless "They asked not to be named" is ticked. The ledger stores no
+  phone numbers or emails, so the public feed (`/api/ledger`) cannot leak them.
+- **Receipt photos are public** (`/api/ledger/receipt?ref=`). Cover phone and account
+  numbers before uploading. Deleting an entry is soft, like pledges: it leaves the page
+  and the totals but stays in the table.
+- The page polls every 15 seconds, so a new entry appears within that time, with confetti.
+
 ## The join counter
 
 `/api/join/count` returns `{ count, goal }`. The count is `JOIN_COUNT_BASE` (people from

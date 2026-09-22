@@ -3,7 +3,10 @@ import assert from "node:assert/strict";
 
 import {
   badgeProgress,
+  checkGoal,
+  checkLedgerEntry,
   checkPledge,
+  ledgerTotals,
   cleanReceiptLink,
   clubFor,
   isoDate,
@@ -199,4 +202,59 @@ test("daysUntil counts forward and backward", () => {
   assert.equal(daysUntil("2026-09-25", "2026-09-22"), 3);
   assert.equal(daysUntil("2026-09-22", "2026-09-22"), 0);
   assert.equal(daysUntil("2026-09-20", "2026-09-22"), -2);
+});
+
+test("ledger entries: money in keeps a hidden name, money out never hides who was paid", () => {
+  const now = new Date("2026-09-22T12:00:00Z");
+  const base = { kind: "in", amount: "1500.4", name: " Abebe Kebede ", anonymous: true, goalId: "g1", method: "telebirr", occurredAt: "2026-09-21T08:30:00Z" };
+  const ok = checkLedgerEntry(base, ["g1"], now);
+  assert.ok(ok.ok);
+  assert.deepEqual(ok.ok && ok.value, { kind: "in", amount: 1500, name: "Abebe Kebede", anonymous: true, goalId: "g1", method: "telebirr", note: "", occurredAt: "2026-09-21T08:30:00.000Z" });
+  const out = checkLedgerEntry({ ...base, kind: "out" }, ["g1"], now);
+  assert.equal(out.ok && out.value.anonymous, false);
+  assert.equal(checkLedgerEntry({ ...base, goalId: "" }, [], now).ok && true, true); // the general fund
+
+  assert.equal(checkLedgerEntry({ ...base, kind: "maybe" }, ["g1"], now).ok, false);
+  assert.equal(checkLedgerEntry({ ...base, amount: 0 }, ["g1"], now).ok, false);
+  assert.equal(checkLedgerEntry({ ...base, name: "A" }, ["g1"], now).ok, false);
+  assert.equal(checkLedgerEntry({ ...base, goalId: "gone" }, ["g1"], now).ok, false);
+  assert.equal(checkLedgerEntry({ ...base, method: "crypto" }, ["g1"], now).ok, false);
+  assert.equal(checkLedgerEntry({ ...base, occurredAt: "2026-09-25T00:00:00Z" }, ["g1"], now).ok, false); // the future
+  assert.equal(checkLedgerEntry({ ...base, occurredAt: "not a date" }, ["g1"], now).ok, false);
+});
+
+test("goals get a known colour and an open status unless told otherwise", () => {
+  const g = checkGoal({ title: "Books", target: "5000", color: "red" });
+  assert.ok(g.ok);
+  assert.equal(g.ok && g.value.color, "#F3BC29");
+  assert.equal(g.ok && g.value.status, "open");
+  assert.equal(checkGoal({ title: "B", target: 10 }).ok, false);
+  assert.equal(checkGoal({ title: "Books", target: -1 }).ok, false);
+});
+
+test("ledgerTotals: balance is in minus out, and only open goals count as still needed", () => {
+  const goals = [
+    { id: "books", target: 5000, status: "open" as const },
+    { id: "laptop", target: 30000, status: "open" as const },
+    { id: "trip", target: 1000, status: "done" as const },
+  ];
+  const t = ledgerTotals(
+    [
+      { kind: "in", amount: 6000, goalId: "books" }, // more than the target
+      { kind: "in", amount: 10000, goalId: "laptop" },
+      { kind: "in", amount: 500, goalId: null },
+      { kind: "out", amount: 4500, goalId: "books" },
+      { kind: "out", amount: 200, goalId: null },
+    ],
+    goals,
+  );
+  assert.equal(t.in, 16500);
+  assert.equal(t.out, 4700);
+  assert.equal(t.balance, 11800);
+  assert.equal(t.count, 5);
+  assert.equal(t.givers, 3);
+  assert.equal(t.needed, 20000); // books needs nothing, laptop 20000, the trip is done
+  assert.deepEqual(t.general, { raised: 500, spent: 200 });
+  const books = t.goals.find((g) => g.id === "books")!;
+  assert.deepEqual([books.raised, books.spent, books.remaining, books.pct], [6000, 4500, 0, 100]);
 });

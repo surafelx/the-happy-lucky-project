@@ -117,12 +117,39 @@ test("pledges: create, edit, prove, verify, delete", async () => {
   await assert.rejects(() => s.createPledge("a-year-covered", { ...fields, amount: 0 })); // the database itself refuses a zero pledge
 });
 
-test("receipts and messages seed once", async () => {
-  const a = await s.readReceipts();
-  const b = await s.readReceipts();
-  assert.equal(a.receipts.length, 40);
-  assert.equal(b.receipts.length, 40);
-  assert.equal(a.campaigns.reduce((t, c) => t + c.raised, 0), a.receipts.reduce((t, r) => t + r.amount, 0));
+test("the ledger starts empty, numbers receipts, and keeps the number through edits", async () => {
+  assert.deepEqual(await s.readLedger(), []); // no made-up entries: every line is real
+  const books = await s.createGoal({ title: "Reading club books", target: 5000, color: "#F3BC29", about: "", plan: "Buy 40 books.", status: "open" });
+  const gift = await s.addLedgerEntry(
+    { kind: "in", amount: 1500, name: "Abebe Kebede", anonymous: false, goalId: books.id, method: "telebirr", note: "", occurredAt: "2026-09-20T09:00:00.000Z" },
+    JPEG,
+    "2026-09-20T10:00:00.000Z",
+  );
+  assert.match(gift.ref, /^HLP-2609-\d{4}$/);
+  assert.equal(gift.receipt, `ledger-${gift.id}`);
+  assert.equal((await s.readLedgerReceipt(gift.ref))?.mime, "image/jpeg");
+
+  const paid = await s.addLedgerEntry({ kind: "out", amount: 400, name: "Kuraz bookshop", anonymous: false, goalId: books.id, method: "cash", note: "8 books", occurredAt: "2026-09-21T09:00:00.000Z" });
+  assert.notEqual(paid.ref, gift.ref);
+  assert.deepEqual((await s.readLedger()).map((e) => e.ref), [paid.ref, gift.ref]); // newest first
+
+  const edited = await s.editLedgerEntry(gift.id, { ...gift, amount: 2000 }, { removeReceipt: true });
+  assert.equal(edited?.ref, gift.ref);
+  assert.equal(edited?.amount, 2000);
+  assert.equal(edited?.receipt, null);
+  assert.equal(await s.readLedgerReceipt(gift.ref), null);
+
+  assert.equal(await s.deleteLedgerEntry(paid.id), true);
+  assert.equal(await s.deleteLedgerEntry(paid.id), false);
+  assert.deepEqual((await s.readLedger()).map((e) => e.ref), [gift.ref]);
+  assert.equal((await db.query("SELECT id FROM ledger WHERE id = $1", [paid.id])).length, 1); // still on record
+
+  const done = await s.updateGoal(books.id, { ...books, status: "done" });
+  assert.equal(done?.status, "done");
+  assert.equal(await s.updateGoal("nope", books), null);
+});
+
+test("messages seed once", async () => {
   assert.equal((await s.readMessages()).length, 3);
   assert.equal((await s.readMessages()).length, 3);
 });

@@ -1,18 +1,17 @@
 import Link from "next/link";
 
-import { latestLetter } from "@/data/letter";
 import { JoinForm } from "@/components/JoinForm";
-import { JoinCount } from "@/components/JoinCount";
+import { HomeStats } from "@/components/HomeStats";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 import { Logo } from "@/components/SvgDefs";
 
 const pop = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
+/** The home page: who we are in one line, the numbers (people and money together), and a way to join. */
 export default function HomePage() {
-  const latest = latestLetter(MENTOR_FORM_ENABLED);
   return (
     <div className="page page-enter">
-      <header className="hero full">
+      <header className="hero full home">
         <div className="wrap">
           <div>
             <Logo className="hero-logo pop" style={pop(0)} />
@@ -30,34 +29,26 @@ export default function HomePage() {
               A project about childhood, luck, and the people who show up. It began as a letter on a
               Sunday, and it is still becoming.
             </p>
-            <div className="hero-cta pop" style={pop(3)}>
-              <Link className="btn rose" href={`/sundays/${latest.slug}`}>
-                Read {latest.title}
-              </Link>
-              {MENTOR_FORM_ENABLED ? (
-                <Link className="btn gold" href="/mentor">
-                  Become a big sibling →
-                </Link>
-              ) : null}
+            <div className="pop" style={pop(3)}>
+              <HomeStats />
             </div>
             {MENTOR_FORM_ENABLED ? (
-              <p className="hero-note pop" style={pop(4)}>
-                Run a school, a children&apos;s home or a centre? <Link href="/partners">Ask the community for help →</Link>
-              </p>
+              <div className="hero-cta pop" style={pop(4)}>
+                <Link className="btn gold" href="/support">
+                  Support us
+                </Link>
+                <Link className="btn" href="/partners">
+                  Ask for help
+                </Link>
+              </div>
             ) : null}
           </div>
 
           <section id="join" className="join join-card pop" style={pop(2)} aria-labelledby="join-h">
             <span className="eyebrow">Come and build it with me</span>
-            <h2 id="join-h">Join</h2>
-            <p className="note">
-              Leave your email and you&apos;ll hear from us as Happy Lucky Chacho takes shape.
-            </p>
+            <h2 id="join-h">Join us</h2>
+            <p className="note">Leave your email and you&apos;ll hear from us when there is something real to share.</p>
             <JoinForm />
-            <JoinCount />
-            <p className="demo-note">
-              No newsletters for the sake of it. Just a note when there is something real to share.
-            </p>
           </section>
         </div>
       </header>

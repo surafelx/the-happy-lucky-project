@@ -317,3 +317,84 @@ export const daysUntil = (due: string, today: string) => Math.round((Date.parse(
 
 /** A date `days` after `from`, as YYYY-MM-DD. */
 export const addDays = (from: Date, days: number) => isoDate(new Date(from.getTime() + days * 864e5));
+
+// ---------- open books: the public ledger and its goals ----------
+export const LEDGER_KINDS = ["in", "out"] as const;
+export type LedgerKind = (typeof LEDGER_KINDS)[number];
+export const LEDGER_METHODS = ["telebirr", "bank", "cash", "other"] as const;
+export const METHOD_LABEL: Record<string, string> = { telebirr: "Telebirr", bank: "Bank transfer", cash: "Cash", other: "Other" };
+export const GOAL_STATUSES = ["open", "done"] as const;
+export type GoalStatus = (typeof GOAL_STATUSES)[number];
+/** The colours a goal's constellation can take: the brand's, plus two that stay apart from them on the night sky. */
+export const GOAL_COLORS = ["#F3BC29", "#E47FC8", "#63B7B9", "#9DD66F", "#FF9B6A", "#A99BFF"] as const;
+
+export type LedgerFields = { kind: LedgerKind; amount: number; name: string; anonymous: boolean; goalId: string | null; method: string; note: string; occurredAt: string };
+export type GoalFields = { title: string; target: number; color: string; about: string; plan: string; status: GoalStatus };
+
+const text = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
+
+/** One entry in the ledger, from the office form. `now` lets tests pin the clock. */
+export function checkLedgerEntry(
+  raw: Record<string, unknown>,
+  goalIds: readonly string[],
+  now = new Date(),
+): { ok: true; value: LedgerFields } | { ok: false; error: string } {
+  const kind = raw.kind === "out" ? "out" : raw.kind === "in" ? "in" : null;
+  if (!kind) return { ok: false, error: "Is this money in or money out?" };
+  const amount = Math.round(Number(raw.amount));
+  if (!Number.isFinite(amount) || amount < 1 || amount > 100_000_000) return { ok: false, error: "Please enter an amount in birr." };
+  const name = text(raw.name, 120);
+  if (name.length < 2) return { ok: false, error: kind === "in" ? "Who gave it? Enter a name." : "Who was it paid to? Enter a name." };
+  const goal = text(raw.goalId, 80);
+  if (goal && !goalIds.includes(goal)) return { ok: false, error: "That goal doesn’t exist any more." };
+  const method = text(raw.method, 20);
+  if (method && !(LEDGER_METHODS as readonly string[]).includes(method)) return { ok: false, error: "Pick how the money moved." };
+  const when = raw.occurredAt ? new Date(String(raw.occurredAt)) : now;
+  if (Number.isNaN(when.getTime())) return { ok: false, error: "That date doesn’t look right." };
+  if (when.getTime() > now.getTime() + 864e5) return { ok: false, error: "That date is in the future." };
+  if (when.getFullYear() < 2020) return { ok: false, error: "That date is too far back." };
+  return {
+    ok: true,
+    value: { kind, amount, name, anonymous: kind === "in" && raw.anonymous === true, goalId: goal || null, method, note: text(raw.note, 500), occurredAt: when.toISOString() },
+  };
+}
+
+export function checkGoal(raw: Record<string, unknown>): { ok: true; value: GoalFields } | { ok: false; error: string } {
+  const title = text(raw.title, 80);
+  if (title.length < 2) return { ok: false, error: "Give the goal a name." };
+  const target = Math.round(Number(raw.target));
+  if (!Number.isFinite(target) || target < 0 || target > 1_000_000_000) return { ok: false, error: "Please enter the target in birr." };
+  const color = (GOAL_COLORS as readonly string[]).includes(String(raw.color)) ? String(raw.color) : GOAL_COLORS[0];
+  const status: GoalStatus = raw.status === "done" ? "done" : "open";
+  return { ok: true, value: { title, target, color, about: text(raw.about, 600), plan: text(raw.plan, 1000), status } };
+}
+
+/**
+ * Everything the numbers on the page come from. The balance is money in minus
+ * money out. What is still needed counts only open goals, and a goal that has
+ * raised more than its target needs nothing (it never goes negative).
+ */
+export function ledgerTotals<G extends { id: string; target: number; status: GoalStatus }>(
+  entries: { kind: LedgerKind; amount: number; goalId: string | null }[],
+  goals: G[],
+) {
+  const sum = (k: LedgerKind, goalId?: string | null) =>
+    entries.filter((e) => e.kind === k && (goalId === undefined || e.goalId === goalId)).reduce((s, e) => s + e.amount, 0);
+  const moneyIn = sum("in");
+  const moneyOut = sum("out");
+  const perGoal = goals.map((g) => {
+    const raised = sum("in", g.id);
+    const spent = sum("out", g.id);
+    return { ...g, raised, spent, remaining: Math.max(0, g.target - raised), pct: g.target > 0 ? Math.min(100, Math.round((raised / g.target) * 100)) : 0 };
+  });
+  return {
+    in: moneyIn,
+    out: moneyOut,
+    balance: moneyIn - moneyOut,
+    count: entries.length,
+    givers: entries.filter((e) => e.kind === "in").length,
+    needed: perGoal.filter((g) => g.status === "open").reduce((s, g) => s + g.remaining, 0),
+    general: { raised: sum("in", null), spent: sum("out", null) },
+    goals: perGoal,
+  };
+}

@@ -4,7 +4,7 @@ import type { PledgeInput } from "@/data/campaign";
 import { one, query } from "./db.ts";
 import { importLegacyFiles } from "./db-import.ts";
 import { PLEDGE_STATUSES, REQUEST_STATUSES, STATUSES, SUBSCRIPTION_STATUSES, clubFor, isoDate, nextMonth, nextSundays, receiptId, sundayKind } from "./office.ts";
-import type { ActivityKind, MentorStatus, PledgeFields, PledgeStatus, RequestStatus, SubjectKind, SubscriptionStatus, SundayKind } from "./office.ts";
+import type { ActivityKind, GoalFields, GoalStatus, LedgerFields, LedgerKind, MentorStatus, PledgeFields, PledgeStatus, RequestStatus, SubjectKind, SubscriptionStatus, SundayKind } from "./office.ts";
 
 /**
  * The data layer. Every read and write in the app goes through here, and here
@@ -79,6 +79,12 @@ const toMentor = (r: MentorRow): Mentor => ({
   updatedAt: r.updated_at,
   club: clubFor(r.form.share),
 });
+
+/** How many people have offered to help. A number only: who they are stays in the office. */
+export async function countMentors(): Promise<number> {
+  await prepared();
+  return Number((await one<{ n: number | string }>("SELECT COUNT(*) AS n FROM mentors"))?.n ?? 0);
+}
 
 export async function readMentors(): Promise<Mentor[]> {
   await prepared();
@@ -246,40 +252,99 @@ export async function readMessages(): Promise<Message[]> {
   return rows.map((r) => ({ from: r.sender, at: r.at, text: r.text, club: r.club || undefined }));
 }
 
-// ---------- receipts (example ledger until a payment provider is connected) ----------
-export type Receipt = { id: string; donor: string; place: string; campaign: string; amount: number; at: string; color: string };
-const CAMPAIGNS = [
-  { key: "meron", title: "School fees for Meron, 12", goal: 24000, color: "#4B9B9D" },
-  { key: "abenezer", title: "Laptop for Abenezer, 14", goal: 45000, color: "#F3BC29" },
-  { key: "kolfe", title: "Library corner, Kolfe primary", goal: 90000, color: "#E47FC8" },
-];
-export async function readReceipts(): Promise<{ receipts: Receipt[]; campaigns: { key: string; title: string; goal: number; raised: number; color: string }[] }> {
+// ---------- open books: goals and the ledger ----------
+export type Goal = GoalFields & { id: string; at: string; updatedAt: string };
+type GoalRow = { id: string; title: string; target: number; color: string; about: string; plan: string; status: GoalStatus; at: string; updated_at: string };
+const GOAL_COLS = "id, title, target, color, about, plan, status, at, updated_at";
+const toGoal = (r: GoalRow): Goal => ({ id: r.id, title: r.title, target: Number(r.target), color: r.color, about: r.about, plan: r.plan, status: r.status, at: r.at, updatedAt: r.updated_at });
+
+export async function readGoals(): Promise<Goal[]> {
   await prepared();
-  const read = () => query<Receipt>("SELECT id, donor, place, campaign, amount, at, color FROM receipts ORDER BY at DESC");
-  let receipts = await read();
-  if (receipts.length === 0) {
-    const names = ["Kaleb", "Marta", "Selam", "Dawit", "Hana", "Ruth", "Yonas", "Abel", "Tigist", "Biruk", "Lily", "Samuel"];
-    const places = ["Addis Ababa", "London", "Hawassa", "Melbourne", "Bahir Dar", "Washington DC", "Adama", "Gondar"];
-    const amounts = [250, 500, 500, 1000, 1000, 1500, 2000, 2500, 5000];
-    let seed = 11;
-    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    for (let i = 0; i < 40; i++) {
-      const at = new Date(Date.now() - Math.floor(rnd() * 45) * 864e5);
-      const c = CAMPAIGNS[Math.floor(rnd() * CAMPAIGNS.length)];
-      await query("INSERT INTO receipts (id, donor, place, campaign, amount, color, at) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT (id) DO NOTHING", [
-        receiptId(at, 100 + i),
-        names[Math.floor(rnd() * names.length)],
-        places[Math.floor(rnd() * places.length)],
-        c.key,
-        amounts[Math.floor(rnd() * amounts.length)],
-        c.color,
-        at.toISOString(),
-      ]);
-    }
-    receipts = await read();
-  }
-  const campaigns = CAMPAIGNS.map((c) => ({ ...c, raised: receipts.filter((r) => r.campaign === c.key).reduce((s, r) => s + r.amount, 0) }));
-  return { receipts, campaigns };
+  return (await query<GoalRow>(`SELECT ${GOAL_COLS} FROM goals ORDER BY position`)).map(toGoal);
+}
+export async function createGoal(f: GoalFields, at = now(), id = newId("goal-", at)): Promise<Goal> {
+  await prepared();
+  const rows = await query<GoalRow>(
+    `INSERT INTO goals (id, title, target, color, about, plan, status, at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $8) RETURNING ${GOAL_COLS}`,
+    [id, f.title, f.target, f.color, f.about, f.plan, f.status, at],
+  );
+  return toGoal(rows[0]);
+}
+export async function updateGoal(id: string, f: GoalFields): Promise<Goal | null> {
+  await prepared();
+  const r = await one<GoalRow>(
+    `UPDATE goals SET title = $2, target = $3, color = $4, about = $5, plan = $6, status = $7, updated_at = $8 WHERE id = $1 RETURNING ${GOAL_COLS}`,
+    [id, f.title, f.target, f.color, f.about, f.plan, f.status, now()],
+  );
+  return r ? toGoal(r) : null;
+}
+
+export type LedgerEntry = LedgerFields & { id: number; ref: string; receipt: string | null; at: string; updatedAt: string };
+type LedgerRow = {
+  id: number; ref: string; kind: LedgerKind; amount: number; name: string; anonymous: boolean; goal_id: string | null; method: string; note: string;
+  receipt_file: string | null; occurred_at: string; at: string; updated_at: string;
+};
+const LEDGER_COLS = "id, ref, kind, amount, name, anonymous, goal_id, method, note, receipt_file, occurred_at, at, updated_at";
+const toEntry = (r: LedgerRow): LedgerEntry => ({
+  id: Number(r.id), ref: r.ref, kind: r.kind, amount: Number(r.amount), name: r.name, anonymous: r.anonymous, goalId: r.goal_id, method: r.method, note: r.note,
+  receipt: r.receipt_file, occurredAt: r.occurred_at, at: r.at, updatedAt: r.updated_at,
+});
+
+/** Every live entry, newest first. Deleted ones stay in the table with `deleted_at` set and are never returned. */
+export async function readLedger(): Promise<LedgerEntry[]> {
+  await prepared();
+  return (await query<LedgerRow>(`SELECT ${LEDGER_COLS} FROM ledger WHERE deleted_at IS NULL ORDER BY occurred_at DESC, id DESC`)).map(toEntry);
+}
+export async function readLedgerEntry(id: number): Promise<LedgerEntry | null> {
+  await prepared();
+  const r = await one<LedgerRow>(`SELECT ${LEDGER_COLS} FROM ledger WHERE id = $1 AND deleted_at IS NULL`, [id]);
+  return r ? toEntry(r) : null;
+}
+
+/**
+ * Logs money in or out. The receipt number is HLP-YYMM-NNNN from the day it was
+ * logged and the row's own sequence, so it is unique and never changes, even
+ * if the entry is edited later.
+ */
+export async function addLedgerEntry(f: LedgerFields, receiptDataUrl = "", at = now()): Promise<LedgerEntry> {
+  await prepared();
+  const [{ id }] = await query<{ id: number }>(
+    `INSERT INTO ledger (kind, amount, name, anonymous, goal_id, method, note, occurred_at, at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9) RETURNING id`,
+    [f.kind, f.amount, f.name, f.anonymous, f.goalId, f.method, f.note, f.occurredAt, at],
+  );
+  const ref = receiptId(new Date(at), Number(id));
+  const file = receiptDataUrl ? await saveImage(`ledger-${id}`, receiptDataUrl) : null;
+  await query("UPDATE ledger SET ref = $2, receipt_file = $3 WHERE id = $1", [id, ref, file]);
+  return (await readLedgerEntry(Number(id)))!;
+}
+
+/** Corrects an entry. A new photo replaces the receipt; `removeReceipt` takes it down. */
+export async function editLedgerEntry(id: number, f: LedgerFields, opts: { receiptDataUrl?: string; removeReceipt?: boolean } = {}): Promise<LedgerEntry | null> {
+  await prepared();
+  const cur = await readLedgerEntry(id);
+  if (!cur) return null;
+  let file = cur.receipt;
+  if (opts.receiptDataUrl) file = await saveImage(`ledger-${id}`, opts.receiptDataUrl);
+  else if (opts.removeReceipt) file = null;
+  await query(
+    "UPDATE ledger SET kind = $2, amount = $3, name = $4, anonymous = $5, goal_id = $6, method = $7, note = $8, occurred_at = $9, receipt_file = $10, updated_at = $11 WHERE id = $1",
+    [id, f.kind, f.amount, f.name, f.anonymous, f.goalId, f.method, f.note, f.occurredAt, file, now()],
+  );
+  if (cur.receipt && !file) await query("DELETE FROM files WHERE id = $1", [cur.receipt]);
+  return readLedgerEntry(id);
+}
+
+/** A soft delete: the row stays for the record, but it leaves the page and the totals. */
+export async function deleteLedgerEntry(id: number): Promise<boolean> {
+  await prepared();
+  return (await query("UPDATE ledger SET deleted_at = $2, updated_at = $2 WHERE id = $1 AND deleted_at IS NULL RETURNING id", [id, now()])).length > 0;
+}
+
+/** The receipt photo behind a receipt number, for a live entry only. */
+export async function readLedgerReceipt(ref: string): Promise<StoredFile | null> {
+  await prepared();
+  const r = await one<{ receipt_file: string | null }>("SELECT receipt_file FROM ledger WHERE ref = $1 AND deleted_at IS NULL", [ref]);
+  return r?.receipt_file ? readFileById(r.receipt_file) : null;
 }
 
 // ---------- organisation requests ("partners") ----------
