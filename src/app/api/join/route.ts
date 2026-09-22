@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { dbConfigured } from "@/lib/db";
 import { latestLetter } from "@/data/letter";
+import { crm } from "@/lib/crm";
 import { JOIN_BASE } from "@/lib/join-count";
 import { addSubscriber, countSubscribers } from "@/lib/store";
 
@@ -59,6 +60,7 @@ export async function POST(req: Request) {
     if (dbConfigured()) {
       code = "DB_FAILED";
       fresh = await addSubscriber(email, source, at);
+      if (fresh) await crm.joined(email);
       saved = true;
       position = JOIN_BASE + (await countSubscribers());
     }

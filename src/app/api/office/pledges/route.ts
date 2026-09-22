@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { CAMPAIGN, PLEDGE_TIERS } from "@/data/campaign";
+import { crm } from "@/lib/crm";
 import { DASHBOARDS_ENABLED, forbidden, notAvailable, officeAllowed } from "@/lib/guard";
 import { PLEDGE_STATUSES, checkPledge, pledgeTotals, supplyMath } from "@/lib/office";
 import type { PledgeStatus } from "@/lib/office";
@@ -88,6 +89,7 @@ export async function PATCH(req: Request) {
     fields = checked.value;
   }
   const pledge = await editPledge(id, { fields, status });
+  if (status && status !== current.status) await crm.changed("pledge", { id, name: current.name }, `Status: ${status}.`);
   return NextResponse.json({ ok: true, pledge });
 }
 

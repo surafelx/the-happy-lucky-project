@@ -113,4 +113,44 @@ export const MIGRATIONS: { id: string; statements: string[] }[] = [
       )`,
     ],
   },
+  {
+    id: "002_support_and_activity",
+    statements: [
+      // Monthly supporters. No money moves through the site: the office confirms each month by hand.
+      `CREATE TABLE subscriptions (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        email TEXT NOT NULL,
+        phone TEXT NOT NULL DEFAULT '',
+        plan TEXT NOT NULL,
+        amount INTEGER NOT NULL CHECK (amount > 0),
+        method TEXT NOT NULL DEFAULT 'telebirr',
+        anonymous BOOLEAN NOT NULL DEFAULT FALSE,
+        note TEXT NOT NULL DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'paused', 'cancelled')),
+        started_at TEXT,
+        next_due TEXT,
+        paid_months INTEGER NOT NULL DEFAULT 0,
+        at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`,
+      `CREATE INDEX subscriptions_status ON subscriptions (status, next_due)`,
+
+      // The CRM timeline: everything that happened to a person, plus reminders with due dates.
+      `CREATE TABLE activity (
+        id SERIAL PRIMARY KEY,
+        subject_kind TEXT NOT NULL,
+        subject_id TEXT NOT NULL,
+        subject_name TEXT NOT NULL DEFAULT '',
+        kind TEXT NOT NULL CHECK (kind IN ('system', 'note', 'call', 'email', 'sms', 'meeting', 'reminder')),
+        text TEXT NOT NULL,
+        due_at TEXT,
+        done_at TEXT,
+        seen BOOLEAN NOT NULL DEFAULT FALSE,
+        at TEXT NOT NULL
+      )`,
+      `CREATE INDEX activity_subject ON activity (subject_kind, subject_id, at DESC)`,
+      `CREATE INDEX activity_due ON activity (due_at) WHERE done_at IS NULL`,
+    ],
+  },
 ];

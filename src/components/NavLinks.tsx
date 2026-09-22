@@ -13,7 +13,7 @@ const LINKS = [
         { href: "/work", label: "Our work" },
         { href: "/mentor", label: "Mentor" },
         { href: "/partners", label: "Organisations" },
-        { href: "/campaigns/a-year-covered", label: "Give" },
+        { href: "/support", label: "Give" },
       ]
     : []),
 ];

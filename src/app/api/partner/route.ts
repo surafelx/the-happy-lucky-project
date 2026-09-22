@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { NEED_OPTIONS, ORG_TYPES, WHEN_OPTIONS, WHERE_OPTIONS } from "@/data/partner";
 import type { NeedOption, OrgType, PartnerRequest, WhenOption, WhereOption } from "@/data/partner";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
+import { crm } from "@/lib/crm";
 import { deliver } from "@/lib/intake";
 import { addPartner } from "@/lib/store";
 
@@ -60,7 +61,7 @@ export async function POST(req: Request) {
   const payload = { kind: "partner", at, id, ...record };
   const webhook = (process.env.MENTOR_WEBHOOK_URL ?? process.env.JOIN_WEBHOOK_URL)?.trim();
 
-  const failed = await deliver({ tag: "partner", req, payload, webhook, save: () => addPartner(record, at, id) });
+  const failed = await deliver({ tag: "partner", req, payload, webhook, save: () => addPartner(record, at, id).then(() => crm.requestReceived({ id, name: record.org })) });
   if (failed) return failed;
 
   return NextResponse.json({ ok: true, id });

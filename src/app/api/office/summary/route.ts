@@ -2,8 +2,8 @@ import { NextResponse } from "next/server";
 
 import { DASHBOARDS_ENABLED, forbidden, notAvailable, officeAllowed } from "@/lib/guard";
 import { CAMPAIGN } from "@/data/campaign";
-import { isoDate, skillCounts, suggestMentors, weeklyCounts } from "@/lib/office";
-import { kidsTotal, readJoins, readMentors, readPartners, readPledges, readReceipts, readRsvps, readSundays, readTasks } from "@/lib/store";
+import { daysUntil, isoDate, skillCounts, suggestMentors, weeklyCounts } from "@/lib/office";
+import { kidsTotal, readJoins, readMentors, readActivity, readPartners, readPledges, readReceipts, readSubscriptions, readRsvps, readSundays, readTasks } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,7 +14,8 @@ export async function GET() {
   if (!(await officeAllowed())) return forbidden();
 
   const now = new Date();
-  const [joins, mentors, tasks, rsvps, ledger, partners, pledges] = await Promise.all([readJoins(), readMentors(), readTasks(), readRsvps(), readReceipts(), readPartners(), readPledges(CAMPAIGN.key)]);
+  const [joins, mentors, tasks, rsvps, ledger, partners, pledges, subs, reminders] = await Promise.all([readJoins(), readMentors(), readTasks(), readRsvps(), readReceipts(), readPartners(), readPledges(CAMPAIGN.key), readSubscriptions(), readActivity({ open: true, limit: 500 })]);
+  const today = isoDate(now);
   const sundays = await readSundays(mentors, now);
 
   const weekAgo = new Date(now.getTime() - 7 * 864e5);
@@ -35,6 +36,10 @@ export async function GET() {
       pool: mentors.length,
       byStatus,
       pledgesToVerify: pledges.filter((p) => p.status === "sent").length,
+      supportersActive: subs.filter((x) => x.status === "active").length,
+      supportersMonthly: subs.filter((x) => x.status === "active").reduce((t, x) => t + x.amount, 0),
+      supportersDue: subs.filter((x) => x.status === "active" && x.nextDue && daysUntil(x.nextDue, today) <= 0).length + subs.filter((x) => x.status === "pending").length,
+      remindersDue: reminders.filter((a) => a.dueAt && daysUntil(a.dueAt, today) <= 0).length,
       requestsOpen: partners.filter((p) => p.status !== "done").length,
       campaignsOpen: ledger.campaigns.length,
       raisedThisMonth,

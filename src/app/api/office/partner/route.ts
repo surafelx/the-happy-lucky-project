@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { DASHBOARDS_ENABLED, forbidden, notAvailable, officeAllowed } from "@/lib/guard";
 import { REQUEST_STATUSES } from "@/lib/office";
 import type { RequestStatus } from "@/lib/office";
-import { updatePartner } from "@/lib/store";
+import { crm } from "@/lib/crm";
+import { readPartners, updatePartner } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -25,5 +26,8 @@ export async function POST(req: Request) {
   if (body.match && typeof body.match.mentorId === "string") patch.match = { mentorId: body.match.mentorId, on: Boolean(body.match.on) };
   const meta = await updatePartner(id, patch);
   if (!meta) return NextResponse.json({ ok: false, error: "No such request." }, { status: 404 });
+  const who = (await readPartners()).find((p) => p.id === id);
+  if (who && patch.status) await crm.changed("partner", { id, name: who.org }, `Status: ${patch.status}.`);
+  if (who && patch.match) await crm.changed("partner", { id, name: who.org }, `${patch.match.on ? "Matched" : "Unmatched"} a mentor.`);
   return NextResponse.json({ ok: true, meta });
 }

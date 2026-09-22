@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { crm } from "@/lib/crm";
 import { deliver } from "@/lib/intake";
 import { addMentor } from "@/lib/store";
 
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
   const payload = { kind: "mentor", at, id, ...record, photo };
   const webhook = (process.env.MENTOR_WEBHOOK_URL ?? process.env.JOIN_WEBHOOK_URL)?.trim();
 
-  const failed = await deliver({ tag: "mentor", req, payload, webhook, save: () => addMentor(record, photo, at, id) });
+  const failed = await deliver({ tag: "mentor", req, payload, webhook, save: () => addMentor(record, photo, at, id).then((mentorId) => crm.mentorApplied({ id: mentorId, name: record.name })) });
   if (failed) return failed;
 
   return NextResponse.json({ ok: true });

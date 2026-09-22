@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 
 import { CAMPAIGN } from "@/data/campaign";
 import { dbConfigured } from "@/lib/db";
+import { crm } from "@/lib/crm";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 import { cleanReceiptLink } from "@/lib/office";
 import { attachProof, readPledges } from "@/lib/store";
@@ -49,6 +50,7 @@ export async function POST(req: Request) {
 
   try {
     await attachProof(pledge.id, { link: link ?? "", imageDataUrl: image, ref: clean(body.ref, 80) });
+    await crm.proofSent({ id: pledge.id, name: pledge.name });
   } catch (err) {
     console.error("[pledge-proof] DB_FAILED:", err);
     return NextResponse.json({ ok: false, error: "Sorry, that didn’t save on our side. Please try again in a moment." }, { status: 500 });

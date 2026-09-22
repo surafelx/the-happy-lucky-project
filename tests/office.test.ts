@@ -8,6 +8,8 @@ import {
   clubFor,
   isoDate,
   nextSundays,
+  daysUntil,
+  nextMonth,
   onboardingSteps,
   ordinal,
   pledgeTotals,
@@ -184,4 +186,17 @@ test("ordinal handles the teens and the thousands", () => {
   assert.deepEqual([1, 2, 3, 4, 11, 12, 13, 21, 22, 23, 33, 50, 101, 111, 112, 1003].map(ordinal), [
     "1st", "2nd", "3rd", "4th", "11th", "12th", "13th", "21st", "22nd", "23rd", "33rd", "50th", "101st", "111th", "112th", "1,003rd",
   ]);
+});
+
+test("nextMonth keeps the day of the month and clamps at short months", () => {
+  assert.equal(nextMonth("2026-01-15"), "2026-02-15");
+  assert.equal(nextMonth("2026-01-31"), "2026-02-28");
+  assert.equal(nextMonth("2026-12-10"), "2027-01-10");
+  assert.equal(nextMonth("2028-01-31"), "2028-02-29");
+});
+
+test("daysUntil counts forward and backward", () => {
+  assert.equal(daysUntil("2026-09-25", "2026-09-22"), 3);
+  assert.equal(daysUntil("2026-09-22", "2026-09-22"), 0);
+  assert.equal(daysUntil("2026-09-20", "2026-09-22"), -2);
 });

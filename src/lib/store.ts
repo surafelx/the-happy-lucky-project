@@ -3,8 +3,8 @@ import type { PartnerRequest } from "@/data/partner";
 import type { PledgeInput } from "@/data/campaign";
 import { one, query } from "./db.ts";
 import { importLegacyFiles } from "./db-import.ts";
-import { PLEDGE_STATUSES, REQUEST_STATUSES, STATUSES, clubFor, isoDate, nextSundays, receiptId, sundayKind } from "./office.ts";
-import type { MentorStatus, PledgeFields, PledgeStatus, RequestStatus, SundayKind } from "./office.ts";
+import { PLEDGE_STATUSES, REQUEST_STATUSES, STATUSES, SUBSCRIPTION_STATUSES, clubFor, isoDate, nextMonth, nextSundays, receiptId, sundayKind } from "./office.ts";
+import type { ActivityKind, MentorStatus, PledgeFields, PledgeStatus, RequestStatus, SubjectKind, SubscriptionStatus, SundayKind } from "./office.ts";
 
 /**
  * The data layer. Every read and write in the app goes through here, and here
@@ -425,4 +425,97 @@ export async function attachProof(id: string, proof: { link: string; imageDataUr
     [id, proof.link, proof.ref, file, at],
   );
   return readPledge(id);
+}
+
+// ---------- supporters (monthly plans) ----------
+export type Subscription = {
+  id: string; name: string; email: string; phone: string; plan: string; amount: number; method: string; anonymous: boolean; note: string;
+  status: SubscriptionStatus; startedAt: string | null; nextDue: string | null; paidMonths: number; at: string; updatedAt: string;
+};
+type SubRow = { id: string; name: string; email: string; phone: string; plan: string; amount: number; method: string; anonymous: boolean; note: string; status: SubscriptionStatus; started_at: string | null; next_due: string | null; paid_months: number; at: string; updated_at: string };
+const SUB_COLS = "id, name, email, phone, plan, amount, method, anonymous, note, status, started_at, next_due, paid_months, at, updated_at";
+const toSub = (r: SubRow): Subscription => ({
+  id: r.id, name: r.name, email: r.email, phone: r.phone, plan: r.plan, amount: Number(r.amount), method: r.method, anonymous: r.anonymous, note: r.note,
+  status: r.status, startedAt: r.started_at, nextDue: r.next_due, paidMonths: Number(r.paid_months), at: r.at, updatedAt: r.updated_at,
+});
+
+export async function readSubscriptions(): Promise<Subscription[]> {
+  await prepared();
+  return (await query<SubRow>(`SELECT ${SUB_COLS} FROM subscriptions ORDER BY at DESC`)).map(toSub);
+}
+export async function readSubscription(id: string): Promise<Subscription | null> {
+  await prepared();
+  const r = await one<SubRow>(`SELECT ${SUB_COLS} FROM subscriptions WHERE id = $1`, [id]);
+  return r ? toSub(r) : null;
+}
+export type SubscriptionFields = { name: string; email: string; phone: string; plan: string; amount: number; method: string; anonymous: boolean; note: string };
+export async function createSubscription(f: SubscriptionFields, at = now(), id = newId("s-", at)): Promise<Subscription> {
+  await prepared();
+  await query(
+    `INSERT INTO subscriptions (id, name, email, phone, plan, amount, method, anonymous, note, at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $10)`,
+    [id, f.name, f.email.toLowerCase(), f.phone, f.plan, f.amount, f.method, f.anonymous, f.note, at],
+  );
+  return (await readSubscription(id))!;
+}
+/** Status changes from the office. Going active for the first time sets the start and the first due date. */
+export async function updateSubscription(id: string, patch: { status?: SubscriptionStatus; fields?: Partial<SubscriptionFields> }, today = isoDate(new Date())): Promise<Subscription | null> {
+  await prepared();
+  const cur = await readSubscription(id);
+  if (!cur) return null;
+  const f = { ...cur, ...(patch.fields ?? {}) };
+  const status = patch.status && SUBSCRIPTION_STATUSES.includes(patch.status) ? patch.status : cur.status;
+  const startedAt = cur.startedAt ?? (status === "active" ? today : null);
+  const nextDue = status === "active" ? (cur.nextDue ?? nextMonth(today)) : status === "cancelled" ? null : cur.nextDue;
+  await query(
+    `UPDATE subscriptions SET name = $2, email = $3, phone = $4, plan = $5, amount = $6, method = $7, anonymous = $8, note = $9, status = $10, started_at = $11, next_due = $12, updated_at = $13 WHERE id = $1`,
+    [id, f.name, f.email.toLowerCase(), f.phone, f.plan, f.amount, f.method, f.anonymous, f.note, status, startedAt, nextDue, now()],
+  );
+  return readSubscription(id);
+}
+/** The office confirms this month's payment: the count goes up and the due date moves a month on. */
+export async function recordSubscriptionPayment(id: string, today = isoDate(new Date())): Promise<Subscription | null> {
+  await prepared();
+  const cur = await readSubscription(id);
+  if (!cur) return null;
+  const from = cur.nextDue && cur.nextDue > today ? cur.nextDue : today;
+  await query(`UPDATE subscriptions SET status = 'active', started_at = COALESCE(started_at, $2::text), next_due = $3, paid_months = paid_months + 1, updated_at = $4 WHERE id = $1`, [id, today, nextMonth(from), now()]);
+  return readSubscription(id);
+}
+
+// ---------- the activity log (CRM) ----------
+export type Activity = { id: number; subjectKind: SubjectKind; subjectId: string; subjectName: string; kind: ActivityKind; text: string; dueAt: string | null; doneAt: string | null; seen: boolean; at: string };
+type ActRow = { id: number; subject_kind: SubjectKind; subject_id: string; subject_name: string; kind: ActivityKind; text: string; due_at: string | null; done_at: string | null; seen: boolean; at: string };
+const ACT_COLS = "id, subject_kind, subject_id, subject_name, kind, text, due_at, done_at, seen, at";
+const toAct = (r: ActRow): Activity => ({ id: Number(r.id), subjectKind: r.subject_kind, subjectId: r.subject_id, subjectName: r.subject_name, kind: r.kind, text: r.text, dueAt: r.due_at, doneAt: r.done_at, seen: r.seen, at: r.at });
+
+export async function logActivity(a: { subjectKind: SubjectKind; subjectId: string; subjectName: string; kind: ActivityKind; text: string; dueAt?: string | null; at?: string }): Promise<Activity> {
+  await prepared();
+  const rows = await query<ActRow>(
+    `INSERT INTO activity (subject_kind, subject_id, subject_name, kind, text, due_at, seen, at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING ${ACT_COLS}`,
+    [a.subjectKind, a.subjectId, a.subjectName, a.kind, a.text.slice(0, 2000), a.dueAt ?? null, a.kind !== "system" && a.kind !== "reminder", a.at ?? now()],
+  );
+  return toAct(rows[0]);
+}
+/** Newest first. A subject narrows to one person; `open` keeps only reminders not yet done. */
+export async function readActivity(opts: { subjectKind?: SubjectKind; subjectId?: string; open?: boolean; limit?: number } = {}): Promise<Activity[]> {
+  await prepared();
+  const where: string[] = [];
+  const params: unknown[] = [];
+  if (opts.subjectKind && opts.subjectId) {
+    params.push(opts.subjectKind, opts.subjectId);
+    where.push(`subject_kind = $${params.length - 1} AND subject_id = $${params.length}`);
+  }
+  if (opts.open) where.push("kind = 'reminder' AND done_at IS NULL");
+  params.push(opts.limit ?? 200);
+  const rows = await query<ActRow>(`SELECT ${ACT_COLS} FROM activity ${where.length ? "WHERE " + where.join(" AND ") : ""} ORDER BY at DESC LIMIT $${params.length}`, params);
+  return rows.map(toAct);
+}
+export async function completeReminder(id: number, done = true): Promise<Activity | null> {
+  await prepared();
+  const rows = await query<ActRow>(`UPDATE activity SET done_at = $2::text, seen = TRUE WHERE id = $1 AND kind = 'reminder' RETURNING ${ACT_COLS}`, [id, done ? now() : null]);
+  return rows[0] ? toAct(rows[0]) : null;
+}
+export async function markActivitySeen(): Promise<number> {
+  await prepared();
+  return (await query("UPDATE activity SET seen = TRUE WHERE seen = FALSE RETURNING id")).length;
 }

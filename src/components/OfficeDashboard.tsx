@@ -4,7 +4,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
+import { OfficeActivity, Timeline } from "@/components/OfficeActivity";
 import { OfficePledges } from "@/components/OfficePledges";
+import { OfficeSupporters } from "@/components/OfficeSupporters";
 import { AdminShell, useHashTab } from "@/components/AdminShell";
 import { KIND_LABEL, REQUEST_LABEL, REQUEST_STATUSES, STATUSES, STATUS_LABEL } from "@/lib/office";
 import type { MentorStatus, RequestStatus, SundayKind } from "@/lib/office";
@@ -22,7 +24,7 @@ type Request = {
 type Sunday = { date: string; kind: SundayKind; kidsExpected: number; slots: { time: string; title: string; lead: string }[]; going: number; notGoing: number };
 type Summary = {
   today: string;
-  kpis: { joined: number; joinedThisWeek: number; pool: number; byStatus: Record<MentorStatus, number>; requestsOpen: number; pledgesToVerify: number; campaignsOpen: number; raisedThisMonth: number; yearTarget: number };
+  kpis: { joined: number; joinedThisWeek: number; pool: number; byStatus: Record<MentorStatus, number>; requestsOpen: number; pledgesToVerify: number; supportersActive: number; supportersMonthly: number; supportersDue: number; remindersDue: number; campaignsOpen: number; raisedThisMonth: number; yearTarget: number };
   weekly: { week: string; count: number }[];
   skills: { skill: string; count: number }[];
   mentors: Mentor[];
@@ -41,6 +43,8 @@ const TABS = [
   { key: "sundays", label: "Sundays", icon: "📅" },
   { key: "tasks", label: "To do", icon: "☑" },
   { key: "pledges", label: "Pledges", icon: "🤝" },
+  { key: "supporters", label: "Supporters", icon: "💛" },
+  { key: "activity", label: "Activity", icon: "⚡" },
   { key: "receipts", label: "Receipts", icon: "🧾" },
 ];
 const fmt = (n: number) => n.toLocaleString("en-US");
@@ -146,7 +150,7 @@ export function OfficeDashboard() {
   return (
     <AdminShell
       product="The office"
-      tabs={TABS.map((t) => ({ ...t, badge: t.key === "mentors" ? kpis.byStatus.new || undefined : t.key === "requests" ? newReqs || undefined : t.key === "tasks" ? openTasks || undefined : t.key === "pledges" ? kpis.pledgesToVerify || undefined : undefined }))}
+      tabs={TABS.map((t) => ({ ...t, badge: t.key === "mentors" ? kpis.byStatus.new || undefined : t.key === "requests" ? newReqs || undefined : t.key === "tasks" ? openTasks || undefined : t.key === "pledges" ? kpis.pledgesToVerify || undefined : t.key === "supporters" ? kpis.supportersDue || undefined : t.key === "activity" ? kpis.remindersDue || undefined : undefined }))}
       active={tab}
       onTab={setTab}
       who={{ name: "Office", role: day(data.today, true), initial: "O" }}
@@ -291,6 +295,7 @@ export function OfficeDashboard() {
                 <small className="quiet">Saved when you click away.</small>
               </label>
               <a className="abtn" href={`mailto:${sel.email}?subject=${encodeURIComponent("Welcome to the Sundays")}`}>Write to {sel.name.split(" ")[0]}</a>
+              <Timeline subjectKind="mentor" subjectId={sel.id} subjectName={sel.name} toast={toast} />
             </aside>
           ) : null}
         </div>
@@ -350,6 +355,7 @@ export function OfficeDashboard() {
                 <textarea key={selReq.id} defaultValue={selReq.notes} rows={5} placeholder="Who you wrote to, what was agreed…" onBlur={(e) => void act("/api/office/partner", { id: selReq.id, notes: e.target.value }, "Notes saved")} />
               </label>
               <a className="abtn" href={`mailto:${selReq.email}?subject=${encodeURIComponent(`Your request to Happy Lucky Chacho`)}`}>Write to {selReq.contact.split(" ")[0]}</a>
+              <Timeline subjectKind="partner" subjectId={selReq.id} subjectName={selReq.org} toast={toast} />
             </aside>
           ) : null}
         </div>
@@ -394,6 +400,8 @@ export function OfficeDashboard() {
       ) : null}
 
       {tab === "pledges" ? <OfficePledges toast={toast} onChanged={() => void load()} /> : null}
+      {tab === "supporters" ? <OfficeSupporters toast={toast} onChanged={() => void load()} /> : null}
+      {tab === "activity" ? <OfficeActivity toast={toast} onChanged={() => void load()} /> : null}
 
       {tab === "receipts" ? (
         <div className="agrid">

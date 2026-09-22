@@ -288,3 +288,32 @@ export function ordinal(n: number): string {
   const suffix = v >= 11 && v <= 13 ? "th" : (["th", "st", "nd", "rd"][v % 10] ?? "th");
   return `${Math.trunc(n).toLocaleString("en-US")}${suffix}`;
 }
+
+// ---------- supporters and the activity log ----------
+export const SUBSCRIPTION_STATUSES = ["pending", "active", "paused", "cancelled"] as const;
+export type SubscriptionStatus = (typeof SUBSCRIPTION_STATUSES)[number];
+export const SUBSCRIPTION_LABEL: Record<SubscriptionStatus, string> = { pending: "Awaiting first payment", active: "Active", paused: "Paused", cancelled: "Cancelled" };
+
+export const ACTIVITY_KINDS = ["system", "note", "call", "email", "sms", "meeting", "reminder"] as const;
+export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
+export const ACTIVITY_ICON: Record<ActivityKind, string> = { system: "\u26a1", note: "\ud83d\udcdd", call: "\ud83d\udcde", email: "\u2709\ufe0f", sms: "\ud83d\udcac", meeting: "\ud83e\udd1d", reminder: "\u23f0" };
+
+export const SUBJECT_KINDS = ["subscriber", "mentor", "partner", "pledge", "subscription"] as const;
+export type SubjectKind = (typeof SUBJECT_KINDS)[number];
+export const SUBJECT_LABEL: Record<SubjectKind, string> = { subscriber: "Joined the letter", mentor: "Mentor", partner: "Organisation", pledge: "Pledge", subscription: "Supporter" };
+
+/** The same day next month, clamped to the month's length (31 Jan -> 28 Feb). */
+export function nextMonth(iso: string): string {
+  const d = new Date(iso + "T12:00:00");
+  const day = d.getDate();
+  const target = new Date(d.getFullYear(), d.getMonth() + 1, 1, 12);
+  const last = new Date(target.getFullYear(), target.getMonth() + 1, 0).getDate();
+  target.setDate(Math.min(day, last));
+  return isoDate(target);
+}
+
+/** Days from `today` to `due` (negative when overdue). */
+export const daysUntil = (due: string, today: string) => Math.round((Date.parse(due + "T12:00:00") - Date.parse(today + "T12:00:00")) / 864e5);
+
+/** A date `days` after `from`, as YYYY-MM-DD. */
+export const addDays = (from: Date, days: number) => isoDate(new Date(from.getTime() + days * 864e5));

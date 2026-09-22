@@ -3,7 +3,8 @@ import { NextResponse } from "next/server";
 import { DASHBOARDS_ENABLED, forbidden, notAvailable, officeAllowed } from "@/lib/guard";
 import { STATUSES } from "@/lib/office";
 import type { MentorStatus } from "@/lib/office";
-import { updateMentor } from "@/lib/store";
+import { crm } from "@/lib/crm";
+import { readMentors, updateMentor } from "@/lib/store";
 
 export const runtime = "nodejs";
 
@@ -27,5 +28,8 @@ export async function POST(req: Request) {
   }
   const meta = await updateMentor(id, patch);
   if (!meta) return NextResponse.json({ ok: false, error: "No such mentor." }, { status: 404 });
+  const who = (await readMentors()).find((m) => m.id === id);
+  if (who && patch.status) await crm.changed("mentor", { id, name: who.name }, `Status: ${patch.status}.`);
+  if (who && patch.attended) await crm.changed("mentor", { id, name: who.name }, `${patch.attended.present ? "Came" : "Did not come"} on ${patch.attended.date}.`);
   return NextResponse.json({ ok: true, meta });
 }

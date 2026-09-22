@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 
+import { Timeline } from "@/components/OfficeActivity";
+
 type Status = "pledged" | "sent" | "received";
 type Pledge = {
   id: string;
@@ -272,6 +274,7 @@ export function OfficePledges({ toast, onChanged }: { toast: (msg: string) => vo
               ) : null}
             </div>
           </form>
+          {current ? <Timeline subjectKind="pledge" subjectId={current.id} subjectName={current.name} toast={toast} /> : null}
         </aside>
       ) : null}
     </div>

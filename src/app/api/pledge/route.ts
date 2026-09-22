@@ -5,6 +5,7 @@ import type { PledgeInput, PledgeTier } from "@/data/campaign";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 import { checkPledge, pledgeTotals, supplyMath } from "@/lib/office";
 import { dbConfigured } from "@/lib/db";
+import { crm } from "@/lib/crm";
 import { deliver } from "@/lib/intake";
 import { createPledge, readPledges } from "@/lib/store";
 
@@ -53,7 +54,7 @@ export async function POST(req: Request) {
   const payload = { kind: "pledge", at, id, campaign: CAMPAIGN.key, source: "site", ...record };
   const webhook = (process.env.MENTOR_WEBHOOK_URL ?? process.env.JOIN_WEBHOOK_URL)?.trim();
 
-  const failed = await deliver({ tag: "pledge", req, payload, webhook, save: () => createPledge(CAMPAIGN.key, checked.value, "pledged", "site", at, id) });
+  const failed = await deliver({ tag: "pledge", req, payload, webhook, save: () => createPledge(CAMPAIGN.key, checked.value, "pledged", "site", at, id).then(() => crm.pledged({ id, name: record.name }, amount)) });
   if (failed) return failed;
 
   return NextResponse.json({ ok: true, id, amount });

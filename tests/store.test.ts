@@ -126,3 +126,40 @@ test("receipts and messages seed once", async () => {
   assert.equal((await s.readMessages()).length, 3);
   assert.equal((await s.readMessages()).length, 3);
 });
+
+test("a supporter goes pending -> active on the first payment, and the due date walks forward", async () => {
+  const sub = await s.createSubscription({ name: "Marta", email: "Marta@Example.com", phone: "", plan: "club", amount: 300, method: "telebirr", anonymous: false, note: "" });
+  assert.equal(sub.status, "pending");
+  assert.equal(sub.email, "marta@example.com");
+  assert.equal(sub.nextDue, null);
+  const first = await s.recordSubscriptionPayment(sub.id, "2026-01-31");
+  assert.equal(first?.status, "active");
+  assert.equal(first?.paidMonths, 1);
+  assert.equal(first?.startedAt, "2026-01-31");
+  assert.equal(first?.nextDue, "2026-02-28");
+  const second = await s.recordSubscriptionPayment(sub.id, "2026-02-20"); // paid early: moves on from the due date, not today
+  assert.equal(second?.nextDue, "2026-03-28");
+  assert.equal(second?.paidMonths, 2);
+  const paused = await s.updateSubscription(sub.id, { status: "paused" });
+  assert.equal(paused?.status, "paused");
+  assert.equal(paused?.nextDue, "2026-03-28");
+  const cancelled = await s.updateSubscription(sub.id, { status: "cancelled" });
+  assert.equal(cancelled?.nextDue, null);
+  assert.equal(await s.updateSubscription("nope", { status: "active" }), null);
+});
+
+test("the activity log keeps a timeline per person and open reminders across everyone", async () => {
+  await s.logActivity({ subjectKind: "mentor", subjectId: "m9", subjectName: "Almaz", kind: "system", text: "Sent the form." });
+  const r = await s.logActivity({ subjectKind: "mentor", subjectId: "m9", subjectName: "Almaz", kind: "reminder", text: "Reply to Almaz.", dueAt: "2026-09-24" });
+  await s.logActivity({ subjectKind: "pledge", subjectId: "g1", subjectName: "Kaleb", kind: "call", text: "Called, will pay Friday." });
+  assert.equal(r.seen, false);
+  const mine = await s.readActivity({ subjectKind: "mentor", subjectId: "m9" });
+  assert.deepEqual(mine.map((a) => a.kind), ["reminder", "system"]);
+  assert.equal((await s.readActivity({ open: true })).length, 1);
+  const done = await s.completeReminder(r.id);
+  assert.ok(done?.doneAt);
+  assert.equal((await s.readActivity({ open: true })).length, 0);
+  assert.equal(await s.completeReminder(999999), null);
+  assert.ok((await s.markActivitySeen()) >= 1);
+  assert.ok((await s.readActivity()).every((a) => a.seen));
+});
