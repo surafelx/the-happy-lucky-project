@@ -24,7 +24,8 @@ test("migrations create the schema once and are safe to run again", async () => 
   assert.equal(conn.driver, "memory");
   assert.deepEqual(await db.migrate(conn), []);
   const tables = (await db.query<{ table_name: string }>("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'")).map((r) => r.table_name);
-  for (const t of ["subscribers", "mentors", "partners", "pledges", "tasks", "rsvps", "messages", "receipts", "files"]) assert.ok(tables.includes(t), t);
+  for (const t of ["subscribers", "mentors", "partners", "pledges", "tasks", "rsvps", "messages", "goals", "ledger", "files"]) assert.ok(tables.includes(t), t);
+  assert.equal(tables.includes("receipts"), false); // the old made-up donor list is gone
 });
 
 test("subscribers are unique by email, whatever the capitals", async () => {
@@ -121,7 +122,7 @@ test("the ledger starts empty, numbers receipts, and keeps the number through ed
   assert.deepEqual(await s.readLedger(), []); // no made-up entries: every line is real
   const books = await s.createGoal({ title: "Reading club books", target: 5000, color: "#F3BC29", about: "", plan: "Buy 40 books.", status: "open" });
   const gift = await s.addLedgerEntry(
-    { kind: "in", amount: 1500, name: "Abebe Kebede", anonymous: false, goalId: books.id, method: "telebirr", note: "", occurredAt: "2026-09-20T09:00:00.000Z" },
+    { kind: "in", amount: 1500, name: "Abebe Kebede", anonymous: false, goalId: books.id, method: "telebirr", note: "", items: "", recipient: "", occurredAt: "2026-09-20T09:00:00.000Z" },
     JPEG,
     "2026-09-20T10:00:00.000Z",
   );
@@ -129,9 +130,12 @@ test("the ledger starts empty, numbers receipts, and keeps the number through ed
   assert.equal(gift.receipt, `ledger-${gift.id}`);
   assert.equal((await s.readLedgerReceipt(gift.ref))?.mime, "image/jpeg");
 
-  const paid = await s.addLedgerEntry({ kind: "out", amount: 400, name: "Kuraz bookshop", anonymous: false, goalId: books.id, method: "cash", note: "8 books", occurredAt: "2026-09-21T09:00:00.000Z" });
+  const paid = await s.addLedgerEntry({ kind: "out", amount: 400, name: "Kuraz bookshop", anonymous: false, goalId: books.id, method: "cash", note: "8 books", items: "", recipient: "", occurredAt: "2026-09-21T09:00:00.000Z" });
+  const kind = await s.addLedgerEntry({ kind: "inkind", amount: 3000, name: "Surafel", anonymous: false, goalId: null, method: "", note: "", items: "4 packs of 12 diapers", recipient: "One Heart Wholeness Center", occurredAt: "2026-09-22T09:00:00.000Z" });
+  assert.equal(kind.items, "4 packs of 12 diapers");
+  assert.equal(kind.recipient, "One Heart Wholeness Center");
   assert.notEqual(paid.ref, gift.ref);
-  assert.deepEqual((await s.readLedger()).map((e) => e.ref), [paid.ref, gift.ref]); // newest first
+  assert.deepEqual((await s.readLedger()).map((e) => e.ref), [kind.ref, paid.ref, gift.ref]); // newest first
 
   const edited = await s.editLedgerEntry(gift.id, { ...gift, amount: 2000 }, { removeReceipt: true });
   assert.equal(edited?.ref, gift.ref);
@@ -141,7 +145,7 @@ test("the ledger starts empty, numbers receipts, and keeps the number through ed
 
   assert.equal(await s.deleteLedgerEntry(paid.id), true);
   assert.equal(await s.deleteLedgerEntry(paid.id), false);
-  assert.deepEqual((await s.readLedger()).map((e) => e.ref), [gift.ref]);
+  assert.deepEqual((await s.readLedger()).map((e) => e.ref), [kind.ref, gift.ref]);
   assert.equal((await db.query("SELECT id FROM ledger WHERE id = $1", [paid.id])).length, 1); // still on record
 
   const done = await s.updateGoal(books.id, { ...books, status: "done" });

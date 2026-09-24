@@ -1382,6 +1382,7 @@ body:has(.admin-page){padding-bottom:0}
 .books .rcpt{width:100%;text-align:left;font:inherit;font-size:.78rem;color:var(--ink)}
 .books .rcpt>span{min-width:0}
 .books .rcpt.out .amt{color:var(--ink-2)}
+.books .rcpt.inkind .amt{color:var(--rose-deep)}
 .books .rcpt.in .amt{color:var(--teal-deep)}
 .books .rcpt:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .rmore{width:100%;border:2px dashed var(--ink);background:transparent;border-radius:12px;padding:.45rem;font:inherit;font-weight:700;font-size:.8rem;cursor:pointer}
@@ -1420,10 +1421,13 @@ body:has(.admin-page){padding-bottom:0}
 /* ---------- office: the ledger ---------- */
 .atable td.ledger-in{color:var(--teal-deep);font-weight:700}
 .atable td.ledger-out{color:var(--ink-2)}
+.atable td.ledger-inkind{color:var(--rose-deep);font-weight:700}
 .kind-toggle{display:grid;grid-template-columns:1fr 1fr;gap:.4rem}
+.kind-toggle.three{grid-template-columns:repeat(3,minmax(0,1fr))}
 .kind-toggle button{border:1.5px solid var(--ink);background:var(--paper);border-radius:10px;padding:.5rem;font:inherit;font-weight:700;font-size:.88rem;cursor:pointer}
 .kind-toggle button.on.in{background:var(--teal-soft);box-shadow:inset 0 0 0 1.5px var(--teal-deep)}
 .kind-toggle button.on.out{background:var(--gold-soft);box-shadow:inset 0 0 0 1.5px var(--ink)}
+.kind-toggle button.on.inkind{background:var(--rose-soft);box-shadow:inset 0 0 0 1.5px var(--rose-deep)}
 .swatches{display:flex;gap:.45rem;flex-wrap:wrap}
 .swatches button{width:28px;height:28px;border-radius:50%;border:1.5px solid var(--ink);cursor:pointer;transition:transform .2s var(--spring)}
 .swatches button.on{transform:scale(1.2);box-shadow:0 0 0 2px var(--paper),0 0 0 4px var(--ink)}

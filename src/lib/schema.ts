@@ -192,4 +192,22 @@ export const MIGRATIONS: { id: string; statements: string[] }[] = [
       `CREATE INDEX ledger_ref ON ledger (ref)`,
     ],
   },
+  {
+    id: "004_in_kind",
+    statements: [
+      // Gifts in goods, not money: bought by someone else and handed over, so they
+      // never pass through the balance. `items` is what it was, `recipient` who got it.
+      `ALTER TABLE ledger DROP CONSTRAINT IF EXISTS ledger_kind_check`,
+      `ALTER TABLE ledger ADD CONSTRAINT ledger_kind_check CHECK (kind IN ('in', 'out', 'inkind'))`,
+      `ALTER TABLE ledger ADD COLUMN items TEXT NOT NULL DEFAULT ''`,
+      `ALTER TABLE ledger ADD COLUMN recipient TEXT NOT NULL DEFAULT ''`,
+    ],
+  },
+  {
+    id: "005_drop_demo_receipts",
+    statements: [
+      // The old made-up donor list. The real ledger replaced it, and nothing read this table.
+      `DROP TABLE IF EXISTS receipts`,
+    ],
+  },
 ];

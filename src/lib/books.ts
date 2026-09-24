@@ -17,7 +17,7 @@ export async function publicBooks() {
   return {
     ok: true as const,
     now: new Date().toISOString(),
-    totals: { in: totals.in, out: totals.out, balance: totals.balance, count: totals.count, givers: totals.givers, needed: totals.needed, general: totals.general },
+    totals: { in: totals.in, out: totals.out, balance: totals.balance, count: totals.count, givers: totals.givers, needed: totals.needed, inKind: totals.inKind, general: totals.general },
     goals: totals.goals.map((g) => ({ id: g.id, title: g.title, color: g.color, target: g.target, about: g.about, plan: g.plan, status: g.status, raised: g.raised, spent: g.spent, remaining: g.remaining, pct: g.pct })),
     entries: entries.map((e) => ({
       ref: e.ref,
@@ -27,6 +27,8 @@ export async function publicBooks() {
       goalId: e.goalId,
       method: METHOD_LABEL[e.method] ?? "",
       note: e.note,
+      items: e.items,
+      recipient: e.recipient,
       occurredAt: e.occurredAt,
       loggedAt: e.at,
       receipt: Boolean(e.receipt),

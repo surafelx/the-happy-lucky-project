@@ -319,7 +319,7 @@ export const daysUntil = (due: string, today: string) => Math.round((Date.parse(
 export const addDays = (from: Date, days: number) => isoDate(new Date(from.getTime() + days * 864e5));
 
 // ---------- open books: the public ledger and its goals ----------
-export const LEDGER_KINDS = ["in", "out"] as const;
+export const LEDGER_KINDS = ["in", "out", "inkind"] as const;
 export type LedgerKind = (typeof LEDGER_KINDS)[number];
 export const LEDGER_METHODS = ["telebirr", "bank", "cash", "other"] as const;
 export const METHOD_LABEL: Record<string, string> = { telebirr: "Telebirr", bank: "Bank transfer", cash: "Cash", other: "Other" };
@@ -328,7 +328,7 @@ export type GoalStatus = (typeof GOAL_STATUSES)[number];
 /** The colours a goal's constellation can take: the brand's, plus two that stay apart from them on the night sky. */
 export const GOAL_COLORS = ["#F3BC29", "#E47FC8", "#63B7B9", "#9DD66F", "#FF9B6A", "#A99BFF"] as const;
 
-export type LedgerFields = { kind: LedgerKind; amount: number; name: string; anonymous: boolean; goalId: string | null; method: string; note: string; occurredAt: string };
+export type LedgerFields = { kind: LedgerKind; amount: number; name: string; anonymous: boolean; goalId: string | null; method: string; note: string; items: string; recipient: string; occurredAt: string };
 export type GoalFields = { title: string; target: number; color: string; about: string; plan: string; status: GoalStatus };
 
 const text = (v: unknown, max: number) => String(v ?? "").trim().slice(0, max);
@@ -339,12 +339,18 @@ export function checkLedgerEntry(
   goalIds: readonly string[],
   now = new Date(),
 ): { ok: true; value: LedgerFields } | { ok: false; error: string } {
-  const kind = raw.kind === "out" ? "out" : raw.kind === "in" ? "in" : null;
-  if (!kind) return { ok: false, error: "Is this money in or money out?" };
+  const kind = (LEDGER_KINDS as readonly string[]).includes(String(raw.kind)) ? (String(raw.kind) as LedgerKind) : null;
+  if (!kind) return { ok: false, error: "Is this money in, money out, or a gift in kind?" };
   const amount = Math.round(Number(raw.amount));
-  if (!Number.isFinite(amount) || amount < 1 || amount > 100_000_000) return { ok: false, error: "Please enter an amount in birr." };
+  if (!Number.isFinite(amount) || amount < 1 || amount > 100_000_000) {
+    return { ok: false, error: kind === "inkind" ? "What were the goods worth, in birr?" : "Please enter an amount in birr." };
+  }
   const name = text(raw.name, 120);
-  if (name.length < 2) return { ok: false, error: kind === "in" ? "Who gave it? Enter a name." : "Who was it paid to? Enter a name." };
+  if (name.length < 2) return { ok: false, error: kind === "out" ? "Who was it paid to? Enter a name." : "Who gave it? Enter a name." };
+  const items = text(raw.items, 200);
+  const recipient = text(raw.recipient, 120);
+  if (kind === "inkind" && items.length < 2) return { ok: false, error: "What was given? For example “4 packs of 12 diapers”." };
+  if (kind === "inkind" && recipient.length < 2) return { ok: false, error: "Who received the goods? Enter a name." };
   const goal = text(raw.goalId, 80);
   if (goal && !goalIds.includes(goal)) return { ok: false, error: "That goal doesn’t exist any more." };
   const method = text(raw.method, 20);
@@ -355,7 +361,18 @@ export function checkLedgerEntry(
   if (when.getFullYear() < 2020) return { ok: false, error: "That date is too far back." };
   return {
     ok: true,
-    value: { kind, amount, name, anonymous: kind === "in" && raw.anonymous === true, goalId: goal || null, method, note: text(raw.note, 500), occurredAt: when.toISOString() },
+    value: {
+      kind,
+      amount,
+      name,
+      anonymous: kind !== "out" && raw.anonymous === true,
+      goalId: goal || null,
+      method: kind === "inkind" ? "" : method,
+      note: text(raw.note, 500),
+      items: kind === "inkind" ? items : "",
+      recipient: kind === "inkind" ? recipient : "",
+      occurredAt: when.toISOString(),
+    },
   };
 }
 
@@ -371,8 +388,9 @@ export function checkGoal(raw: Record<string, unknown>): { ok: true; value: Goal
 
 /**
  * Everything the numbers on the page come from. The balance is money in minus
- * money out. What is still needed counts only open goals, and a goal that has
- * raised more than its target needs nothing (it never goes negative).
+ * money out; gifts in kind never touch it, because no money changed hands here.
+ * What is still needed counts only open goals, and a goal that has raised more
+ * than its target needs nothing (it never goes negative).
  */
 export function ledgerTotals<G extends { id: string; target: number; status: GoalStatus }>(
   entries: { kind: LedgerKind; amount: number; goalId: string | null }[],
@@ -382,6 +400,7 @@ export function ledgerTotals<G extends { id: string; target: number; status: Goa
     entries.filter((e) => e.kind === k && (goalId === undefined || e.goalId === goalId)).reduce((s, e) => s + e.amount, 0);
   const moneyIn = sum("in");
   const moneyOut = sum("out");
+  const inKind = entries.filter((e) => e.kind === "inkind");
   const perGoal = goals.map((g) => {
     const raised = sum("in", g.id);
     const spent = sum("out", g.id);
@@ -393,6 +412,7 @@ export function ledgerTotals<G extends { id: string; target: number; status: Goa
     balance: moneyIn - moneyOut,
     count: entries.length,
     givers: entries.filter((e) => e.kind === "in").length,
+    inKind: { value: inKind.reduce((s, e) => s + e.amount, 0), count: inKind.length },
     needed: perGoal.filter((g) => g.status === "open").reduce((s, g) => s + g.remaining, 0),
     general: { raised: sum("in", null), spent: sum("out", null) },
     goals: perGoal,

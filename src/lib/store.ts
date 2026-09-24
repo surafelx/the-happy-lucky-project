@@ -282,12 +282,12 @@ export async function updateGoal(id: string, f: GoalFields): Promise<Goal | null
 export type LedgerEntry = LedgerFields & { id: number; ref: string; receipt: string | null; at: string; updatedAt: string };
 type LedgerRow = {
   id: number; ref: string; kind: LedgerKind; amount: number; name: string; anonymous: boolean; goal_id: string | null; method: string; note: string;
-  receipt_file: string | null; occurred_at: string; at: string; updated_at: string;
+  items: string; recipient: string; receipt_file: string | null; occurred_at: string; at: string; updated_at: string;
 };
-const LEDGER_COLS = "id, ref, kind, amount, name, anonymous, goal_id, method, note, receipt_file, occurred_at, at, updated_at";
+const LEDGER_COLS = "id, ref, kind, amount, name, anonymous, goal_id, method, note, items, recipient, receipt_file, occurred_at, at, updated_at";
 const toEntry = (r: LedgerRow): LedgerEntry => ({
   id: Number(r.id), ref: r.ref, kind: r.kind, amount: Number(r.amount), name: r.name, anonymous: r.anonymous, goalId: r.goal_id, method: r.method, note: r.note,
-  receipt: r.receipt_file, occurredAt: r.occurred_at, at: r.at, updatedAt: r.updated_at,
+  items: r.items, recipient: r.recipient, receipt: r.receipt_file, occurredAt: r.occurred_at, at: r.at, updatedAt: r.updated_at,
 });
 
 /** Every live entry, newest first. Deleted ones stay in the table with `deleted_at` set and are never returned. */
@@ -302,15 +302,15 @@ export async function readLedgerEntry(id: number): Promise<LedgerEntry | null> {
 }
 
 /**
- * Logs money in or out. The receipt number is HLP-YYMM-NNNN from the day it was
+ * Logs money in, money out, or a gift in kind. The receipt number is HLP-YYMM-NNNN from the day it was
  * logged and the row's own sequence, so it is unique and never changes, even
  * if the entry is edited later.
  */
 export async function addLedgerEntry(f: LedgerFields, receiptDataUrl = "", at = now()): Promise<LedgerEntry> {
   await prepared();
   const [{ id }] = await query<{ id: number }>(
-    `INSERT INTO ledger (kind, amount, name, anonymous, goal_id, method, note, occurred_at, at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $9) RETURNING id`,
-    [f.kind, f.amount, f.name, f.anonymous, f.goalId, f.method, f.note, f.occurredAt, at],
+    `INSERT INTO ledger (kind, amount, name, anonymous, goal_id, method, note, items, recipient, occurred_at, at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $11) RETURNING id`,
+    [f.kind, f.amount, f.name, f.anonymous, f.goalId, f.method, f.note, f.items, f.recipient, f.occurredAt, at],
   );
   const ref = receiptId(new Date(at), Number(id));
   const file = receiptDataUrl ? await saveImage(`ledger-${id}`, receiptDataUrl) : null;
@@ -327,8 +327,8 @@ export async function editLedgerEntry(id: number, f: LedgerFields, opts: { recei
   if (opts.receiptDataUrl) file = await saveImage(`ledger-${id}`, opts.receiptDataUrl);
   else if (opts.removeReceipt) file = null;
   await query(
-    "UPDATE ledger SET kind = $2, amount = $3, name = $4, anonymous = $5, goal_id = $6, method = $7, note = $8, occurred_at = $9, receipt_file = $10, updated_at = $11 WHERE id = $1",
-    [id, f.kind, f.amount, f.name, f.anonymous, f.goalId, f.method, f.note, f.occurredAt, file, now()],
+    "UPDATE ledger SET kind = $2, amount = $3, name = $4, anonymous = $5, goal_id = $6, method = $7, note = $8, items = $9, recipient = $10, occurred_at = $11, receipt_file = $12, updated_at = $13 WHERE id = $1",
+    [id, f.kind, f.amount, f.name, f.anonymous, f.goalId, f.method, f.note, f.items, f.recipient, f.occurredAt, file, now()],
   );
   if (cur.receipt && !file) await query("DELETE FROM files WHERE id = $1", [cur.receipt]);
   return readLedgerEntry(id);

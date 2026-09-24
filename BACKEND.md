@@ -61,6 +61,10 @@ It is **not connected to any bank**. The office logs every entry by hand under *
   numbers before uploading. Deleting an entry is soft, like pledges: it leaves the page
   and the totals but stays in the table.
 - The page polls every 15 seconds, so a new entry appears within that time, with confetti.
+- **Gifts in kind** (goods someone bought and handed over, like diapers to a home) are a
+  third kind of entry. They carry what the goods were and who received them, show what
+  they were worth, and are deliberately kept out of the balance: that money never passed
+  through us. Their photo is of the goods, not a receipt.
 
 ## The join counter
 

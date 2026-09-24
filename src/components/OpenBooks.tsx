@@ -105,6 +105,13 @@ function placeStars(entries: Entry[], anchors: Anchor[]): Star[] {
   return stars;
 }
 
+/** A gift in kind: a soft rounded shape, so it never reads as cash. */
+function bundle(cx: number, cy: number, r: number) {
+  const w = round(r * 1.15);
+  const h = round(r * 0.95);
+  return `M${round(cx - w)} ${round(cy - h * 0.2)}h${round(w * 2)}v${round(h * 1.2)}h${round(-w * 2)}Z`;
+}
+
 /** A four-pointed sparkle. */
 function sparkle(cx: number, cy: number, r: number) {
   const k = round(r * 0.3);
@@ -188,12 +195,13 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   const listed = entries.filter((e) => matches(e) && inFocus(e));
   const goalOf = (e: Entry) => goals.find((g) => g.id === e.goalId) ?? null;
 
-  const t = data?.totals ?? { in: 0, out: 0, balance: 0, count: 0, givers: 0, needed: 0, general: { raised: 0, spent: 0 } };
+  const t = data?.totals ?? { in: 0, out: 0, balance: 0, count: 0, givers: 0, needed: 0, inKind: { value: 0, count: 0 }, general: { raised: 0, spent: 0 } };
   const balance = useCountUp(t.balance);
   const count = useCountUp(t.count, 700);
   const raised = useCountUp(t.in);
   const spent = useCountUp(t.out);
   const needed = useCountUp(t.needed);
+  const inKindValue = useCountUp(t.inKind.value);
   const focusTitle = focus ? anchors.find((a) => a.id === focus)?.title ?? "" : "";
 
   const showOnSky = (id: string) => {
@@ -226,14 +234,18 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
         </div>
         <div className="bstat"><span>Given so far</span><b className="num">{fmt(raised)}<small> ETB</small></b><em>{t.givers} {t.givers === 1 ? "gift" : "gifts"}</em></div>
         <div className="bstat"><span>Spent</span><b className="num">{fmt(spent)}<small> ETB</small></b><em>every payment has its line</em></div>
+        {t.inKind.count ? (
+          <div className="bstat"><span>Given in kind</span><b className="num">{fmt(inKindValue)}<small> ETB</small></b><em>{t.inKind.count} {t.inKind.count === 1 ? "gift" : "gifts"} of goods, handed over directly</em></div>
+        ) : null}
         <div className="bstat need"><span>Still needed</span><b className="num">{fmt(needed)}<small> ETB</small></b><em>for the open goals below</em></div>
       </section>
 
       <p className="books-latest" aria-live="polite">
         {latest ? (
           <>
-            <b>{latest.kind === "in" ? "✨ Just in:" : "🧾 Just spent:"}</b> {latest.kind === "in" ? `${latest.name} gave` : `paid ${latest.name}`} {fmt(latest.amount)} ETB
-            {goalOf(latest) ? ` for ${goalOf(latest)!.title}` : ""}.{" "}
+            <b>{latest.kind === "in" ? "✨ Just in:" : latest.kind === "out" ? "🧾 Just spent:" : "🎁 Just given:"}</b>{" "}
+            {latest.kind === "in" ? `${latest.name} gave` : latest.kind === "out" ? `paid ${latest.name}` : `${latest.name} gave ${latest.items} to ${latest.recipient}, worth`} {fmt(latest.amount)} ETB
+            {latest.kind !== "inkind" && goalOf(latest) ? ` for ${goalOf(latest)!.title}` : ""}.{" "}
             <button type="button" onClick={() => setOpen(latest)}>See the receipt</button>
           </>
         ) : null}
@@ -293,6 +305,8 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
                         <circle cx={s.x} cy={s.y} r={round(s.r * 1.3)} fill={s.color} opacity={0.18} />
                         <path d={sparkle(s.x, s.y, round(s.r * 1.5))} fill={s.color} />
                       </>
+                    ) : e.kind === "inkind" ? (
+                      <path d={bundle(s.x, s.y, round(s.r * 1.2))} fill={s.color} opacity={0.85} />
                     ) : (
                       <circle cx={s.x} cy={s.y} r={round(s.r * 0.8)} fill="#0A1826" stroke={s.color} strokeWidth={1.6} />
                     )}
@@ -310,8 +324,9 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
             {entries.length === 0 ? <p className="sky-empty">The sky is empty for now. The first gift will be the first star.</p> : null}
             {tip ? (
               <div className="tip show" style={{ left: `${(tip.x / W) * 100}%`, top: `${(tip.y / H) * 100}%` }}>
-                <b>{tip.entry.kind === "in" ? tip.entry.name : `Paid to ${tip.entry.name}`}</b>
-                {tip.entry.kind === "in" ? "+" : "−"}{fmt(tip.entry.amount)} ETB · {shortDate(tip.entry.occurredAt)}
+                <b>{tip.entry.kind === "out" ? `Paid to ${tip.entry.name}` : tip.entry.name}</b>
+                {tip.entry.kind === "inkind" ? `${tip.entry.items} · worth ` : tip.entry.kind === "in" ? "+" : "−"}
+                {fmt(tip.entry.amount)} ETB · {shortDate(tip.entry.occurredAt)}
                 <br />
                 <span className="mono">{tip.entry.ref}</span>
               </div>
@@ -319,6 +334,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
             <div className="sky-legend">
               <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d={sparkle(0, 0, 5.5)} fill="#F6EFD9" /></svg> a gift</span>
               <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="none" stroke="#F6EFD9" strokeWidth="1.6" /></svg> money spent</span>
+              <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d="M-5 -1h10v5h-10Z" fill="#F6EFD9" /></svg> a gift in kind</span>
               <span>bigger star, bigger amount</span>
             </div>
             <span className="sky-hint">{focus ? <button type="button" onClick={() => setFocus(null)}>Show every goal</button> : "Tap a star to see its receipt"}</span>
@@ -353,11 +369,11 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
                 <button type="button" className={`rcpt ${e.kind}${born.has(e.ref) ? " new" : ""}`} onClick={() => setOpen(e)}>
                   <i style={{ background: e.kind === "in" ? goalOf(e)?.color ?? GENERAL_COLOR : "transparent", borderColor: goalOf(e)?.color ?? "var(--ink)" }} />
                   <span>
-                    <b>{e.kind === "in" ? e.name : `Paid to ${e.name}`}</b>
+                    <b>{e.kind === "out" ? `Paid to ${e.name}` : e.name}</b>
                     <br />
-                    <span className="id">{e.ref} · {shortDate(e.occurredAt)} · {goalOf(e)?.title ?? "General fund"}</span>
+                    <span className="id">{e.ref} · {shortDate(e.occurredAt)} · {e.kind === "inkind" ? `${e.items} → ${e.recipient}` : goalOf(e)?.title ?? "General fund"}</span>
                   </span>
-                  <span className="amt num">{e.kind === "in" ? "+" : "−"}{fmt(e.amount)}{e.receipt ? " 🧾" : ""}</span>
+                  <span className="amt num">{e.kind === "in" ? "+" : e.kind === "out" ? "−" : "≈"}{fmt(e.amount)}{e.receipt ? " 📷" : ""}</span>
                 </button>
               </li>
             ))}
@@ -401,6 +417,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
           <li><b>Logged by hand.</b> When a Telebirr, bank or cash payment reaches us, someone on the team logs it here, usually the same day. The page updates by itself.</li>
           <li><b>Not connected to our bank.</b> This is our own record, kept in the open. “What we have now” is everything in minus everything out.</li>
           <li><b>Find your gift.</b> Search your name or the receipt number we sent you. The date shows when your money arrived.</li>
+          <li><b>Gifts in kind.</b> Goods bought by someone else and handed straight over. They show what they were worth, but they never move “what we have now”, because that money never passed through us.</li>
           <li><b>Receipts for spending.</b> Where we have a receipt, you can open it. Phone and account numbers are covered before they go up.</li>
           <li><b>See a mistake?</b> Tell us and we’ll fix it. A corrected entry keeps its receipt number.</li>
         </ul>
@@ -411,17 +428,23 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
           <div className="paper" role="dialog" aria-modal="true" aria-label={`Receipt ${open.ref}`} onClick={(e) => e.stopPropagation()}>
             <button type="button" className="x" aria-label="Close" onClick={() => setOpen(null)} autoFocus>×</button>
             <div className="head">Happy Lucky Chacho</div>
-            <div className="sub">{open.kind === "in" ? "Gift received" : "Money spent"} · {open.ref}</div>
-            <div className="row"><span>{open.kind === "in" ? "From" : "Paid to"}</span><span>{open.name}</span></div>
+            <div className="sub">{open.kind === "in" ? "Gift received" : open.kind === "out" ? "Money spent" : "Gift in kind"} · {open.ref}</div>
+            <div className="row"><span>{open.kind === "out" ? "Paid to" : "From"}</span><span>{open.name}</span></div>
+            {open.kind === "inkind" ? (
+              <>
+                <div className="row"><span>What</span><span>{open.items}</span></div>
+                <div className="row"><span>Given to</span><span>{open.recipient}</span></div>
+              </>
+            ) : null}
             <div className="row"><span>For</span><span>{goalOf(open)?.title ?? "General fund"}</span></div>
             <div className="row"><span>When</span><span>{dateTime(open.occurredAt)}</span></div>
             {open.method ? <div className="row"><span>How</span><span>{open.method}</span></div> : null}
             {open.note ? <div className="row"><span>Note</span><span>{open.note}</span></div> : null}
-            <div className="row big"><span>{open.kind === "in" ? "Amount" : "Spent"}</span><span>{fmt(open.amount)} ETB</span></div>
+            <div className="row big"><span>{open.kind === "in" ? "Amount" : open.kind === "out" ? "Spent" : "Worth"}</span><span>{fmt(open.amount)} ETB</span></div>
             {open.receipt ? (
               <a className="paper-photo" href={`/api/ledger/receipt?ref=${encodeURIComponent(open.ref)}`} target="_blank" rel="noopener">
                 {/* eslint-disable-next-line @next/next/no-img-element -- served from the database, not a static asset */}
-                <img src={`/api/ledger/receipt?ref=${encodeURIComponent(open.ref)}`} alt={`Photo of receipt ${open.ref}`} loading="lazy" />
+                <img src={`/api/ledger/receipt?ref=${encodeURIComponent(open.ref)}`} alt={open.kind === "inkind" ? `Photo of the gift, ${open.ref}` : `Photo of receipt ${open.ref}`} loading="lazy" />
               </a>
             ) : null}
             <div className="thanks">Logged {dateTime(open.loggedAt)}{open.kind === "in" ? ". Thank you." : ""}</div>

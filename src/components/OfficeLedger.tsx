@@ -5,12 +5,12 @@ import type { ChangeEvent, FormEvent } from "react";
 
 import { shrinkImage } from "@/lib/image";
 
-type Kind = "in" | "out";
-type Entry = { id: number; ref: string; kind: Kind; amount: number; name: string; anonymous: boolean; goalId: string | null; method: string; note: string; receipt: string | null; occurredAt: string; at: string };
+type Kind = "in" | "out" | "inkind";
+type Entry = { id: number; ref: string; kind: Kind; amount: number; name: string; anonymous: boolean; goalId: string | null; method: string; note: string; items: string; recipient: string; receipt: string | null; occurredAt: string; at: string };
 type Goal = { id: string; title: string; target: number; color: string; about: string; plan: string; status: "open" | "done"; raised: number; spent: number; remaining: number; pct: number };
-type Payload = { totals: { in: number; out: number; balance: number; count: number; needed: number }; goals: Goal[]; entries: Entry[]; colors: string[]; methods: { key: string; label: string }[] };
+type Payload = { totals: { in: number; out: number; balance: number; count: number; needed: number; inKind: { value: number; count: number } }; goals: Goal[]; entries: Entry[]; colors: string[]; methods: { key: string; label: string }[] };
 
-type EntryDraft = { kind: Kind; amount: string; name: string; anonymous: boolean; goalId: string; method: string; note: string; when: string; image: string; removeReceipt: boolean };
+type EntryDraft = { kind: Kind; amount: string; name: string; anonymous: boolean; goalId: string; method: string; note: string; items: string; recipient: string; when: string; image: string; removeReceipt: boolean };
 type GoalDraft = { title: string; target: string; color: string; about: string; plan: string; status: "open" | "done" };
 
 const fmt = (n: number) => n.toLocaleString("en-US");
@@ -21,7 +21,7 @@ const localInput = (iso: string) => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 };
 const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-const blankEntry = (): EntryDraft => ({ kind: "in", amount: "", name: "", anonymous: false, goalId: "", method: "telebirr", note: "", when: localInput(new Date().toISOString()), image: "", removeReceipt: false });
+const blankEntry = (): EntryDraft => ({ kind: "in", amount: "", name: "", anonymous: false, goalId: "", method: "telebirr", note: "", items: "", recipient: "", when: localInput(new Date().toISOString()), image: "", removeReceipt: false });
 
 async function call(url: string, method: "POST" | "PATCH" | "DELETE", body?: unknown) {
   const res = await fetch(url, { method, headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
@@ -90,7 +90,7 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
     setSide({ type: "entry", id: e?.id ?? null });
     setEntry(
       e
-        ? { kind: e.kind, amount: String(e.amount), name: e.name, anonymous: e.anonymous, goalId: e.goalId ?? "", method: e.method, note: e.note, when: localInput(e.occurredAt), image: "", removeReceipt: false }
+        ? { kind: e.kind, amount: String(e.amount), name: e.name, anonymous: e.anonymous, goalId: e.goalId ?? "", method: e.method, note: e.note, items: e.items, recipient: e.recipient, when: localInput(e.occurredAt), image: "", removeReceipt: false }
         : blankEntry(),
     );
   };
@@ -129,11 +129,14 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
       goalId: entry.goalId,
       method: entry.method,
       note: entry.note,
+      items: entry.items,
+      recipient: entry.recipient,
       occurredAt: new Date(entry.when).toISOString(),
       image: entry.image || undefined,
       removeReceipt: entry.removeReceipt,
     };
-    void run(() => call("/api/office/ledger", current ? "PATCH" : "POST", body), current ? "Entry updated" : entry.kind === "in" ? "Gift logged. It’s on the page now." : "Payment logged").then((ok) => {
+    const added = entry.kind === "in" ? "Gift logged. It’s on the page now." : entry.kind === "out" ? "Payment logged" : "Gift in kind logged";
+    void run(() => call("/api/office/ledger", current ? "PATCH" : "POST", body), current ? "Entry updated" : added).then((ok) => {
       if (ok) setSide(null);
     });
   };
@@ -161,6 +164,7 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
           <div className="akpi"><span>Balance</span><b className="num">{fmt(t.balance)}<small> ETB</small></b><em>money in minus money out</em></div>
           <div className="akpi"><span>Money in</span><b className="num">{fmt(t.in)}<small> ETB</small></b><em>{data.entries.filter((e) => e.kind === "in").length} gifts</em></div>
           <div className="akpi"><span>Money out</span><b className="num">{fmt(t.out)}<small> ETB</small></b><em>{data.entries.filter((e) => e.kind === "out").length} payments</em></div>
+          <div className="akpi"><span>Given in kind</span><b className="num">{fmt(t.inKind.value)}<small> ETB</small></b><em>{t.inKind.count} {t.inKind.count === 1 ? "gift" : "gifts"} of goods</em></div>
           <div className="akpi"><span>Still needed</span><b className="num">{fmt(t.needed)}<small> ETB</small></b><em>across open goals</em></div>
         </div>
 
@@ -176,6 +180,7 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
               <button type="button" className={`pill${filter === "all" ? " on" : ""}`} onClick={() => setFilter("all")}>All {data.entries.length}</button>
               <button type="button" className={`pill st-active${filter === "in" ? " on" : ""}`} onClick={() => setFilter("in")}>In</button>
               <button type="button" className={`pill st-contacted${filter === "out" ? " on" : ""}`} onClick={() => setFilter("out")}>Out</button>
+            <button type="button" className={`pill${filter === "inkind" ? " on" : ""}`} onClick={() => setFilter("inkind")}>In kind</button>
             </div>
           </div>
           {rows.length === 0 ? (
@@ -188,10 +193,10 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
                   {rows.map((e) => (
                     <tr key={e.id} className={side?.type === "entry" && side.id === e.id ? "open" : ""} onClick={() => openEntry(e)}>
                       <td className="mono">{e.ref}{e.receipt ? <span className="pill" title="Receipt photo published">🧾</span> : null}</td>
-                      <td><b>{e.name}</b>{e.anonymous ? <span className="pill">hidden</span> : null}{e.note ? <span className="sub">{e.note}</span> : null}</td>
+                      <td><b>{e.name}</b>{e.anonymous ? <span className="pill">hidden</span> : null}{e.kind === "inkind" ? <span className="sub">{e.items} → {e.recipient}</span> : e.note ? <span className="sub">{e.note}</span> : null}</td>
                       <td><i className="dot" style={{ background: data.goals.find((g) => g.id === e.goalId)?.color ?? "var(--ink-3)" }} />{goalTitle(e.goalId)}</td>
                       <td>{when(e.occurredAt)}</td>
-                      <td className={`r num ledger-${e.kind}`}>{e.kind === "in" ? "+" : "−"}{fmt(e.amount)} ETB</td>
+                      <td className={`r num ledger-${e.kind}`}>{e.kind === "in" ? "+" : e.kind === "out" ? "−" : "≈"}{fmt(e.amount)} ETB</td>
                     </tr>
                   ))}
                 </tbody>
@@ -227,23 +232,38 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
           <div className="ahead"><h2>{current ? current.ref : "Log money"}</h2><button type="button" className="aclose" aria-label="Close" onClick={() => setSide(null)}>×</button></div>
           {current ? <p className="quiet">Logged {when(current.at)}. The receipt number stays the same if you edit.</p> : null}
           <form className="aform" onSubmit={saveEntry}>
-            <div className="kind-toggle" role="radiogroup" aria-label="Money in or out">
+            <div className="kind-toggle three" role="radiogroup" aria-label="What kind of entry">
               <button type="button" role="radio" aria-checked={entry.kind === "in"} className={entry.kind === "in" ? "on in" : ""} onClick={() => setEntry({ ...entry, kind: "in" })}>＋ Money in</button>
               <button type="button" role="radio" aria-checked={entry.kind === "out"} className={entry.kind === "out" ? "on out" : ""} onClick={() => setEntry({ ...entry, kind: "out", anonymous: false })}>− Money out</button>
+              <button type="button" role="radio" aria-checked={entry.kind === "inkind"} className={entry.kind === "inkind" ? "on inkind" : ""} onClick={() => setEntry({ ...entry, kind: "inkind" })}>🎁 In kind</button>
             </div>
-            <label className="field"><span>Amount (birr)</span><input type="number" inputMode="numeric" min={1} step={1} value={entry.amount} onChange={(e) => setEntry({ ...entry, amount: e.target.value })} required /></label>
-            <label className="field"><span>{entry.kind === "in" ? "From" : "Paid to"}</span><input value={entry.name} onChange={(e) => setEntry({ ...entry, name: e.target.value })} placeholder={entry.kind === "in" ? "Full name, as it should show" : "Shop, school, person"} required /></label>
-            {entry.kind === "in" ? (
+            {entry.kind === "inkind" ? <p className="quiet">Goods handed straight to someone, not money through our hands. It never changes the balance.</p> : null}
+            <label className="field"><span>{entry.kind === "inkind" ? "What it was worth (birr)" : "Amount (birr)"}</span><input type="number" inputMode="numeric" min={1} step={1} value={entry.amount} onChange={(e) => setEntry({ ...entry, amount: e.target.value })} required /></label>
+            <label className="field"><span>{entry.kind === "out" ? "Paid to" : "From"}</span><input value={entry.name} onChange={(e) => setEntry({ ...entry, name: e.target.value })} placeholder={entry.kind === "out" ? "Shop, school, person" : "Full name, as it should show"} required /></label>
+            {entry.kind === "inkind" ? (
+              <>
+                <label className="field"><span>What was given</span><input value={entry.items} onChange={(e) => setEntry({ ...entry, items: e.target.value })} placeholder="e.g. 4 packs of 12 diapers" required /></label>
+                <label className="field"><span>Who received it</span><input value={entry.recipient} onChange={(e) => setEntry({ ...entry, recipient: e.target.value })} placeholder="e.g. One Heart Wholeness Center" required /></label>
+              </>
+            ) : null}
+            {entry.kind !== "out" ? (
               <label className="acheck"><input type="checkbox" checked={entry.anonymous} onChange={(e) => setEntry({ ...entry, anonymous: e.target.checked })} /> They asked not to be named (shows as “Anonymous”)</label>
             ) : null}
             <label className="field"><span>For</span><select value={entry.goalId} onChange={(e) => setEntry({ ...entry, goalId: e.target.value })}><option value="">General fund</option>{data.goals.map((g) => <option key={g.id} value={g.id}>{g.title}{g.status === "done" ? " (done)" : ""}</option>)}</select></label>
-            <label className="field"><span>How</span><select value={entry.method} onChange={(e) => setEntry({ ...entry, method: e.target.value })}>{data.methods.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}</select></label>
-            <label className="field"><span>When it arrived or was paid</span><input type="datetime-local" value={entry.when} onChange={(e) => setEntry({ ...entry, when: e.target.value })} required /></label>
+            {entry.kind === "inkind" ? null : (
+              <label className="field"><span>How</span><select value={entry.method} onChange={(e) => setEntry({ ...entry, method: e.target.value })}>{data.methods.map((m) => <option key={m.key} value={m.key}>{m.label}</option>)}</select></label>
+            )}
+            <label className="field"><span>{entry.kind === "inkind" ? "When it was handed over" : "When it arrived or was paid"}</span><input type="datetime-local" value={entry.when} onChange={(e) => setEntry({ ...entry, when: e.target.value })} required /></label>
             <label className="field"><span>Note <em>(public)</em></span><textarea rows={2} value={entry.note} onChange={(e) => setEntry({ ...entry, note: e.target.value })} placeholder={entry.kind === "in" ? "e.g. for the reading club books" : "e.g. 40 exercise books, 20 pens"} /></label>
 
             <div className="field">
-              <span>Receipt photo <em>(public)</em></span>
-              <p className="quiet receipt-warn">Cover phone numbers, account numbers and signatures before you upload{entry.anonymous ? ", and their name, since they asked not to be named" : ""}. Anyone can open this photo.</p>
+              <span>{entry.kind === "inkind" ? "Photo of the gift" : "Receipt photo"} <em>(public)</em></span>
+              <p className="quiet receipt-warn">
+                {entry.kind === "inkind"
+                  ? "A photo of the goods or the handover. Ask before photographing anyone, and never publish a child’s face without their guardian’s consent."
+                  : "Cover phone numbers, account numbers and signatures before you upload."}
+                {entry.anonymous ? " Cover their name too, since they asked not to be named." : ""} Anyone can open this photo.
+              </p>
               {entry.image ? (
                 // eslint-disable-next-line @next/next/no-img-element -- a local preview of the picked photo
                 <img className="receipt-preview" src={entry.image} alt="The receipt you picked" />
@@ -261,7 +281,7 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
             </div>
 
             <div className="aform-actions">
-              <button type="submit" className="abtn primary" disabled={busy}>{current ? "Save changes" : entry.kind === "in" ? "Log gift" : "Log payment"}</button>
+              <button type="submit" className="abtn primary" disabled={busy}>{current ? "Save changes" : entry.kind === "in" ? "Log gift" : entry.kind === "out" ? "Log payment" : "Log gift in kind"}</button>
               {current ? <button type="button" className="abtn danger ghost" disabled={busy} onClick={() => removeEntry(current)}>Remove entry</button> : null}
             </div>
           </form>

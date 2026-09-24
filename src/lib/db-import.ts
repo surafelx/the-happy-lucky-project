@@ -130,14 +130,6 @@ export async function importLegacyFiles(): Promise<{ imported: Record<string, nu
     imported.messages = (imported.messages ?? 0) + 1;
   }
 
-  for (const r of await object<Json[]>("receipts.json", [])) {
-    if (!str(r.id)) continue;
-    await query("INSERT INTO receipts (id, donor, place, campaign, amount, color, at) VALUES ($1, $2, $3, $4, $5, $6, $7) ON CONFLICT DO NOTHING", [
-      str(r.id), str(r.donor), str(r.place), str(r.campaign), Math.round(Number(r.amount)) || 0, str(r.color), str(r.at),
-    ]);
-    imported.receipts = (imported.receipts ?? 0) + 1;
-  }
-
   await setMeta(MARKER, new Date().toISOString());
   if (Object.keys(imported).length) console.log("[db] imported the old data files:", imported);
   return { imported };

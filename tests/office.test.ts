@@ -209,7 +209,7 @@ test("ledger entries: money in keeps a hidden name, money out never hides who wa
   const base = { kind: "in", amount: "1500.4", name: " Abebe Kebede ", anonymous: true, goalId: "g1", method: "telebirr", occurredAt: "2026-09-21T08:30:00Z" };
   const ok = checkLedgerEntry(base, ["g1"], now);
   assert.ok(ok.ok);
-  assert.deepEqual(ok.ok && ok.value, { kind: "in", amount: 1500, name: "Abebe Kebede", anonymous: true, goalId: "g1", method: "telebirr", note: "", occurredAt: "2026-09-21T08:30:00.000Z" });
+  assert.deepEqual(ok.ok && ok.value, { kind: "in", amount: 1500, name: "Abebe Kebede", anonymous: true, goalId: "g1", method: "telebirr", note: "", items: "", recipient: "", occurredAt: "2026-09-21T08:30:00.000Z" });
   const out = checkLedgerEntry({ ...base, kind: "out" }, ["g1"], now);
   assert.equal(out.ok && out.value.anonymous, false);
   assert.equal(checkLedgerEntry({ ...base, goalId: "" }, [], now).ok && true, true); // the general fund
@@ -221,6 +221,22 @@ test("ledger entries: money in keeps a hidden name, money out never hides who wa
   assert.equal(checkLedgerEntry({ ...base, method: "crypto" }, ["g1"], now).ok, false);
   assert.equal(checkLedgerEntry({ ...base, occurredAt: "2026-09-25T00:00:00Z" }, ["g1"], now).ok, false); // the future
   assert.equal(checkLedgerEntry({ ...base, occurredAt: "not a date" }, ["g1"], now).ok, false);
+});
+
+test("a gift in kind needs to say what it was and who received it", () => {
+  const now = new Date("2026-09-22T12:00:00Z");
+  const base = { kind: "inkind", amount: 3000, name: "Surafel", occurredAt: "2026-09-22T09:00:00Z" };
+  assert.equal(checkLedgerEntry(base, [], now).ok, false); // no items, no recipient
+  assert.equal(checkLedgerEntry({ ...base, items: "4 packs of 12 diapers" }, [], now).ok, false); // still no recipient
+  const ok = checkLedgerEntry({ ...base, items: "4 packs of 12 diapers", recipient: "One Heart Wholeness Center", method: "telebirr" }, [], now);
+  assert.ok(ok.ok);
+  assert.equal(ok.ok && ok.value.items, "4 packs of 12 diapers");
+  assert.equal(ok.ok && ok.value.recipient, "One Heart Wholeness Center");
+  assert.equal(ok.ok && ok.value.method, ""); // no money moved, so no payment method
+  // items and recipient belong to gifts in kind only
+  const cash = checkLedgerEntry({ ...base, kind: "in", items: "diapers", recipient: "someone" }, [], now);
+  assert.equal(cash.ok && cash.value.items, "");
+  assert.equal(cash.ok && cash.value.recipient, "");
 });
 
 test("goals get a known colour and an open status unless told otherwise", () => {
@@ -245,13 +261,15 @@ test("ledgerTotals: balance is in minus out, and only open goals count as still 
       { kind: "in", amount: 500, goalId: null },
       { kind: "out", amount: 4500, goalId: "books" },
       { kind: "out", amount: 200, goalId: null },
+      { kind: "inkind", amount: 3000, goalId: "books" }, // goods, not money: outside the balance
     ],
     goals,
   );
   assert.equal(t.in, 16500);
   assert.equal(t.out, 4700);
-  assert.equal(t.balance, 11800);
-  assert.equal(t.count, 5);
+  assert.equal(t.balance, 11800); // the diapers change nothing here
+  assert.deepEqual(t.inKind, { value: 3000, count: 1 });
+  assert.equal(t.count, 6);
   assert.equal(t.givers, 3);
   assert.equal(t.needed, 20000); // books needs nothing, laptop 20000, the trip is done
   assert.deepEqual(t.general, { raised: 500, spent: 200 });

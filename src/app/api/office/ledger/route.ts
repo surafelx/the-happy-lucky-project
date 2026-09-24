@@ -29,7 +29,7 @@ export async function GET() {
   const totals = ledgerTotals(entries, goals);
   return NextResponse.json({
     ok: true,
-    totals: { in: totals.in, out: totals.out, balance: totals.balance, count: totals.count, needed: totals.needed },
+    totals: { in: totals.in, out: totals.out, balance: totals.balance, count: totals.count, needed: totals.needed, inKind: totals.inKind },
     goals: totals.goals,
     entries,
     colors: GOAL_COLORS,
