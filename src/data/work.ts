@@ -28,24 +28,25 @@ export type WorkPlace = {
 
 export const WORK: WorkPlace[] = [
   {
+    id: "one-heart",
+    name: "One Heart Wholeness Center",
+    kind: "Children's home",
+    town: "Bahir Dar",
+    at: [37.39, 11.59],
+    since: "2026",
+    what: "Four packs of diapers, forty-eight in all, bought and carried over in person. The first thing we have handed to anyone.",
+    now: true,
+  },
+  {
     id: "year-covered",
     name: "Ethiopian Orthodox charity home",
     kind: "Campaign",
     town: "Addis Ababa",
     at: [38.76, 9.04],
     since: "2026",
-    what: "A Year, Covered: twelve months of sanitary pads for every woman living at the home.",
-    reached: 40,
+    what: "A Year, Covered: a plan to cover twelve months of sanitary pads for the women living at the home. Still being raised, nothing delivered yet.",
     href: "/campaigns/a-year-covered",
-    now: true,
   },
-  { id: "kolfe", name: "Kolfe Primary School", kind: "School", town: "Addis Ababa", at: [38.7, 9.01], since: "2026", what: "Sunday coding club and a homework hour with big siblings.", reached: 60, example: true },
-  { id: "entoto", name: "Entoto children's home", kind: "Children's home", town: "Addis Ababa", at: [38.77, 9.09], since: "2026", what: "Reading club, art afternoons and one-to-one mentoring.", reached: 35, example: true },
-  { id: "bahir-dar", name: "Tana lakeside school", kind: "School", town: "Bahir Dar", at: [37.39, 11.59], since: "2026", what: "A science corner built from a box of donated kits.", reached: 80, example: true },
-  { id: "hawassa", name: "Hawassa youth centre", kind: "Community", town: "Hawassa", at: [38.48, 7.05], since: "2026", what: "Career talks and a monthly university guidance session.", reached: 45, example: true },
-  { id: "dire-dawa", name: "Dire Dawa girls' club", kind: "Community", town: "Dire Dawa", at: [41.87, 9.59], since: "2026", what: "Remote mentoring, one evening a week.", reached: 25, example: true },
-  { id: "jimma", name: "Jimma children's home", kind: "Children's home", town: "Jimma", at: [36.83, 7.67], since: "2026", what: "School material and a music workshop.", reached: 30, example: true },
-  { id: "mekelle", name: "Mekelle primary school", kind: "School", town: "Mekelle", at: [39.47, 13.5], since: "2026", what: "Exercise books, pens and a reading shelf.", reached: 120, example: true },
 ];
 
 /** Faint reference towns so the pins have something to sit next to. */

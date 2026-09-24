@@ -20,6 +20,9 @@ export function WorkMap() {
   const pins = useMemo(() => spread(shown.map((w) => ({ ...project(w.at), place: w }))), [shown]);
   const towns = new Set(WORK.map((w) => w.town)).size;
   const reached = WORK.reduce((s, w) => s + (w.reached ?? 0), 0);
+  // A campaign that is still raising is not a place we have shown up, so it is counted apart.
+  const planned = WORK.filter((w) => w.kind === "Campaign");
+  const done = WORK.filter((w) => w.kind !== "Campaign");
   const hasExamples = WORK.some((w) => w.example);
 
   const pick = (id: string, scroll = false) => {
@@ -35,12 +38,14 @@ export function WorkMap() {
           Where we&apos;ve <em>shown up</em>
         </h1>
         <p className="lede pop" style={{ "--i": 2 } as React.CSSProperties}>
-          Every pin is a school, a home or a community we have worked with, one Sunday at a time. Tap a pin to see what happened there.
+          We are at the beginning, so this map is short. Every pin is somewhere we have actually been, and it says plainly what
+          happened there. It grows one Sunday at a time.
         </p>
         <div className="work-stats pop" style={{ "--i": 3 } as React.CSSProperties}>
-          <div><b>{WORK.length}</b><span>places</span></div>
-          <div><b>{towns}</b><span>towns</span></div>
-          <div><b>{fmt(reached)}</b><span>kids and women reached</span></div>
+          <div><b>{done.length}</b><span>{done.length === 1 ? "place we have been" : "places we have been"}</span></div>
+          <div><b>{towns}</b><span>{towns === 1 ? "town" : "towns"}</span></div>
+          {reached > 0 ? <div><b>{fmt(reached)}</b><span>kids and women reached</span></div> : null}
+          {planned.length ? <div><b>{planned.length}</b><span>{planned.length === 1 ? "campaign still raising" : "campaigns still raising"}</span></div> : null}
         </div>
       </header>
 
