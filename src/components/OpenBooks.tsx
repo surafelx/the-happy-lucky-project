@@ -230,7 +230,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
         <div className="bstat live">
           <span><i className={error ? "off" : ""} aria-hidden="true" /> {error ? "Reconnecting…" : "Live"}</span>
           <b className="num">{fmt(count)}</b>
-          <em>transactions · updated {ago(fetchedAt, Math.max(clock, Date.parse(fetchedAt)))}</em>
+          <em>{t.count === 1 ? "line written down so far" : "lines written down so far"} · updated {ago(fetchedAt, Math.max(clock, Date.parse(fetchedAt)))}</em>
         </div>
         <div className="bstat"><span>Given so far</span><b className="num">{fmt(raised)}<small> ETB</small></b><em>{t.givers} {t.givers === 1 ? "gift" : "gifts"}</em></div>
         <div className="bstat"><span>Spent</span><b className="num">{fmt(spent)}<small> ETB</small></b><em>every payment has its line</em></div>
