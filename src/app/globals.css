@@ -1469,3 +1469,24 @@ body:has(.admin-page){padding-bottom:0}
 .jfoot a:hover{color:var(--ink)}
 @media (max-width:420px){.jsplit{grid-template-columns:1fr}.jbig+.jbig{border-left:0;border-top:2.5px solid var(--ink)}}
 
+
+/* ---------- the whole sky: full screen, pannable, with a little depth ---------- */
+.skybox.navigable{cursor:grab;touch-action:none;border-radius:0;border:0;box-shadow:none;aspect-ratio:auto;height:100%;width:100%}
+.skybox.navigable:active{cursor:grabbing}
+.skybox.navigable:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+.sky-open{position:absolute;right:.8rem;bottom:.7rem;z-index:2;border:2px solid #F6FFFA;background:rgba(10,24,38,.72);color:#F6FFFA;border-radius:999px;padding:.35rem .85rem;font:inherit;font-weight:700;font-size:.78rem;cursor:pointer;transition:transform .2s var(--spring)}
+.sky-open:hover{transform:translateY(-2px) rotate(-1.5deg)}
+.sky-full{position:fixed;inset:0;z-index:70;background:#0A1826;display:grid;grid-template-rows:auto minmax(0,1fr);animation:skyin .35s ease-out}
+@keyframes skyin{from{opacity:0}to{opacity:1}}
+.sky-full-bar{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.7rem clamp(.8rem,3vw,1.6rem);color:#F6FFFA;font-size:.85rem;border-bottom:1px solid rgba(246,255,250,.14)}
+.sky-full-bar b{font-family:var(--font-lucky);font-weight:400;font-size:1.15rem;letter-spacing:.02em}
+.sky-full-hint{margin-left:auto;font-size:.75rem;opacity:.7}
+.sky-close{border:2px solid #F6FFFA;background:transparent;color:#F6FFFA;border-radius:999px;padding:.3rem .9rem;font:inherit;font-weight:700;font-size:.8rem;cursor:pointer}
+.sky-close:hover{background:#F6FFFA;color:#0A1826}
+.sky-zoom{position:absolute;right:.8rem;top:.8rem;z-index:2;display:grid;gap:.35rem}
+.sky-zoom button{width:38px;height:38px;border:2px solid rgba(246,255,250,.7);background:rgba(10,24,38,.6);color:#F6FFFA;border-radius:50%;font:inherit;font-size:1.05rem;font-weight:700;cursor:pointer;line-height:1}
+.sky-zoom button:hover{background:#F6FFFA;color:#0A1826}
+.sky-full .sky-legend{bottom:1rem;left:clamp(.8rem,3vw,1.6rem)}
+.lightbox{z-index:90}
+@media (max-width:600px){.sky-full-hint{display:none}.sky-full .sky-legend{font-size:.64rem}}
+@media (prefers-reduced-motion:reduce){.sky-full{animation:none}.sky-open:hover{transform:none}}

@@ -26,6 +26,7 @@ import {
   weekStart,
 } from "../src/lib/office.ts";
 import { ETHIOPIA_BORDER, VIEW, inside, project, spread, toPath } from "../src/lib/geo.ts";
+import { H, W, placeAnchors, placeStars } from "../src/lib/sky.ts";
 
 test("sundaysOfMonth lists every Sunday of September 2026", () => {
   assert.deepEqual(sundaysOfMonth(2026, 8), [6, 13, 20, 27]);
@@ -275,4 +276,38 @@ test("ledgerTotals: balance is in minus out, and only open goals count as still 
   assert.deepEqual(t.general, { raised: 500, spent: 200 });
   const books = t.goals.find((g) => g.id === "books")!;
   assert.deepEqual([books.raised, books.spent, books.remaining, books.pct], [6000, 4500, 0, 100]);
+});
+
+const goal = (i: number) => ({ id: `g${i}`, title: `Goal ${i}`, color: "#fff", target: 100, about: "", plan: "", status: "open" as const, raised: 0, spent: 0, remaining: 100, pct: 0 });
+
+test("the sky spreads its goals out and never stacks two in one column", () => {
+  const two = placeAnchors([goal(0), goal(1)], false);
+  assert.equal(two.length, 2);
+  assert.ok(Math.abs(two[0].x - two[1].x) > 400, "two goals sit side by side");
+  assert.equal(two[0].y, two[1].y);
+  for (const n of [3, 4, 5]) {
+    const out = placeAnchors(Array.from({ length: n }, (_, i) => goal(i)), true);
+    assert.equal(out.length, n + 1); // the general fund sits in the middle
+    assert.deepEqual([out[0].x, out[0].y], [W / 2, H / 2]);
+    for (const a of out) assert.ok(a.x > 0 && a.x < W && a.y > 0 && a.y < H, `${a.title} stays inside the sky`);
+    for (let i = 1; i < out.length; i++) {
+      for (let j = i + 1; j < out.length; j++) {
+        assert.ok(Math.hypot(out[i].x - out[j].x, out[i].y - out[j].y) > 120, `${out[i].title} and ${out[j].title} keep their distance`);
+      }
+    }
+  }
+});
+
+test("stars stay inside the sky and keep off their goal's name", () => {
+  const anchors = placeAnchors([goal(0), goal(1)], false);
+  const entries = Array.from({ length: 40 }, (_, i) => ({ ref: `HLP-2609-${i}`, kind: "in" as const, amount: 100 + i * 37, name: "A", goalId: i % 2 ? "g1" : "g0", method: "", note: "", items: "", recipient: "", occurredAt: `2026-09-${String(1 + (i % 28)).padStart(2, "0")}T09:00:00.000Z`, loggedAt: "", receipt: false }));
+  const stars = placeStars(entries, anchors);
+  assert.equal(stars.length, 40);
+  for (const s of stars) {
+    assert.ok(s.x >= 16 && s.x <= W - 16 && s.y >= 16 && s.y <= H - 16);
+    const a = anchors.find((x) => x.id === s.anchor)!;
+    const labelHalf = Math.min(34, a.title.length) * 4.4 + 10; // the same band placeStars keeps clear
+    const onTheName = Math.abs(s.x - a.x) < labelHalf && s.y > a.y + 28 && s.y < a.y + 58;
+    assert.equal(onTheName, false, `a star sits on ${a.title}`);
+  }
 });

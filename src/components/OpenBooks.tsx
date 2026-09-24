@@ -2,20 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { createPortal } from "react-dom";
 
 import type { PublicBooks } from "@/lib/books";
+import { SkyCanvas } from "@/components/SkyCanvas";
 import { useCountUp } from "@/lib/count-up";
 import { burst, prefersReducedMotion } from "@/lib/format";
+import { GENERAL_COLOR, GENERAL_ID, placeAnchors, placeStars, sparkle } from "@/lib/sky";
+import type { Entry, Star } from "@/lib/sky";
 
-type Entry = PublicBooks["entries"][number];
-type Goal = PublicBooks["goals"][number];
-type Anchor = { id: string; title: string; color: string; x: number; y: number; goal: Goal | null };
-type Star = { entry: Entry; x: number; y: number; r: number; color: string; anchor: string };
-
-const W = 1000;
-const H = 620;
-const GENERAL_ID = "general";
-const GENERAL_COLOR = "#F6EFD9";
 const POLL_MS = 15_000;
 const fmt = (n: number) => n.toLocaleString("en-US");
 const dateTime = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
@@ -26,97 +21,6 @@ function ago(iso: string, now: number) {
   if (s < 60) return `${s}s ago`;
   if (s < 3600) return `${Math.floor(s / 60)} min ago`;
   return `${Math.floor(s / 3600)} h ago`;
-}
-
-/**
- * Two decimals is plenty for a 1000-wide sky, and it keeps every coordinate
- * identical on the server and in the browser: their Math.sin/cos differ in the
- * last bits, which React reports as a hydration mismatch.
- */
-const round = (n: number) => Math.round(n * 100) / 100;
-
-/** A small seeded random, so the sky is drawn the same way on every visit. */
-function seeded(seed: number) {
-  let t = seed >>> 0;
-  return () => {
-    t += 0x6d2b79f5;
-    let x = Math.imul(t ^ (t >>> 15), 1 | t);
-    x ^= x + Math.imul(x ^ (x >>> 7), 61 | x);
-    return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
-  };
-}
-const BACKDROP = (() => {
-  const rnd = seeded(20260922);
-  return Array.from({ length: 150 }, () => ({ x: round(rnd() * W), y: round(rnd() * H), r: round(0.4 + rnd() * 1.1), o: round(0.15 + rnd() * 0.6) }));
-})();
-
-/** Where each constellation sits: the general fund in the middle, the goals around it. */
-function placeAnchors(goals: Goal[], withGeneral: boolean): Anchor[] {
-  const out: Anchor[] = goals.map((g) => ({ id: g.id, title: g.title, color: g.color, x: 0, y: 0, goal: g }));
-  const general: Anchor = { id: GENERAL_ID, title: "General fund", color: GENERAL_COLOR, x: W / 2, y: H / 2, goal: null };
-  if (out.length === 0) return [general];
-  if (out.length === 1) {
-    out[0].x = withGeneral ? 680 : W / 2;
-    out[0].y = H / 2;
-    if (withGeneral) general.x = 320;
-  } else {
-    out.forEach((a, i) => {
-      const t = -Math.PI / 2 + (i * 2 * Math.PI) / out.length;
-      a.x = round(W / 2 + Math.cos(t) * 330);
-      a.y = round(H / 2 + Math.sin(t) * 185);
-    });
-  }
-  return withGeneral ? [general, ...out] : out;
-}
-
-/**
- * Each gift is a star around its goal, laid on a golden-angle spiral in the
- * order the money arrived, so a new star lands on the outside and the old
- * ones never move.
- */
-function placeStars(entries: Entry[], anchors: Anchor[]): Star[] {
-  const byAnchor = new Map<string, Entry[]>();
-  for (const e of [...entries].sort((a, b) => a.occurredAt.localeCompare(b.occurredAt) || a.ref.localeCompare(b.ref))) {
-    const key = e.goalId && anchors.some((a) => a.id === e.goalId) ? e.goalId : GENERAL_ID;
-    byAnchor.set(key, [...(byAnchor.get(key) ?? []), e]);
-  }
-  const maxR = anchors.length <= 2 ? 190 : 118;
-  const stars: Star[] = [];
-  anchors.forEach((a, ai) => {
-    const list = byAnchor.get(a.id) ?? [];
-    const step = Math.min(15, (maxR - 34) / Math.sqrt(Math.max(1, list.length)));
-    // Spiral slots under the goal's name are skipped, so no star sits on the words.
-    const labelHalf = Math.min(34, a.title.length) * 4.4 + 10;
-    let slot = 0;
-    list.forEach((entry) => {
-      let x = 0;
-      let y = 0;
-      for (let tries = 0; tries < 40; tries++, slot++) {
-        const angle = ai * 1.3 + slot * 2.39996;
-        const dist = 34 + step * Math.sqrt(slot + 0.6);
-        x = round(Math.min(W - 16, Math.max(16, a.x + Math.cos(angle) * dist)));
-        y = round(Math.min(H - 16, Math.max(16, a.y + Math.sin(angle) * dist * 0.85)));
-        if (!(Math.abs(x - a.x) < labelHalf && y > a.y + 28 && y < a.y + 58)) break;
-      }
-      slot++;
-      stars.push({ entry, anchor: a.id, color: a.color, x, y, r: round(2.6 + Math.min(8, Math.log10(entry.amount + 1) * 1.7)) });
-    });
-  });
-  return stars;
-}
-
-/** A gift in kind: a soft rounded shape, so it never reads as cash. */
-function bundle(cx: number, cy: number, r: number) {
-  const w = round(r * 1.15);
-  const h = round(r * 0.95);
-  return `M${round(cx - w)} ${round(cy - h * 0.2)}h${round(w * 2)}v${round(h * 1.2)}h${round(-w * 2)}Z`;
-}
-
-/** A four-pointed sparkle. */
-function sparkle(cx: number, cy: number, r: number) {
-  const k = round(r * 0.3);
-  const n = round;
-  return `M${cx} ${n(cy - r)}Q${n(cx + k)} ${n(cy - k)} ${n(cx + r)} ${cy}Q${n(cx + k)} ${n(cy + k)} ${cx} ${n(cy + r)}Q${n(cx - k)} ${n(cy + k)} ${n(cx - r)} ${cy}Q${n(cx - k)} ${n(cy - k)} ${cx} ${n(cy - r)}Z`;
 }
 
 export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
@@ -131,6 +35,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   const [tip, setTip] = useState<Star | null>(null);
   const [open, setOpen] = useState<Entry | null>(null);
   const [limit, setLimit] = useState(60);
+  const [fullSky, setFullSky] = useState(false);
   const known = useRef<Set<string>>(new Set(initial?.entries.map((e) => e.ref) ?? []));
   // Without server data (the first read failed), the first fetch only learns what is already there: no "just in", no confetti.
   const primed = useRef(initial !== null);
@@ -178,11 +83,26 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   }, [initial, refresh]);
 
   useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null);
+    if (!open && !fullSky) return;
+    // Escape closes the receipt first, then the full-screen sky.
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      if (open) setOpen(null);
+      else setFullSky(false);
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open]);
+  }, [open, fullSky]);
+
+  // The page behind should not scroll while the sky is open.
+  useEffect(() => {
+    if (!fullSky) return;
+    const had = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = had;
+    };
+  }, [fullSky]);
 
   const entries = useMemo(() => data?.entries ?? [], [data]);
   const goals = useMemo(() => data?.goals ?? [], [data]);
@@ -203,6 +123,27 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   const needed = useCountUp(t.needed);
   const inKindValue = useCountUp(t.inKind.value);
   const focusTitle = focus ? anchors.find((a) => a.id === focus)?.title ?? "" : "";
+
+  const starState = (e: Entry) => {
+    const hit = needle !== "" && matches(e);
+    return { dim: (needle !== "" && !hit) || !inFocus(e), hit, born: born.has(e.ref) };
+  };
+  const renderTip = (s: Star) => (
+    <>
+      <b>{s.entry.kind === "out" ? `Paid to ${s.entry.name}` : s.entry.name}</b>
+      {s.entry.kind === "inkind" ? `${s.entry.items} \u00b7 worth ` : s.entry.kind === "in" ? "+" : "\u2212"}
+      {fmt(s.entry.amount)} ETB · {shortDate(s.entry.occurredAt)}
+      <br />
+      <span className="mono">{s.entry.ref}</span>
+    </>
+  );
+  const skyLegend = (
+    <div className="sky-legend">
+      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d={sparkle(0, 0, 5.5)} fill="#F6EFD9" /></svg> a gift</span>
+      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="none" stroke="#F6EFD9" strokeWidth="1.6" /></svg> money spent</span>
+      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d="M-5 -1h10v5h-10Z" fill="#F6EFD9" /></svg> a gift in kind</span>
+    </div>
+  );
 
   const showOnSky = (id: string) => {
     setFocus(id);
@@ -253,91 +194,25 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
 
       <section className="sky-grid books-sky" aria-label="The sky of gifts">
         <div>
-          <div className="skybox night" ref={skyRef} onMouseLeave={() => setTip(null)}>
-            <svg viewBox={`0 0 ${W} ${H}`} aria-hidden="true" preserveAspectRatio="xMidYMid meet">
-              <defs>
-                <radialGradient id="sky-glow" cx="50%" cy="45%" r="70%">
-                  <stop offset="0%" stopColor="#1B4A55" />
-                  <stop offset="100%" stopColor="#0A1826" />
-                </radialGradient>
-              </defs>
-              <rect width={W} height={H} fill="url(#sky-glow)" />
-              {BACKDROP.map((s, i) => (
-                // Still on purpose: an endless animation inside the SVG repaints the whole sky every frame, which drains phones.
-                <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#fff" opacity={s.o} />
-              ))}
-
-              {anchors.map((a) => {
-                const own = stars.filter((s) => s.anchor === a.id);
-                const dim = focus !== null && focus !== a.id;
-                const path = own.map((s, i) => `${i ? "L" : "M"}${s.x} ${s.y}`).join("");
-                const pct = a.goal && a.goal.target > 0 ? a.goal.pct : null;
-                const C = round(2 * Math.PI * 24);
-                return (
-                  <g key={a.id} className={`anchor${dim ? " dim" : ""}`} onClick={() => setFocus(focus === a.id ? null : a.id)}>
-                    {own.length ? <line x1={a.x} y1={a.y} x2={own[0].x} y2={own[0].y} stroke={a.color} strokeOpacity={0.25} strokeDasharray="2 5" /> : null}
-                    {path ? <path d={path} fill="none" stroke={a.color} strokeOpacity={0.32} strokeWidth={1.2} strokeLinejoin="round" /> : null}
-                    <circle cx={a.x} cy={a.y} r={40} fill={a.color} opacity={0.07} />
-                    <circle cx={a.x} cy={a.y} r={24} fill="none" stroke="#fff" strokeOpacity={0.14} strokeWidth={5} strokeDasharray={a.goal ? undefined : "3 5"} />
-                    {pct !== null ? (
-                      <circle cx={a.x} cy={a.y} r={24} fill="none" stroke={a.color} strokeWidth={5} strokeLinecap="round" strokeDasharray={`${round((C * pct) / 100)} ${C}`} transform={`rotate(-90 ${a.x} ${a.y})`} />
-                    ) : null}
-                    <text x={a.x} y={a.y + 4} textAnchor="middle" className="anchor-pct" fill={a.color}>{pct !== null ? `${pct}%` : a.goal ? "✓" : "∞"}</text>
-                  </g>
-                );
-              })}
-
-              {stars.map((s) => {
-                const e = s.entry;
-                const hit = needle !== "" && matches(e);
-                const dim = (needle !== "" && !hit) || !inFocus(e);
-                return (
-                  <g
-                    key={e.ref}
-                    className={`star ${e.kind}${dim ? " dim" : ""}${hit ? " hit" : ""}${born.has(e.ref) ? " born" : ""}`}
-                    onMouseEnter={() => setTip(s)}
-                    onClick={() => setOpen(e)}
-                  >
-                    <circle cx={s.x} cy={s.y} r={round(s.r + 9)} fill="transparent" />
-                    {hit ? <circle className="halo" cx={s.x} cy={s.y} r={round(s.r + 6)} fill="none" stroke={s.color} strokeWidth={1.5} /> : null}
-                    {e.kind === "in" ? (
-                      <>
-                        <circle cx={s.x} cy={s.y} r={round(s.r * 1.3)} fill={s.color} opacity={0.18} />
-                        <path d={sparkle(s.x, s.y, round(s.r * 1.5))} fill={s.color} />
-                      </>
-                    ) : e.kind === "inkind" ? (
-                      <path d={bundle(s.x, s.y, round(s.r * 1.2))} fill={s.color} opacity={0.85} />
-                    ) : (
-                      <circle cx={s.x} cy={s.y} r={round(s.r * 0.8)} fill="#0A1826" stroke={s.color} strokeWidth={1.6} />
-                    )}
-                  </g>
-                );
-              })}
-              {/* Names last, so they sit above any line that crosses them. */}
-              {anchors.map((a) => (
-                <text key={a.id} x={a.x} y={a.y + 44} textAnchor="middle" className={`anchor-title${focus !== null && focus !== a.id ? " dim" : ""}`}>
-                  {a.title.length > 34 ? a.title.slice(0, 32) + "…" : a.title}
-                </text>
-              ))}
-            </svg>
-
-            {entries.length === 0 ? <p className="sky-empty">The sky is empty for now. The first gift will be the first star.</p> : null}
-            {tip ? (
-              <div className="tip show" style={{ left: `${(tip.x / W) * 100}%`, top: `${(tip.y / H) * 100}%` }}>
-                <b>{tip.entry.kind === "out" ? `Paid to ${tip.entry.name}` : tip.entry.name}</b>
-                {tip.entry.kind === "inkind" ? `${tip.entry.items} · worth ` : tip.entry.kind === "in" ? "+" : "−"}
-                {fmt(tip.entry.amount)} ETB · {shortDate(tip.entry.occurredAt)}
-                <br />
-                <span className="mono">{tip.entry.ref}</span>
-              </div>
-            ) : null}
-            <div className="sky-legend">
-              <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d={sparkle(0, 0, 5.5)} fill="#F6EFD9" /></svg> a gift</span>
-              <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="none" stroke="#F6EFD9" strokeWidth="1.6" /></svg> money spent</span>
-              <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d="M-5 -1h10v5h-10Z" fill="#F6EFD9" /></svg> a gift in kind</span>
-              <span>bigger star, bigger amount</span>
-            </div>
-            <span className="sky-hint">{focus ? <button type="button" onClick={() => setFocus(null)}>Show every goal</button> : "Tap a star to see its receipt"}</span>
+          <div ref={skyRef}>
+            <SkyCanvas
+              anchors={anchors}
+              stars={stars}
+              focus={focus}
+              onFocus={setFocus}
+              onOpen={setOpen}
+              onTip={setTip}
+              starState={starState}
+              tip={tip}
+              renderTip={renderTip}
+            >
+              {entries.length === 0 ? <p className="sky-empty">The sky is empty for now. The first gift will be the first star.</p> : null}
+              {skyLegend}
+              <span className="sky-hint">{focus ? <button type="button" onClick={() => setFocus(null)}>Show every goal</button> : "Tap a star to see its receipt"}</span>
+              {entries.length ? (
+                <button type="button" className="sky-open" onClick={() => setFullSky(true)}>⤢ Open the whole sky</button>
+              ) : null}
+            </SkyCanvas>
           </div>
           {/* On a phone the names inside the sky would be too small to read, so they move here. */}
           <ul className="sky-key">
@@ -422,6 +297,35 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
           <li><b>See a mistake?</b> Tell us and we’ll fix it. A corrected entry keeps its receipt number.</li>
         </ul>
       </section>
+
+      {fullSky
+        ? createPortal(
+        <div className="sky-full" role="dialog" aria-modal="true" aria-label="The whole sky">
+          <header className="sky-full-bar">
+            <div>
+              <b>{fmt(t.count)}</b> {t.count === 1 ? "line" : "lines"} in the open · <b>{fmt(t.balance)} ETB</b> in hand
+            </div>
+            <span className="sky-full-hint">drag to move · scroll to zoom · tap a star for its receipt</span>
+            <button type="button" className="sky-close" onClick={() => setFullSky(false)} autoFocus>Close ✕</button>
+          </header>
+          <SkyCanvas
+            anchors={anchors}
+            stars={stars}
+            focus={focus}
+            onFocus={setFocus}
+            onOpen={setOpen}
+            onTip={setTip}
+            starState={starState}
+            tip={tip}
+            renderTip={renderTip}
+            navigable
+          >
+            {skyLegend}
+          </SkyCanvas>
+        </div>,
+        document.body,
+          )
+        : null}
 
       <div className={`lightbox${open ? " open" : ""}`} onClick={() => setOpen(null)} aria-hidden={!open}>
         {open ? (
