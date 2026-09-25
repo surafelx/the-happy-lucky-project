@@ -26,7 +26,7 @@ import {
   weekStart,
 } from "../src/lib/office.ts";
 import { ETHIOPIA_BORDER, VIEW, inside, project, spread, toPath } from "../src/lib/geo.ts";
-import { H, SQUARE, TALL, W, WIDE, placeAnchors, placeStars, skySizeFor } from "../src/lib/sky.ts";
+import { H, SQUARE, TALL, W, WIDE, blob, placeAnchors, placeStars, skySizeFor } from "../src/lib/sky.ts";
 
 test("sundaysOfMonth lists every Sunday of September 2026", () => {
   assert.deepEqual(sundaysOfMonth(2026, 8), [6, 13, 20, 27]);
@@ -332,4 +332,13 @@ test("a phone gets a sky shaped like the room it has, and every shape keeps its 
       for (const st of placeStars(entries, out, size)) assert.ok(st.x >= 16 && st.x <= size.w - 16 && st.y >= 16 && st.y <= size.h - 16);
     }
   }
+});
+
+test("each gift's blob has its own shape, keeps it, and stays about the size it was given", () => {
+  const a = blob(100, 50, 8, "HLP-2609-0001");
+  assert.equal(a, blob(100, 50, 8, "HLP-2609-0001"), "the same gift draws the same blob every time");
+  assert.notEqual(a, blob(100, 50, 8, "HLP-2609-0002"), "another gift gets another shape");
+  const nums = a.match(/-?\d+(\.\d+)?/g)!.map(Number);
+  for (let i = 0; i < nums.length; i += 2) assert.ok(Math.hypot(nums[i] - 100, nums[i + 1] - 50) <= 8 * 1.12 + 0.01, "no point strays past the wobble");
+  assert.ok(/^M[^MZ]+Z$/.test(a) && !/\d\.\d{3}/.test(a), "one closed shape, coordinates rounded so server and browser agree");
 });

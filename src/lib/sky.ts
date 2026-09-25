@@ -20,7 +20,7 @@ export const TALL: SkySize = { w: H, h: W, rx: 185, ry: 330 };
 /** The shape that best fills the clear part of the screen, given its width over its height. */
 export const skySizeFor = (aspect: number) => (aspect >= 1.3 ? WIDE : aspect >= 0.75 ? SQUARE : TALL);
 export const GENERAL_ID = "general";
-/** The general fund's stars: a deep blue, so they read on the light sky. */
+/** The general fund's gifts: a deep blue, so they read on the light sky. */
 export const GENERAL_COLOR = "#2E5A78";
 /** The sky is white at its heart and fades to a very light blue at the edges. */
 export const SKY_LIGHT = "#FFFFFF";
@@ -124,16 +124,35 @@ export function placeStars(entries: Entry[], anchors: Anchor[], size: SkySize = 
   return stars;
 }
 
-/** A four-pointed sparkle: a gift of money. */
-export function sparkle(cx: number, cy: number, r: number) {
-  const k = round(r * 0.3);
-  const n = round;
-  return `M${cx} ${n(cy - r)}Q${n(cx + k)} ${n(cy - k)} ${n(cx + r)} ${cy}Q${n(cx + k)} ${n(cy + k)} ${cx} ${n(cy + r)}Q${n(cx - k)} ${n(cy + k)} ${n(cx - r)} ${cy}Q${n(cx - k)} ${n(cy - k)} ${cx} ${n(cy - r)}Z`;
+/**
+ * A small blob: a gift of money. A circle with a gentle wobble, shaped by `seed`
+ * (the receipt number), so each gift has its own blob and keeps it on every visit.
+ */
+export function blob(cx: number, cy: number, r: number, seed: string) {
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
+  const rnd = seeded(h);
+  const n = 7;
+  const turn = rnd() * Math.PI * 2;
+  const pts = Array.from({ length: n }, (_, i) => {
+    const a = turn + (i * 2 * Math.PI) / n;
+    const k = r * (0.86 + rnd() * 0.26);
+    return [cx + Math.cos(a) * k, cy + Math.sin(a) * k];
+  });
+  // A smooth closed curve: each point pulls the line towards it, passing through the midpoints between them.
+  const mid = (i: number) => pts[i % n].map((v, j) => (v + pts[(i + 1) % n][j]) / 2);
+  const start = mid(n - 1);
+  let d = `M${round(start[0])} ${round(start[1])}`;
+  for (let i = 0; i < n; i++) {
+    const m = mid(i);
+    d += `Q${round(pts[i][0])} ${round(pts[i][1])} ${round(m[0])} ${round(m[1])}`;
+  }
+  return `${d}Z`;
 }
 
-/** A gift in kind: a parcel, so it never reads as cash. */
+/** A gift in kind: a small rounded square, so it never reads as cash. */
 export function bundle(cx: number, cy: number, r: number) {
-  const w = round(r * 1.15);
-  const h = round(r * 0.95);
-  return `M${round(cx - w)} ${round(cy - h * 0.2)}h${round(w * 2)}v${round(h * 1.2)}h${round(-w * 2)}Z`;
+  const s = round(r * 0.9);
+  const k = round(r * 0.35);
+  return `M${round(cx - s + k)} ${round(cy - s)}H${round(cx + s - k)}Q${round(cx + s)} ${round(cy - s)} ${round(cx + s)} ${round(cy - s + k)}V${round(cy + s - k)}Q${round(cx + s)} ${round(cy + s)} ${round(cx + s - k)} ${round(cy + s)}H${round(cx - s + k)}Q${round(cx - s)} ${round(cy + s)} ${round(cx - s)} ${round(cy + s - k)}V${round(cy - s + k)}Q${round(cx - s)} ${round(cy - s)} ${round(cx - s + k)} ${round(cy - s)}Z`;
 }

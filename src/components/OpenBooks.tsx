@@ -7,7 +7,7 @@ import type { PublicBooks } from "@/lib/books";
 import { SkyCanvas } from "@/components/SkyCanvas";
 import { useCountUp } from "@/lib/count-up";
 import { burst } from "@/lib/format";
-import { GENERAL_COLOR, GENERAL_ID, placeAnchors, placeStars, skySizeFor, sparkle } from "@/lib/sky";
+import { GENERAL_COLOR, GENERAL_ID, blob, bundle, placeAnchors, placeStars, skySizeFor } from "@/lib/sky";
 import type { Entry, Star } from "@/lib/sky";
 
 const POLL_MS = 15_000;
@@ -36,7 +36,7 @@ const narrow = () => typeof window !== "undefined" && window.matchMedia("(max-wi
 /**
  * The audit: the whole page is the sky. The money floats across the top, the
  * receipts, goals and how it works open in a panel over it, and everything
- * between is stars you can drag, zoom and tap.
+ * between is the sky, a dot for every gift, that you can drag, zoom and tap.
  */
 export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   const [data, setData] = useState<PublicBooks | null>(initial);
@@ -117,7 +117,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, panelOpen]);
 
-  // How much of the sky the money (top) and the dock (bottom) cover, so the stars sit in the clear band between,
+  // How much of the sky the money (top) and the dock (bottom) cover, so the gifts sit in the clear band between,
   // and that band's shape, so a phone gets a squarer sky that fills it instead of a thin wide strip.
   // Layout offsets, not bounding boxes: the cards are tilted and pop in, and neither should move the sky.
   useEffect(() => {
@@ -174,9 +174,9 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
 
   const legend = (
     <>
-      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d={sparkle(0, 0, 5.5)} fill="currentColor" /></svg> a gift</span>
-      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="none" stroke="currentColor" strokeWidth="1.6" /></svg> money spent</span>
-      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d="M-5 -1h10v5h-10Z" fill="currentColor" /></svg> a gift in kind</span>
+      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d={blob(0, 0, 4.6, "a gift")} fill="currentColor" /></svg> a gift</span>
+      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4.2" fill="none" stroke="currentColor" strokeWidth="1.8" /></svg> money spent</span>
+      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d={bundle(0, 0, 5)} fill="currentColor" /></svg> a gift in kind</span>
     </>
   );
 
@@ -212,7 +212,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
         inset={inset}
         navigable
       >
-        {entries.length === 0 ? <p className="sky-empty">The sky is empty for now. The first gift will be the first star.</p> : null}
+        {entries.length === 0 ? <p className="sky-empty">The sky is empty for now. The first gift will be the first dot.</p> : null}
       </SkyCanvas>
 
       <header className="sky-cash" ref={cashRef} aria-label="The numbers">
@@ -277,7 +277,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
         <div className="sky-dock-bar">
           <div className="sky-legend">
             {legend}
-            <span className="sky-hint">{entries.length ? "drag to move · scroll to zoom · tap a star for its receipt" : null}</span>
+            <span className="sky-hint">{entries.length ? "drag to move · scroll to zoom · tap a dot for its receipt" : null}</span>
           </div>
           <div className="dock-buttons">
             {focus ? <button type="button" className="dock-btn ghost" onClick={() => setFocus(null)}>Show every goal</button> : null}
@@ -356,7 +356,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
                   <p className="goal-nums num"><b>{fmt(g.raised)}</b> of {fmt(g.target)} ETB{g.status === "open" && g.remaining > 0 ? <> · <b>{fmt(g.remaining)}</b> to go</> : null}{g.spent ? <> · {fmt(g.spent)} spent</> : null}</p>
                   {g.about ? <><h4>Why</h4><p>{g.about}</p></> : null}
                   {g.plan ? <><h4>The plan</h4><p>{g.plan}</p></> : null}
-                  <button type="button" className="goal-look" onClick={() => showOnSky(g.id)}>✨ See its stars</button>
+                  <button type="button" className="goal-look" onClick={() => showOnSky(g.id)}>✨ See it in the sky</button>
                 </article>
               ))}
               {hasGeneral || goals.length === 0 ? (
@@ -364,7 +364,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
                   <header><h3>General fund</h3></header>
                   <p className="goal-nums num"><b>{fmt(t.general.raised)}</b> ETB given · {fmt(t.general.spent)} spent</p>
                   <p>Gifts that aren’t tied to one goal. They go wherever the need is biggest that week, and each payment from here is logged like any other.</p>
-                  {hasGeneral ? <button type="button" className="goal-look" onClick={() => showOnSky(GENERAL_ID)}>✨ See its stars</button> : null}
+                  {hasGeneral ? <button type="button" className="goal-look" onClick={() => showOnSky(GENERAL_ID)}>✨ See it in the sky</button> : null}
                 </article>
               ) : null}
             </div>
@@ -374,7 +374,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
             <div className="books-how">
               <h2 className="panel-title">Every birr, <em>in the open</em></h2>
               <p className="lede">
-                What we have, what we still need, and where every gift went. We log each gift and each payment by hand, usually the same day, with the receipt. Every star in the sky is one of them.
+                What we have, what we still need, and where every gift went. We log each gift and each payment by hand, usually the same day, with the receipt. Every dot in the sky is one of them.
               </p>
               <p className="how-legend">{legend}</p>
               <ul>

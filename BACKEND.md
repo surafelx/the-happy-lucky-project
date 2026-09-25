@@ -47,7 +47,8 @@ To use the hosted database from your laptop instead of the local one, put the sa
 ## The audit (the public ledger)
 
 `/audit` shows what the foundation has, what it needs and where every birr went, as a
-sky of stars: each goal is a constellation, each gift a star, each payment a hollow star.
+sky: each goal is a cluster, each gift a small filled blob, each payment a hollow ring,
+and each gift in kind a small rounded square.
 It is **not connected to any bank**. The office logs every entry by hand under **Ledger**.
 
 - **Balance** is money in minus money out. **Still needed** is the sum of what open goals

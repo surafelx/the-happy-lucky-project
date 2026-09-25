@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Audit",
-  description: "The audit: what Happy Lucky Chacho has, what it needs, and where every birr went. Every gift and every payment, with receipts, drawn as a sky of stars.",
+  description: "The audit: what Happy Lucky Chacho has, what it needs, and where every birr went. Every gift and every payment, with receipts, drawn as a sky: a dot for every gift.",
 };
 
 /** The public audit, a full-screen sky. Local only until the mentor flag goes on, and on Vercel only with a database. */

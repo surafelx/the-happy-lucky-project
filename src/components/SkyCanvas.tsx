@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactNode, WheelEvent as ReactWheelEvent } from "react";
 
-import { SKY_EDGE, SKY_INK, SKY_LIGHT, WIDE, backdrop, bundle, round, sparkle } from "@/lib/sky";
+import { SKY_EDGE, SKY_INK, SKY_LIGHT, WIDE, backdrop, blob, bundle, round } from "@/lib/sky";
 import type { Anchor, Entry, SkySize, Star } from "@/lib/sky";
 import { prefersReducedMotion } from "@/lib/format";
 
@@ -46,7 +46,7 @@ export function SkyCanvas({
   navigable?: boolean;
   /** The sky's own units: wide for a landscape screen, tall for a phone held upright. */
   size?: SkySize;
-  /** Pixels at the top and bottom covered by things floating over the sky; the stars are laid out between them. */
+  /** Pixels at the top and bottom covered by things floating over the sky; the gifts are laid out between them. */
   inset?: { top: number; bottom: number };
   children?: ReactNode;
 }) {
@@ -191,16 +191,16 @@ export function SkyCanvas({
         {st.hit ? <circle className="halo" cx={s.x} cy={s.y} r={round(s.r + 6)} fill="none" stroke={s.color} strokeWidth={1.5} /> : null}
         {s.entry.kind === "in" ? (
           <>
-            <circle cx={s.x} cy={s.y} r={round(s.r * 1.3)} fill={s.color} opacity={0.18} />
-            <path d={sparkle(s.x, s.y, round(s.r * 1.5))} fill={s.color} stroke={SKY_INK} strokeWidth={0.9} strokeLinejoin="round" />
+            <circle cx={s.x} cy={s.y} r={round(s.r * 1.6)} fill={s.color} opacity={0.16} />
+            <path d={blob(s.x, s.y, s.r, s.entry.ref)} fill={s.color} stroke={SKY_INK} strokeWidth={0.9} />
           </>
         ) : s.entry.kind === "inkind" ? (
-          <path d={bundle(s.x, s.y, round(s.r * 1.2))} fill={s.color} stroke={SKY_INK} strokeWidth={0.9} />
+          <path d={bundle(s.x, s.y, s.r)} fill={s.color} stroke={SKY_INK} strokeWidth={0.9} />
         ) : (
           <>
             {/* Hollow: an ink ring with the goal's colour inside it. */}
-            <circle cx={s.x} cy={s.y} r={round(s.r * 0.8)} fill={SKY_LIGHT} stroke={SKY_INK} strokeWidth={3.4} />
-            <circle cx={s.x} cy={s.y} r={round(s.r * 0.8)} fill="none" stroke={s.color} strokeWidth={1.8} />
+            <circle cx={s.x} cy={s.y} r={round(s.r * 0.85)} fill={SKY_LIGHT} stroke={SKY_INK} strokeWidth={3.4} />
+            <circle cx={s.x} cy={s.y} r={round(s.r * 0.85)} fill="none" stroke={s.color} strokeWidth={1.8} />
           </>
         )}
       </g>
