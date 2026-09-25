@@ -54,53 +54,89 @@ export function SupportForm() {
   };
 
   return (
-    <div className="mflow support">
-      <span className="eyebrow pop" style={pop(0)}>Give monthly</span>
-      <h1 className="pop" style={pop(1)}>Keep a Sunday <em>running</em></h1>
-      <p className="lede pop" style={pop(2)}>
-        Four plans, each tied to one real thing. Pick one, and we write to you with how to send it by Telebirr or bank transfer. Cancel any month, no questions. Every birr gets a published receipt.
-      </p>
-
-      <form onSubmit={submit} noValidate>
-        <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hp" aria-hidden="true" />
-        <div className="mcards plans" role="radiogroup" aria-label="Plan">
-          {SUPPORT_PLANS.map((p, i) => (
-            <label key={p.key} className={`mcard ${["teal", "rose", "gold"][i % 3]}${plan === p.key ? " on" : ""}`} style={pop(i + 3)}>
-              <input type="radio" name="plan" value={p.key} checked={plan === p.key} onChange={() => setPlan(p.key)} />
-              <span className="emoji" aria-hidden="true">{p.emoji}</span>
-              <b>{p.name}</b>
-              <span className="price">{fmt(p.amount)} birr <small>a month</small></span>
-              <span className="what">{p.what}</span>
-            </label>
-          ))}
+    <div className="give">
+      <div className="give-grid">
+        <div className="give-pitch">
+          <span className="eyebrow pop" style={pop(0)}>Give monthly</span>
+          <h1 className="pop" style={pop(1)}>
+            Keep a Sunday <em>running</em>
+          </h1>
+          <p className="lede pop" style={pop(2)}>
+            Four plans, each tied to one real thing. Pick one and we write to you with how to send it, by Telebirr or bank transfer.
+          </p>
+          <ul className="give-trust pop" style={pop(3)}>
+            <li>
+              <b>Every birr is published.</b> Each month you give shows up in the <Link href="/audit">audit</Link>, with a receipt number of its own.
+            </li>
+            <li>
+              <b>Cancel any month.</b> One line to us and it stops. Nothing is taken automatically.
+            </li>
+            <li>
+              <b>No money moves through this site.</b> You send it yourself, and we confirm it by hand.
+            </li>
+          </ul>
         </div>
-        <p className="msummary">{chosen.name}: {fmt(chosen.amount)} birr a month. {chosen.what}</p>
 
-        <div className="mfields">
-          <label className="field mfield"><span>Your name</span><input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required /></label>
-          <label className="field mfield"><span>Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required /></label>
-          <label className="field mfield"><span>Phone <em>(optional, for Telebirr)</em></span><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" /></label>
-          <div className="field mfield">
-            <span>How you’d like to pay</span>
-            <div className="seg" role="radiogroup" aria-label="Payment method">
-              {PAY_METHODS.map((m) => (
-                <label key={m} className={method === m ? "on" : ""}><input type="radio" name="method" value={m} checked={method === m} onChange={() => setMethod(m)} />{METHOD_LABEL[m]}</label>
-              ))}
+        <form className="give-card" onSubmit={submit} noValidate>
+          <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hp" aria-hidden="true" />
+
+          <fieldset className="give-plans">
+            <legend>Choose a plan</legend>
+            {SUPPORT_PLANS.map((p) => (
+              <label key={p.key} className={`give-plan${plan === p.key ? " on" : ""}`}>
+                <input type="radio" name="plan" value={p.key} checked={plan === p.key} onChange={() => setPlan(p.key)} />
+                <span className="emoji" aria-hidden="true">{p.emoji}</span>
+                <span className="give-plan-text">
+                  <b>{p.name}</b>
+                  <small>{p.what}</small>
+                </span>
+                <span className="give-price">
+                  {fmt(p.amount)}
+                  <small>birr a month</small>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+
+          <div className="give-fields">
+            <label className="field"><span>Your name</span><input value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required /></label>
+            <label className="field"><span>Email</span><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required /></label>
+            <label className="field"><span>Phone <em>(optional, for Telebirr)</em></span><input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" /></label>
+            <div className="field">
+              <span>How you’d like to pay</span>
+              <div className="seg" role="radiogroup" aria-label="Payment method">
+                {PAY_METHODS.map((m) => (
+                  <label key={m} className={method === m ? "on" : ""}>
+                    <input type="radio" name="method" value={m} checked={method === m} onChange={() => setMethod(m)} />
+                    {METHOD_LABEL[m]}
+                  </label>
+                ))}
+              </div>
             </div>
+            <label className="field wide"><span>Anything to add? <em>(optional)</em></span><textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} /></label>
           </div>
-          <label className="field mfield wide"><span>Anything to add? <em>(optional)</em></span><textarea rows={2} value={note} onChange={(e) => setNote(e.target.value)} /></label>
-        </div>
-        <label className="safeguard">
-          <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
-          <span><b>Keep my name private</b>Your gift still gets a published receipt, without your name on it.</span>
-        </label>
-        {error ? <p className="msg err" role="alert"><span aria-hidden="true">🙈</span>{error}</p> : null}
-        <div className="mnav">
-          <button className="btn rose" type="submit" disabled={status === "sending"}>{status === "sending" ? "Sending…" : `Support with ${chosen.name}`}</button>
-          <Link className="btn ghost" href="/campaigns/a-year-covered">Or give once, to the pad campaign</Link>
-        </div>
-      </form>
-      <p className="demo-note">Monthly giving opens properly once the association is registered and has a bank account in its own name. Until then we hold your plan and write to you before anything is sent.</p>
+
+          <label className="give-anon">
+            <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
+            <span>
+              <b>Keep my name private</b>
+              Your gift still gets a published receipt, without your name on it.
+            </span>
+          </label>
+
+          {error ? <p className="msg err" role="alert"><span aria-hidden="true">🙈</span>{error}</p> : null}
+
+          <div className="give-go">
+            <button className="btn rose" type="submit" disabled={status === "sending"}>
+              {status === "sending" ? "Sending…" : `Support with ${chosen.name} · ${fmt(chosen.amount)} birr`}
+            </button>
+            <Link className="give-once" href="/campaigns/a-year-covered">Or give once, to the pad campaign →</Link>
+          </div>
+          <p className="give-note">
+            Monthly giving opens properly once the association is registered and has a bank account in its own name. Until then we hold your plan and write to you before anything is sent.
+          </p>
+        </form>
+      </div>
 
       {done ? (
         <JoinCelebration

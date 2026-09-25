@@ -33,7 +33,7 @@ export function WorkMap() {
   return (
     <div className="wrap work">
       <header className="work-head">
-        <span className="eyebrow pop" style={{ "--i": 0 } as React.CSSProperties}>Our work</span>
+        <span className="eyebrow pop" style={{ "--i": 0 } as React.CSSProperties}>Visits</span>
         <h1 className="pop" style={{ "--i": 1 } as React.CSSProperties}>
           Where we&apos;ve <em>shown up</em>
         </h1>

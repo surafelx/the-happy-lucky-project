@@ -9,7 +9,7 @@ import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 const LINKS = MENTOR_FORM_ENABLED
   ? [
       { href: "/sundays", label: "Sundays" },
-      { href: "/work", label: "Our work" },
+      { href: "/visits", label: "Visits" },
       { href: "/audit", label: "Audit" },
       { href: "/support", label: "Give" },
     ]

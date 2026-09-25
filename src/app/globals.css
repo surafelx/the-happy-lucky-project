@@ -460,7 +460,8 @@ html::-webkit-scrollbar-thumb:hover{background:var(--teal-deep)}
 }
 .backdrop .ribbon{opacity:.85;animation:sway 12s ease-in-out infinite alternate}
 .backdrop .plane{position:absolute;top:calc(var(--nav-h) + 18px);left:auto;right:6%;width:150px;animation:fly 11s ease-in-out infinite}
-.backdrop .scribble{position:absolute;left:2.5%;bottom:5%;width:96px;opacity:.9;animation:bob 8s ease-in-out infinite}
+/* The arrow points up at the hero's buttons, so it sits just under them rather than in the corner. */
+.backdrop .scribble{position:absolute;left:4.5%;bottom:22%;width:96px;opacity:.9;animation:bob 8s ease-in-out infinite}
 @keyframes sway{to{transform:translateY(-14px) rotate(3deg)}}
 
 /* hero: full screen */
@@ -1490,3 +1491,59 @@ body:has(.admin-page){padding-bottom:0}
 .lightbox{z-index:90}
 @media (max-width:600px){.sky-full-hint{display:none}.sky-full .sky-legend{font-size:.64rem}}
 @media (prefers-reduced-motion:reduce){.sky-full{animation:none}.sky-open:hover{transform:none}}
+
+/* ---------- give: the pitch on one side, one card on the other ---------- */
+.give{position:relative;z-index:1;width:min(1120px,100% - 2.5rem);margin-inline:auto;padding:clamp(2rem,5vw,3.5rem) 0 4rem}
+.give-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);gap:clamp(1.5rem,4vw,3rem);align-items:start}
+.give-pitch{position:sticky;top:calc(var(--nav-h) + 1.5rem);display:grid;gap:.9rem;align-content:start}
+.give-pitch h1{font-family:var(--font-lucky);font-weight:400;font-size:clamp(2.4rem,5vw,3.8rem);line-height:.98;margin:.3rem 0}
+.give-pitch h1 em{font-style:normal;color:var(--rose-deep);display:inline-block;transform:rotate(-2deg)}
+.give-pitch .lede{font-size:1.02rem}
+.give-trust{list-style:none;margin:.6rem 0 0;padding:0;display:grid;gap:.7rem}
+.give-trust li{position:relative;padding-left:1.7rem;font-size:.92rem;color:var(--ink-2);line-height:1.5}
+.give-trust li::before{content:"✓";position:absolute;left:0;top:-.1rem;width:1.15rem;height:1.15rem;border-radius:50%;background:var(--teal);color:var(--paper);font-size:.7rem;font-weight:800;display:grid;place-items:center}
+.give-trust b{color:var(--ink)}
+.give-trust a{font-weight:700;color:var(--rose-deep);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:.2em}
+
+.give-card{background:var(--paper);border:2.5px solid var(--ink);border-radius:28px;padding:clamp(1.1rem,2.5vw,1.6rem);box-shadow:8px 8px 0 var(--ink);display:grid;gap:1rem;min-width:0}
+.give-plans{border:0;margin:0;padding:0;display:grid;gap:.5rem;min-width:0}
+.give-plans legend{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3);padding:0 0 .5rem}
+.give-plan{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:.8rem;border:2.5px solid var(--ink);border-radius:18px;padding:.7rem .9rem;cursor:pointer;background:var(--paper);transition:transform .2s var(--spring),background .2s,box-shadow .2s}
+.give-plan:hover{transform:translateX(3px)}
+.give-plan input{position:absolute;opacity:0;width:1px;height:1px}
+.give-plan .emoji{font-size:1.6rem;line-height:1}
+.give-plan-text{display:grid;gap:.1rem;min-width:0}
+.give-plan-text b{font-family:var(--font-lucky);font-weight:400;font-size:1.2rem;letter-spacing:.02em}
+.give-plan-text small{font-size:.8rem;color:var(--ink-2);line-height:1.35}
+.give-price{font-family:var(--font-lucky);font-weight:400;font-size:1.35rem;line-height:1;text-align:right;white-space:nowrap}
+.give-price small{display:block;font-family:var(--font-poppins);font-size:.6rem;font-weight:700;letter-spacing:.04em;color:var(--ink-3);margin-top:.15rem}
+.give-plan.on{background:var(--gold);box-shadow:5px 5px 0 var(--ink);transform:translateX(3px)}
+.give-plan.on .give-plan-text small,.give-plan.on .give-price small{color:#4a3d10}
+.give-plan:has(input:focus-visible){outline:3px solid var(--gold);outline-offset:3px}
+
+.give-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr));gap:.8rem;padding-top:.3rem;border-top:2px dashed var(--line)}
+.give-fields .field.wide{grid-column:1/-1}
+.give-fields .field>span{font-size:.78rem;font-weight:700;color:var(--ink-2)}
+.give-fields .field input,.give-fields .field textarea{width:100%;border:2px solid var(--ink);border-radius:14px;padding:.6rem .8rem;font:inherit;font-size:.95rem;background:var(--paper);color:var(--ink);box-shadow:none}
+.give-fields .field input:focus-visible,.give-fields .field textarea:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.give-anon{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.6rem;align-items:start;font-size:.85rem;color:var(--ink-2)}
+.give-anon input{width:20px;height:20px;accent-color:var(--rose-deep);margin-top:.15rem}
+.give-anon b{display:block;color:var(--ink)}
+.give-go{display:flex;flex-wrap:wrap;gap:.8rem;align-items:center}
+.give-go .btn{flex:1 1 auto;justify-content:center}
+.give-once{font-size:.85rem;font-weight:700;color:var(--rose-deep);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:.2em;white-space:nowrap}
+.give-once:hover{color:var(--ink)}
+.give-note{font-size:.75rem;line-height:1.5;color:var(--ink-3)}
+
+@media (max-width:900px){
+  .give-grid{grid-template-columns:minmax(0,1fr)}
+  .give-pitch{position:static}
+}
+@media (max-width:520px){
+  .give-card{padding:1rem .9rem;border-radius:22px;box-shadow:6px 6px 0 var(--ink)}
+  .give-plan{grid-template-columns:auto minmax(0,1fr);row-gap:.3rem;padding:.6rem .7rem}
+  .give-price{grid-column:2;text-align:left}
+  .give-price small{display:inline;margin-left:.3rem}
+  .give-go .btn{width:100%}
+}
+@media (prefers-reduced-motion:reduce){.give-plan:hover{transform:none}}

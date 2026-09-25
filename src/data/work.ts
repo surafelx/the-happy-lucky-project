@@ -37,17 +37,10 @@ export const WORK: WorkPlace[] = [
     what: "Four packs of diapers, forty-eight in all, bought and carried over in person. The first thing we have handed to anyone.",
     now: true,
   },
-  {
-    id: "year-covered",
-    name: "Ethiopian Orthodox charity home",
-    kind: "Campaign",
-    town: "Addis Ababa",
-    at: [38.76, 9.04],
-    since: "2026",
-    what: "A Year, Covered: a plan to cover twelve months of sanitary pads for the women living at the home. Still being raised, nothing delivered yet.",
-    href: "/campaigns/a-year-covered",
-  },
 ];
+// The pad campaign at the Ethiopian Orthodox charity home is not here on purpose:
+// nothing has been delivered yet, so it is not a visit. It lives on /campaigns/a-year-covered
+// until the day it happens, and then it gets a pin like any other.
 
 /** Faint reference towns so the pins have something to sit next to. */
 export const TOWNS: { name: string; at: LonLat; capital?: boolean; label?: "above" | "below" }[] = [
