@@ -26,7 +26,7 @@ import {
   weekStart,
 } from "../src/lib/office.ts";
 import { ETHIOPIA_BORDER, VIEW, inside, project, spread, toPath } from "../src/lib/geo.ts";
-import { H, SQUARE, TALL, W, WIDE, blob, placeAnchors, placeStars, skySizeFor } from "../src/lib/sky.ts";
+import { H, LABEL_DROP, SQUARE, TALL, W, WIDE, blob, contentBox, placeAnchors, placeSky, ringRadius, skySizeFor } from "../src/lib/sky.ts";
 
 test("sundaysOfMonth lists every Sunday of September 2026", () => {
   assert.deepEqual(sundaysOfMonth(2026, 8), [6, 13, 20, 27]);
@@ -298,21 +298,56 @@ test("the sky spreads its goals out and never stacks two in one column", () => {
   }
 });
 
-test("stars stay inside the sky and keep off their goal's name", () => {
-  const anchors = placeAnchors([goal(0), goal(1)], false);
-  const entries = Array.from({ length: 40 }, (_, i) => ({ ref: `HLP-2609-${i}`, kind: "in" as const, amount: 100 + i * 37, name: "A", goalId: i % 2 ? "g1" : "g0", method: "", note: "", items: "", recipient: "", occurredAt: `2026-09-${String(1 + (i % 28)).padStart(2, "0")}T09:00:00.000Z`, loggedAt: "", receipt: false }));
-  const stars = placeStars(entries, anchors);
-  assert.equal(stars.length, 40);
-  for (const s of stars) {
-    assert.ok(s.x >= 16 && s.x <= W - 16 && s.y >= 16 && s.y <= H - 16);
-    const a = anchors.find((x) => x.id === s.anchor)!;
-    const labelHalf = Math.min(34, a.title.length) * 4.4 + 10; // the same band placeStars keeps clear
-    const onTheName = Math.abs(s.x - a.x) < labelHalf && s.y > a.y + 28 && s.y < a.y + 58;
-    assert.equal(onTheName, false, `a star sits on ${a.title}`);
+const gift = (i: number, amount: number, goalId: string | null, kind: "in" | "out" | "inkind" = "in") => ({ ref: `HLP-2609-${String(i).padStart(4, "0")}`, kind, amount, name: "A", goalId, method: "", note: "", items: "", recipient: "", occurredAt: `2026-09-${String(1 + (i % 28)).padStart(2, "0")}T09:00:00.000Z`, loggedAt: "", receipt: false });
+
+test("a gift's bubble grows with its amount: four times the birr, twice as wide", () => {
+  const anchors = placeAnchors([], true);
+  const { stars } = placeSky([gift(1, 24000, null), gift(2, 6000, null, "inkind")], anchors);
+  const [big, small] = [stars.find((s) => s.entry.amount === 24000)!, stars.find((s) => s.entry.amount === 6000)!];
+  assert.ok(Math.abs(big.r / small.r - 2) < 0.02, `24,000 is twice as wide as 6,000 (got ${(big.r / small.r).toFixed(3)})`);
+});
+
+test("gifts pack tight around their goal without touching, and goals never run into each other", () => {
+  for (const size of [WIDE, SQUARE, TALL]) {
+    for (const n of [0, 1, 2, 4]) {
+      const anchors = placeAnchors(Array.from({ length: n }, (_, i) => goal(i)), true, size);
+      const entries = Array.from({ length: 60 }, (_, i) => gift(i, [100, 500, 1500, 5000, 24000][i % 5], i % 3 && n ? `g${i % n}` : null, i % 7 === 0 ? "out" : "in"));
+      const { stars, clusters } = placeSky(entries, anchors);
+      assert.equal(stars.length, 60);
+      for (let i = 0; i < stars.length; i++) {
+        const c = clusters.find((x) => x.id === stars[i].anchor)!;
+        assert.ok(Math.hypot(stars[i].x - c.x, stars[i].y - c.y) + stars[i].r <= c.r + 0.05, "every gift sits inside its goal's pack");
+        for (let j = i + 1; j < stars.length; j++) {
+          const [a, b] = [stars[i], stars[j]];
+          assert.ok(Math.hypot(a.x - b.x, a.y - b.y) >= a.r + b.r + 1, `two gifts touch on a ${size.w}x${size.h} sky`);
+        }
+      }
+      // Each goal's ring and the name under it stay clear of every other goal's ring.
+      for (const a of clusters) {
+        for (const b of clusters) {
+          if (a === b) continue;
+          const [ra, rb] = [ringRadius(a.r), ringRadius(b.r)];
+          assert.ok(Math.hypot(a.x - b.x, a.y - b.y) >= ra + rb, `two goals' rings overlap on a ${size.w}x${size.h} sky`);
+          if (Math.abs(a.x - b.x) < rb && b.y > a.y) assert.ok(a.y + ra + LABEL_DROP + 24 <= b.y - rb, "a goal's name clears the ring below it");
+        }
+      }
+    }
   }
 });
 
-test("a phone gets a sky shaped like the room it has, and every shape keeps its goals apart and inside", () => {
+test("the view fits every goal's ring and name, and the whole sky when it is empty", () => {
+  assert.deepEqual(contentBox([], [], WIDE), { x: 0, y: 0, w: W, h: H });
+  const anchors = placeAnchors([goal(0)], true);
+  const { clusters } = placeSky([gift(1, 24000, null), gift(2, 3000, "g0")], anchors);
+  const box = contentBox(anchors, clusters, WIDE);
+  for (const c of clusters) {
+    const R = ringRadius(c.r);
+    assert.ok(c.x - R >= box.x && c.x + R <= box.x + box.w && c.y - R >= box.y && c.y + R + LABEL_DROP + 20 <= box.y + box.h, "every ring and name is in view");
+  }
+  assert.ok(box.w < W, "a young ledger comes in closer than the whole sky");
+});
+
+test("a phone gets a sky shaped like the room it has, and every shape keeps its goals apart", () => {
   assert.equal(skySizeFor(2.4), WIDE); // a laptop
   assert.equal(skySizeFor(0.95), SQUARE); // a phone, once the numbers and buttons take their share
   assert.equal(skySizeFor(0.6), TALL);
@@ -328,8 +363,6 @@ test("a phone gets a sky shaped like the room it has, and every shape keeps its 
           assert.ok(Math.hypot(out[i].x - out[j].x, out[i].y - out[j].y) > 150, `${out[i].title} and ${out[j].title} keep their distance on a ${size.w}x${size.h} sky`);
         }
       }
-      const entries = Array.from({ length: 30 }, (_, i) => ({ ref: `HLP-2609-${i}`, kind: "in" as const, amount: 500 + i * 91, name: "A", goalId: `g${i % n}`, method: "", note: "", items: "", recipient: "", occurredAt: `2026-09-${String(1 + (i % 28)).padStart(2, "0")}T09:00:00.000Z`, loggedAt: "", receipt: false }));
-      for (const st of placeStars(entries, out, size)) assert.ok(st.x >= 16 && st.x <= size.w - 16 && st.y >= 16 && st.y <= size.h - 16);
     }
   }
 });
@@ -339,6 +372,6 @@ test("each gift's blob has its own shape, keeps it, and stays about the size it 
   assert.equal(a, blob(100, 50, 8, "HLP-2609-0001"), "the same gift draws the same blob every time");
   assert.notEqual(a, blob(100, 50, 8, "HLP-2609-0002"), "another gift gets another shape");
   const nums = a.match(/-?\d+(\.\d+)?/g)!.map(Number);
-  for (let i = 0; i < nums.length; i += 2) assert.ok(Math.hypot(nums[i] - 100, nums[i + 1] - 50) <= 8 * 1.12 + 0.01, "no point strays past the wobble");
+  for (let i = 0; i < nums.length; i += 2) assert.ok(Math.hypot(nums[i] - 100, nums[i + 1] - 50) <= 8 + 0.01, "the blob stays inside its circle, so it never touches a neighbour");
   assert.ok(/^M[^MZ]+Z$/.test(a) && !/\d\.\d{3}/.test(a), "one closed shape, coordinates rounded so server and browser agree");
 });

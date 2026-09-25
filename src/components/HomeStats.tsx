@@ -94,8 +94,8 @@ export function HomeStats() {
         <p className="jfoot">
           <span>
             {volunteers ? <><b className="num">{fmt(helpers)}</b> offered to help</> : null}
-            {volunteers && money ? " · " : null}
-            {money ? <><b className="num">{fmt(needed)} ETB</b> still needed</> : null}
+            {volunteers && money?.needed ? " · " : null}
+            {money?.needed ? <><b className="num">{fmt(needed)} ETB</b> still needed</> : null}
           </span>
           {money ? <Link href="/audit">See every birr →</Link> : null}
         </p>

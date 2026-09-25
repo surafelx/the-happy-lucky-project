@@ -47,8 +47,9 @@ To use the hosted database from your laptop instead of the local one, put the sa
 ## The audit (the public ledger)
 
 `/audit` shows what the foundation has, what it needs and where every birr went, as a
-sky: each goal is a cluster, each gift a small filled blob, each payment a hollow ring,
-and each gift in kind a small rounded square.
+bubble chart: every entry is a bubble whose area is its amount, packed with the rest of
+its goal inside a ring that fills as the goal is reached. A gift is a filled blob, a
+payment a hollow ring, and a gift in kind a lightly tinted square.
 It is **not connected to any bank**. The office logs every entry by hand under **Ledger**.
 
 - **Balance** is money in minus money out. **Still needed** is the sum of what open goals

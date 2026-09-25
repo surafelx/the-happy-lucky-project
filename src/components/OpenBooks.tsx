@@ -7,7 +7,7 @@ import type { PublicBooks } from "@/lib/books";
 import { SkyCanvas } from "@/components/SkyCanvas";
 import { useCountUp } from "@/lib/count-up";
 import { burst } from "@/lib/format";
-import { GENERAL_COLOR, GENERAL_ID, blob, bundle, placeAnchors, placeStars, skySizeFor } from "@/lib/sky";
+import { GENERAL_COLOR, GENERAL_ID, blob, bundle, contentBox, placeAnchors, placeSky, skySizeFor } from "@/lib/sky";
 import type { Entry, Star } from "@/lib/sky";
 
 const POLL_MS = 15_000;
@@ -142,7 +142,8 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   const hasGeneral = entries.some((e) => !e.goalId || !goals.some((g) => g.id === e.goalId));
   const size = skySizeFor(inset.aspect);
   const anchors = useMemo(() => placeAnchors(goals, hasGeneral || goals.length === 0, size), [goals, hasGeneral, size]);
-  const stars = useMemo(() => placeStars(entries, anchors, size), [entries, anchors, size]);
+  const { stars, clusters } = useMemo(() => placeSky(entries, anchors), [entries, anchors]);
+  const fit = useMemo(() => contentBox(anchors, clusters, size), [anchors, clusters, size]);
   const needle = q.trim().toLowerCase();
   const matches = (e: Entry) => !needle || e.name.toLowerCase().includes(needle) || e.ref.toLowerCase().includes(needle);
   const inFocus = (e: Entry) => !focus || (focus === GENERAL_ID ? !e.goalId || !goals.some((g) => g.id === e.goalId) : e.goalId === focus);
@@ -176,7 +177,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
     <>
       <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d={blob(0, 0, 4.6, "a gift")} fill="currentColor" /></svg> a gift</span>
       <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4.2" fill="none" stroke="currentColor" strokeWidth="1.8" /></svg> money spent</span>
-      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d={bundle(0, 0, 5)} fill="currentColor" /></svg> a gift in kind</span>
+      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d={bundle(0, 0, 5)} fill="currentColor" fillOpacity="0.3" stroke="currentColor" strokeWidth="1.2" /></svg> a gift in kind</span>
     </>
   );
 
@@ -208,7 +209,9 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
         starState={starState}
         tip={tip}
         renderTip={renderTip}
+        clusters={clusters}
         size={size}
+        fit={fit}
         inset={inset}
         navigable
       >
@@ -230,13 +233,15 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
           <div className="pop" style={{ "--i": 2 } as CSSProperties}>
             <dt>Spent</dt>
             <dd className="num">{fmt(spent)}<small> ETB</small></dd>
-            <dd className="note">every payment has its line</dd>
+            <dd className="note">{t.out ? "every payment has its line" : "nothing spent yet"}</dd>
           </div>
-          <div className="need pop" style={{ "--i": 3 } as CSSProperties}>
-            <dt>Still needed</dt>
-            <dd className="num">{fmt(needed)}<small> ETB</small></dd>
-            <dd className="note">for the open goals</dd>
-          </div>
+          {goals.some((g) => g.status === "open") ? (
+            <div className="need pop" style={{ "--i": 3 } as CSSProperties}>
+              <dt>Still needed</dt>
+              <dd className="num">{fmt(needed)}<small> ETB</small></dd>
+              <dd className="note">for the open goals</dd>
+            </div>
+          ) : null}
           {t.inKind.count ? (
             <div className="pop" style={{ "--i": 4 } as CSSProperties}>
               <dt>Given in kind</dt>

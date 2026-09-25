@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactNode, WheelEvent as ReactWheelEvent } from "react";
 
-import { SKY_EDGE, SKY_INK, SKY_LIGHT, WIDE, backdrop, blob, bundle, round } from "@/lib/sky";
-import type { Anchor, Entry, SkySize, Star } from "@/lib/sky";
+import { LABEL_DROP, SKY_EDGE, SKY_INK, SKY_LIGHT, WIDE, backdrop, blob, bundle, ringRadius, round } from "@/lib/sky";
+import type { Anchor, Cluster, Entry, SkySize, Star } from "@/lib/sky";
 import { prefersReducedMotion } from "@/lib/format";
 
 type StarState = { dim: boolean; hit: boolean; born: boolean };
@@ -13,6 +13,14 @@ const START: View = { k: 1, tx: 0, ty: 0 };
 const MIN_ZOOM = 0.7;
 const MAX_ZOOM = 6;
 const NO_INSET = { top: 0, bottom: 0 };
+// However little is in the sky, never blow it up past this many pixels per sky unit, or the names turn into headlines.
+const MAX_SCALE = 1.5;
+const fmt = (n: number) => n.toLocaleString("en-US");
+/** Ink on a pale bubble, white on a dark one, so the amount inside always reads. */
+function textOn(hex: string) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.42 ? SKY_INK : "#FFFFFF";
+}
 
 /**
  * The sky itself. `navigable` turns on dragging, zooming and a little parallax,
@@ -22,6 +30,7 @@ const NO_INSET = { top: 0, bottom: 0 };
 export function SkyCanvas({
   anchors,
   stars,
+  clusters,
   focus,
   onFocus,
   onOpen,
@@ -31,11 +40,14 @@ export function SkyCanvas({
   renderTip,
   navigable = false,
   size = WIDE,
+  fit,
   inset = NO_INSET,
   children,
 }: {
   anchors: Anchor[];
   stars: Star[];
+  /** Each goal's pack of gifts: where it sits and how far it reaches, for its ring and its name. */
+  clusters: Cluster[];
   focus: string | null;
   onFocus: (id: string | null) => void;
   onOpen: (e: Entry) => void;
@@ -46,13 +58,15 @@ export function SkyCanvas({
   navigable?: boolean;
   /** The sky's own units: wide for a landscape screen, tall for a phone held upright. */
   size?: SkySize;
+  /** The part of the sky to fill the screen with (sky units); the whole sky when left out. */
+  fit?: { x: number; y: number; w: number; h: number };
   /** Pixels at the top and bottom covered by things floating over the sky; the gifts are laid out between them. */
   inset?: { top: number; bottom: number };
   children?: ReactNode;
 }) {
   const [view, setView] = useState<View>(START);
   const { w: W, h: H } = size;
-  const [frame, setFrame] = useState({ x: 0, y: 0, w: W, h: H });
+  const [frame, setFrame] = useState({ x: 0, y: 0, w: W, h: H, s: 1 }); // s: pixels per sky unit
   const [lean, setLean] = useState({ x: 0, y: 0 }); // where the pointer is, for the parallax
   const box = useRef<HTMLDivElement>(null);
   const drag = useRef<{ id: number; x: number; y: number; moved: boolean } | null>(null);
@@ -61,8 +75,9 @@ export function SkyCanvas({
   const pinch = useRef<Map<number, { x: number; y: number }>>(new Map());
 
   // The viewBox takes the shape of the box, so the sky fills the screen instead of letterboxing,
-  // and the sky is fitted into the band left clear between the top and bottom insets.
+  // and the part of the sky being fitted fills the band left clear between the top and bottom insets.
   const { top, bottom } = inset;
+  const { x: fx, y: fy, w: fw, h: fh } = fit ?? { x: 0, y: 0, w: W, h: H };
   useEffect(() => {
     const el = box.current;
     if (!el || !navigable) return; // a sky that stays still keeps its plain frame
@@ -70,15 +85,16 @@ export function SkyCanvas({
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) return;
       const clear = Math.max(r.height * 0.35, r.height - top - bottom); // never squeeze the sky to nothing
-      const s = Math.min(r.width / W, clear / H); // pixels per sky unit
-      const middle = Math.min(top, r.height - clear) + clear / 2; // where the sky's centre lands, in pixels from the top
-      setFrame({ x: round(W / 2 - r.width / 2 / s), y: round(H / 2 - middle / s), w: round(r.width / s), h: round(r.height / s) });
+      const s = Math.min(r.width / fw, clear / fh, MAX_SCALE); // pixels per sky unit
+      const middle = Math.min(top, r.height - clear) + clear / 2; // where the fitted part's centre lands, in pixels from the top
+      const [cx, cy] = [fx + fw / 2, fy + fh / 2];
+      setFrame({ x: round(cx - r.width / 2 / s), y: round(cy - middle / s), w: round(r.width / s), h: round(r.height / s), s });
     };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [navigable, top, bottom, W, H]);
+  }, [navigable, top, bottom, fx, fy, fw, fh]);
 
   /** Client pixels to sky units, so zooming can keep the point under the pointer still. */
   const toSky = useCallback(
@@ -172,11 +188,9 @@ export function SkyCanvas({
     onOpen(s.entry);
   };
 
-  // Three depths: the far stars drift least, the big near stars most.
+  // Two depths: the far specks drift less than the goals and their gifts, which move together so a pack never comes apart.
   const layer = (depth: number, leanBy: number) =>
     `translate(${round(view.tx * depth + lean.x * leanBy)} ${round(view.ty * depth + lean.y * leanBy)}) scale(${round(view.k * (depth < 1 ? 0.92 : 1))})`;
-  const near = stars.filter((s) => s.r > 6);
-  const far = stars.filter((s) => s.r <= 6);
 
   const drawStar = (s: Star) => {
     const st = starState(s.entry);
@@ -187,22 +201,30 @@ export function SkyCanvas({
         onMouseEnter={() => onTip(s)}
         onClick={() => opened(s)}
       >
-        <circle cx={s.x} cy={s.y} r={round(s.r + 9)} fill="transparent" />
-        {st.hit ? <circle className="halo" cx={s.x} cy={s.y} r={round(s.r + 6)} fill="none" stroke={s.color} strokeWidth={1.5} /> : null}
+        <circle cx={s.x} cy={s.y} r={round(s.r + 4)} fill="transparent" />
+        {st.hit ? <circle className="halo" cx={s.x} cy={s.y} r={round(s.r + 4)} fill="none" stroke={SKY_INK} strokeWidth={2} strokeDasharray="4 3" /> : null}
         {s.entry.kind === "in" ? (
-          <>
-            <circle cx={s.x} cy={s.y} r={round(s.r * 1.6)} fill={s.color} opacity={0.16} />
-            <path d={blob(s.x, s.y, s.r, s.entry.ref)} fill={s.color} stroke={SKY_INK} strokeWidth={0.9} />
-          </>
+          <path d={blob(s.x, s.y, s.r, s.entry.ref)} fill={s.color} stroke={SKY_INK} strokeWidth={1.2} />
         ) : s.entry.kind === "inkind" ? (
-          <path d={bundle(s.x, s.y, s.r)} fill={s.color} stroke={SKY_INK} strokeWidth={0.9} />
+          <>
+            {/* Goods, not money: a light tint of the goal's colour, so it never reads as birr in hand. */}
+            <path d={bundle(s.x, s.y, s.r)} fill={SKY_LIGHT} />
+            <path d={bundle(s.x, s.y, s.r)} fill={s.color} fillOpacity={0.3} stroke={SKY_INK} strokeWidth={1.2} />
+          </>
         ) : (
           <>
-            {/* Hollow: an ink ring with the goal's colour inside it. */}
-            <circle cx={s.x} cy={s.y} r={round(s.r * 0.85)} fill={SKY_LIGHT} stroke={SKY_INK} strokeWidth={3.4} />
-            <circle cx={s.x} cy={s.y} r={round(s.r * 0.85)} fill="none" stroke={s.color} strokeWidth={1.8} />
+            {/* Money spent: hollow, an ink outline with the goal's colour just inside it. */}
+            <circle cx={s.x} cy={s.y} r={s.r} fill={SKY_LIGHT} stroke={SKY_INK} strokeWidth={1.2} />
+            <circle cx={s.x} cy={s.y} r={round(s.r - Math.max(1.6, s.r * 0.09) - 0.6)} fill="none" stroke={s.color} strokeWidth={round(Math.max(2.4, s.r * 0.18))} />
           </>
         )}
+        {s.r >= 17 ? (
+          // Big enough to say how much: the amount inside, and "ETB" under it when there is room.
+          <text x={s.x} y={round(s.y + (s.r >= 34 ? 0 : s.r * 0.14))} textAnchor="middle" className="bubble-amt" fill={s.entry.kind === "in" ? textOn(s.color) : SKY_INK} fontSize={round(Math.min(26, s.r * 0.36))}>
+            {fmt(s.entry.amount)}
+            {s.r >= 34 ? <tspan x={s.x} dy="1.15em" fontSize={round(Math.min(13, s.r * 0.18))}>ETB</tspan> : null}
+          </text>
+        ) : null}
       </g>
     );
   };
@@ -215,7 +237,8 @@ export function SkyCanvas({
 
   return (
     <div
-      className={`skybox night${navigable ? " navigable" : ""}`}
+      // "legible": the names under the goals are big enough on screen to read, so a phone can show them too.
+      className={`skybox night${navigable ? " navigable" : ""}${frame.s * view.k >= 0.7 ? " legible" : ""}`}
       ref={box}
       onMouseLeave={() => onTip(null)}
       onWheel={onWheel}
@@ -245,36 +268,41 @@ export function SkyCanvas({
 
         <g transform={layer(1, 2)}>
           {anchors.map((a) => {
-            const own = stars.filter((s) => s.anchor === a.id);
+            const R = ringRadius(clusters.find((c) => c.id === a.id)?.r ?? 0);
             const dim = focus !== null && focus !== a.id;
-            const path = own.map((s, i) => `${i ? "L" : "M"}${s.x} ${s.y}`).join("");
             const pct = a.goal && a.goal.target > 0 ? a.goal.pct : null;
-            const C = round(2 * Math.PI * 24);
+            const C = round(2 * Math.PI * R);
             return (
               <g key={a.id} className={`anchor${dim ? " dim" : ""}`} onClick={() => !dragged.current && onFocus(focus === a.id ? null : a.id)}>
-                {own.length ? <line x1={a.x} y1={a.y} x2={own[0].x} y2={own[0].y} stroke={a.color} strokeOpacity={0.5} strokeDasharray="2 5" /> : null}
-                {path ? <path d={path} fill="none" stroke={a.color} strokeOpacity={0.6} strokeWidth={1.4} strokeLinejoin="round" /> : null}
-                <circle cx={a.x} cy={a.y} r={40} fill={a.color} opacity={0.14} />
-                <circle cx={a.x} cy={a.y} r={24} fill="none" stroke={SKY_INK} strokeOpacity={0.08} strokeWidth={5} strokeDasharray={a.goal ? undefined : "3 5"} />
-                {pct !== null ? (
-                  <circle cx={a.x} cy={a.y} r={24} fill="none" stroke={a.color} strokeWidth={5} strokeLinecap="round" strokeDasharray={`${round((C * pct) / 100)} ${C}`} transform={`rotate(-90 ${a.x} ${a.y})`} />
+                {/* The goal's ground, then its ring: a track, and the part raised so far in the goal's colour. */}
+                <circle cx={a.x} cy={a.y} r={R} fill={a.color} opacity={0.1} />
+                <circle cx={a.x} cy={a.y} r={R} fill="none" stroke={SKY_INK} strokeOpacity={0.12} strokeWidth={5} strokeDasharray={a.goal ? undefined : "2 7"} strokeLinecap="round" />
+                {pct ? (
+                  <circle cx={a.x} cy={a.y} r={R} fill="none" stroke={a.color} strokeWidth={6} strokeLinecap="round" strokeDasharray={`${round((C * pct) / 100)} ${C}`} transform={`rotate(-90 ${a.x} ${a.y})`} />
                 ) : null}
-                <text x={a.x} y={a.y + 4} textAnchor="middle" className="anchor-pct" fill={SKY_INK}>{pct !== null ? `${pct}%` : a.goal ? "✓" : "∞"}</text>
               </g>
             );
           })}
-          {far.map(drawStar)}
-        </g>
-
-        <g transform={layer(1, 6)}>{near.map(drawStar)}</g>
-
-        <g transform={layer(1, 2)}>
-          {/* Names last, so they sit above any line that crosses them. */}
-          {anchors.map((a) => (
-            <text key={a.id} x={a.x} y={a.y + 44} textAnchor="middle" className={`anchor-title${focus !== null && focus !== a.id ? " dim" : ""}`}>
-              {a.title.length > 34 ? a.title.slice(0, 32) + "…" : a.title}
-            </text>
-          ))}
+          {stars.map(drawStar)}
+          {/* Names last, so nothing sits on them: the goal, and how far along it is. */}
+          {anchors.map((a) => {
+            const R = ringRadius(clusters.find((c) => c.id === a.id)?.r ?? 0);
+            const own = stars.filter((s) => s.anchor === a.id);
+            const given = own.filter((s) => s.entry.kind === "in").reduce((t, s) => t + s.entry.amount, 0);
+            const inKind = own.filter((s) => s.entry.kind === "inkind").reduce((t, s) => t + s.entry.amount, 0);
+            const sub = a.goal
+              ? a.goal.status === "done" ? `Done ✓ · ${fmt(a.goal.raised)} ETB` : `${a.goal.pct}% of ${fmt(a.goal.target)} ETB`
+              : [given ? `${fmt(given)} ETB given` : "", inKind ? `${fmt(inKind)} in kind` : ""].filter(Boolean).join(" · ") || "nothing yet";
+            const dim = focus !== null && focus !== a.id ? " dim" : "";
+            return (
+              <g key={a.id} className={`anchor-label${dim}`}>
+                <text x={a.x} y={round(a.y + R + LABEL_DROP)} textAnchor="middle" className="anchor-title">
+                  {a.title.length > 34 ? a.title.slice(0, 32) + "…" : a.title}
+                </text>
+                <text x={a.x} y={round(a.y + R + LABEL_DROP + 19)} textAnchor="middle" className="anchor-sub">{sub}</text>
+              </g>
+            );
+          })}
         </g>
       </svg>
 
