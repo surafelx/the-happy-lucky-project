@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactNode, WheelEvent as ReactWheelEvent } from "react";
 
-import { SKY_INK, WIDE, backdrop, bundle, round, sparkle } from "@/lib/sky";
+import { SKY_EDGE, SKY_INK, SKY_LIGHT, WIDE, backdrop, bundle, round, sparkle } from "@/lib/sky";
 import type { Anchor, Entry, SkySize, Star } from "@/lib/sky";
 import { prefersReducedMotion } from "@/lib/format";
 
@@ -192,12 +192,16 @@ export function SkyCanvas({
         {s.entry.kind === "in" ? (
           <>
             <circle cx={s.x} cy={s.y} r={round(s.r * 1.3)} fill={s.color} opacity={0.18} />
-            <path d={sparkle(s.x, s.y, round(s.r * 1.5))} fill={s.color} />
+            <path d={sparkle(s.x, s.y, round(s.r * 1.5))} fill={s.color} stroke={SKY_INK} strokeWidth={0.9} strokeLinejoin="round" />
           </>
         ) : s.entry.kind === "inkind" ? (
-          <path d={bundle(s.x, s.y, round(s.r * 1.2))} fill={s.color} opacity={0.85} />
+          <path d={bundle(s.x, s.y, round(s.r * 1.2))} fill={s.color} stroke={SKY_INK} strokeWidth={0.9} />
         ) : (
-          <circle cx={s.x} cy={s.y} r={round(s.r * 0.8)} fill={SKY_INK} stroke={s.color} strokeWidth={1.6} />
+          <>
+            {/* Hollow: an ink ring with the goal's colour inside it. */}
+            <circle cx={s.x} cy={s.y} r={round(s.r * 0.8)} fill={SKY_LIGHT} stroke={SKY_INK} strokeWidth={3.4} />
+            <circle cx={s.x} cy={s.y} r={round(s.r * 0.8)} fill="none" stroke={s.color} strokeWidth={1.8} />
+          </>
         )}
       </g>
     );
@@ -227,15 +231,15 @@ export function SkyCanvas({
       <svg viewBox={`${frame.x} ${frame.y} ${frame.w} ${frame.h}`} aria-hidden="true" preserveAspectRatio="xMidYMid meet">
         <defs>
           <radialGradient id="sky-glow" cx="50%" cy="45%" r="70%">
-            <stop offset="0%" stopColor="#1B4A55" />
-            <stop offset="100%" stopColor={SKY_INK} />
+            <stop offset="0%" stopColor={SKY_LIGHT} />
+            <stop offset="100%" stopColor={SKY_EDGE} />
           </radialGradient>
         </defs>
         <rect x={frame.x} y={frame.y} width={frame.w} height={frame.h} fill="url(#sky-glow)" />
 
         <g transform={layer(0.55, 9)}>
           {backdrop(size).map((s, i) => (
-            <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#fff" opacity={s.o} />
+            <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#7FA9C2" opacity={s.o} />
           ))}
         </g>
 
@@ -248,14 +252,14 @@ export function SkyCanvas({
             const C = round(2 * Math.PI * 24);
             return (
               <g key={a.id} className={`anchor${dim ? " dim" : ""}`} onClick={() => !dragged.current && onFocus(focus === a.id ? null : a.id)}>
-                {own.length ? <line x1={a.x} y1={a.y} x2={own[0].x} y2={own[0].y} stroke={a.color} strokeOpacity={0.25} strokeDasharray="2 5" /> : null}
-                {path ? <path d={path} fill="none" stroke={a.color} strokeOpacity={0.32} strokeWidth={1.2} strokeLinejoin="round" /> : null}
-                <circle cx={a.x} cy={a.y} r={40} fill={a.color} opacity={0.07} />
-                <circle cx={a.x} cy={a.y} r={24} fill="none" stroke="#fff" strokeOpacity={0.14} strokeWidth={5} strokeDasharray={a.goal ? undefined : "3 5"} />
+                {own.length ? <line x1={a.x} y1={a.y} x2={own[0].x} y2={own[0].y} stroke={a.color} strokeOpacity={0.5} strokeDasharray="2 5" /> : null}
+                {path ? <path d={path} fill="none" stroke={a.color} strokeOpacity={0.6} strokeWidth={1.4} strokeLinejoin="round" /> : null}
+                <circle cx={a.x} cy={a.y} r={40} fill={a.color} opacity={0.14} />
+                <circle cx={a.x} cy={a.y} r={24} fill="none" stroke={SKY_INK} strokeOpacity={0.08} strokeWidth={5} strokeDasharray={a.goal ? undefined : "3 5"} />
                 {pct !== null ? (
                   <circle cx={a.x} cy={a.y} r={24} fill="none" stroke={a.color} strokeWidth={5} strokeLinecap="round" strokeDasharray={`${round((C * pct) / 100)} ${C}`} transform={`rotate(-90 ${a.x} ${a.y})`} />
                 ) : null}
-                <text x={a.x} y={a.y + 4} textAnchor="middle" className="anchor-pct" fill={a.color}>{pct !== null ? `${pct}%` : a.goal ? "✓" : "∞"}</text>
+                <text x={a.x} y={a.y + 4} textAnchor="middle" className="anchor-pct" fill={SKY_INK}>{pct !== null ? `${pct}%` : a.goal ? "✓" : "∞"}</text>
               </g>
             );
           })}

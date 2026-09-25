@@ -1337,7 +1337,7 @@ body:has(.admin-page){padding-bottom:0}
 /* The page is one screen: the sky fills everything under the nav, and nothing scrolls but the panel. */
 body:has(.sky-page){height:100dvh;overflow:hidden}
 body:has(.sky-page) main{min-height:0}
-.books-page.sky-page{position:absolute;inset:0;overflow:hidden;background:#0A1826}
+.books-page.sky-page{position:absolute;inset:0;overflow:hidden;background:#EAF5FB}
 .sky-stage{position:absolute;inset:0}
 .sky-stage>.skybox{position:absolute;inset:0;min-height:0}
 
@@ -1350,31 +1350,29 @@ body:has(.sky-page) main{min-height:0}
 .cash-main b small{font-family:var(--font-poppins);font-weight:800;font-size:.3em;letter-spacing:.06em}
 .cash-main em{font-style:normal;font-size:.76rem;font-weight:600}
 .cash-stats{margin:0;flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:.55rem;align-content:start;align-items:stretch}
-.cash-stats>div{background:rgba(10,24,38,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1.5px solid rgba(246,255,250,.28);border-radius:16px;padding:.45rem .85rem .5rem;color:#F6FFFA;display:grid;align-content:center;min-width:0}
+.cash-stats>div{background:rgba(255,255,255,.86);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:2px solid var(--ink);border-radius:16px;box-shadow:3px 3px 0 var(--teal);padding:.45rem .85rem .5rem;color:var(--ink);display:grid;align-content:center;min-width:0}
 .cash-stats dt{font-size:.62rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.82;display:flex;align-items:center;gap:.35rem}
 .cash-stats dd{margin:0}
 .cash-stats dd.num{font-family:var(--font-lucky);font-size:1.45rem;line-height:1.1;letter-spacing:.01em;white-space:nowrap}
 .cash-stats dd small{font-family:var(--font-poppins);font-weight:700;font-size:.62rem;opacity:.8}
 .cash-stats dd.note{font-size:.68rem;font-weight:500;opacity:.72}
-.cash-stats .need{border-color:var(--rose)}
-.cash-stats .need dd.num{color:#F7B3E2}
+.cash-stats .need{box-shadow:3px 3px 0 var(--rose)}
+.cash-stats .need dd.num{color:var(--rose-deep)}
 .cash-stats .live i{width:8px;height:8px;border-radius:50%;background:#2DBE6C;box-shadow:0 0 0 0 rgba(45,190,108,.6);animation:livepulse 1.8s infinite}
-.cash-stats .live i.off{background:#8B8386;animation:none}
+.cash-stats .live i.off{background:var(--ink-3);animation:none}
 @keyframes livepulse{70%{box-shadow:0 0 0 8px rgba(45,190,108,0)}100%{box-shadow:0 0 0 0 rgba(45,190,108,0)}}
 /* Out of the flow, so a new gift arriving never moves the sky. */
-.sky-latest{position:absolute;top:calc(100% + .6rem);left:0;margin:0;max-width:100%;font-size:.85rem;color:#F6FFFA;background:rgba(10,24,38,.85);border:1.5px solid var(--gold);border-radius:999px;padding:.35rem .95rem;animation:fadeup .6s var(--spring)}
+.sky-latest{position:absolute;top:calc(100% + .6rem);left:0;margin:0;max-width:100%;font-size:.85rem;color:var(--ink);background:#FFFFFF;border:2px solid var(--ink);box-shadow:3px 3px 0 var(--gold);border-radius:999px;padding:.35rem .95rem;animation:fadeup .6s var(--spring)}
 .sky-latest:empty{display:none}
-.sky-latest b{color:var(--gold)}
-.sky-latest button{border:0;background:none;padding:0;font:inherit;font-weight:700;color:#F7B3E2;text-decoration:underline;cursor:pointer}
+.sky-latest b{color:var(--teal-deep)}
+.sky-latest button{border:0;background:none;padding:0;font:inherit;font-weight:700;color:var(--rose-deep);text-decoration:underline;cursor:pointer}
 
-.skybox.night{background:#0A1826;aspect-ratio:1000/620;min-height:0;box-shadow:8px 8px 0 var(--gold)}
+.skybox.night{background:#EAF5FB;aspect-ratio:1000/620;min-height:0;box-shadow:8px 8px 0 var(--gold)}
 .skybox.night>svg{width:100%;height:100%;display:block}
-.skybox.night .sky-legend,.skybox.night .sky-hint{color:#F6FFFA}
 .skybox.night .sky-legend span{display:inline-flex;align-items:center;gap:.3rem}
-.sky-hint button{pointer-events:auto;border:1.5px solid #F6FFFA;background:rgba(10,24,38,.6);color:#F6FFFA;border-radius:999px;padding:.15rem .6rem;font:inherit;font-weight:700;cursor:pointer}
-.sky-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:2rem;color:#F6FFFA;font-family:var(--font-lucky);font-size:clamp(1.1rem,2.4vw,1.6rem);letter-spacing:.02em;pointer-events:none}
+.sky-empty{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:2rem;color:#1F1A1C;font-family:var(--font-lucky);font-size:clamp(1.1rem,2.4vw,1.6rem);letter-spacing:.02em;pointer-events:none}
 .skybox .anchor{cursor:pointer;transition:opacity .3s}
-.skybox .anchor-title{pointer-events:none;transition:opacity .3s;fill:#F6FFFA;font:700 15px var(--font-poppins),sans-serif;paint-order:stroke;stroke:#0A1826;stroke-width:5px;stroke-linejoin:round}
+.skybox .anchor-title{pointer-events:none;transition:opacity .3s;fill:#1F1A1C;font:700 15px var(--font-poppins),sans-serif;paint-order:stroke;stroke:#FFFFFF;stroke-width:5px;stroke-linejoin:round}
 .skybox .anchor-pct{font:700 12px var(--font-poppins),sans-serif}
 .skybox .star{cursor:pointer;transform-box:fill-box;transform-origin:center;transition:opacity .3s,transform .3s var(--spring)}
 .skybox .star:hover{transform:scale(1.6)}
@@ -1479,24 +1477,24 @@ body:has(.sky-page) main{min-height:0}
 .skybox.navigable:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
 .sky-zoom{position:absolute;right:.8rem;top:.8rem;z-index:2;display:grid;gap:.35rem}
 .sky-stage .sky-zoom{top:auto;right:clamp(.6rem,2.5vw,1.4rem);bottom:calc(var(--dock-h) + .3rem)}
-.sky-zoom button{width:38px;height:38px;border:2px solid rgba(246,255,250,.7);background:rgba(10,24,38,.6);color:#F6FFFA;border-radius:50%;font:inherit;font-size:1.05rem;font-weight:700;cursor:pointer;line-height:1}
-.sky-zoom button:hover{background:#F6FFFA;color:#0A1826}
+.sky-zoom button{width:38px;height:38px;border:2px solid var(--ink);background:#FFFFFF;color:var(--ink);border-radius:50%;font:inherit;font-size:1.05rem;font-weight:700;cursor:pointer;line-height:1}
+.sky-zoom button:hover{background:var(--ink);color:#FFFFFF}
 .lightbox{z-index:90}
 
 /* The dock along the bottom: what the marks mean, and the way into receipts, goals and how it works. */
-.sky-dock{position:absolute;z-index:3;left:0;right:0;bottom:0;padding:1.6rem clamp(.6rem,2.5vw,1.4rem) max(.8rem,env(safe-area-inset-bottom));display:grid;gap:.55rem;pointer-events:none;background:linear-gradient(to top,rgba(10,24,38,.92) 35%,rgba(10,24,38,0))}
+.sky-dock{position:absolute;z-index:3;left:0;right:0;bottom:0;padding:1.6rem clamp(.6rem,2.5vw,1.4rem) max(.8rem,env(safe-area-inset-bottom));display:grid;gap:.55rem;pointer-events:none;background:linear-gradient(to top,rgba(234,245,251,.96) 35%,rgba(234,245,251,0))}
 .sky-dock-bar{display:flex;align-items:center;gap:.6rem 1rem;flex-wrap:wrap}
-.sky-dock .sky-legend{position:static;display:flex;align-items:center;gap:.4rem .9rem;flex-wrap:wrap;color:#F6EFD9}
+.sky-dock .sky-legend{position:static;display:flex;align-items:center;gap:.4rem .9rem;flex-wrap:wrap;color:var(--ink);opacity:1}
 .sky-dock .sky-legend span,.how-legend span{display:inline-flex;align-items:center;gap:.3rem}
-.sky-dock .sky-legend .sky-hint{color:#F6FFFA}
-.how-legend{display:flex;flex-wrap:wrap;gap:.4rem 1rem;margin:0 0 1rem;padding:.5rem .8rem;border-radius:12px;background:#0A1826;color:#F6EFD9;font-size:.8rem;font-weight:600}
+.sky-dock .sky-legend .sky-hint{color:var(--ink-2)}
+.how-legend{display:flex;flex-wrap:wrap;gap:.4rem 1rem;margin:0 0 1rem;padding:.5rem .8rem;border-radius:12px;background:#EAF5FB;border:2px solid var(--ink);color:var(--ink);font-size:.8rem;font-weight:600}
 .sky-dock .sky-hint{position:static;opacity:.65}
 .dock-buttons{margin-left:auto;display:flex;flex-wrap:wrap;gap:.45rem}
 .dock-btn{pointer-events:auto;white-space:nowrap;display:inline-flex;align-items:center;gap:.45rem;border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:999px;padding:.4rem .95rem;font:inherit;font-weight:700;font-size:.85rem;cursor:pointer;box-shadow:3px 3px 0 var(--gold);transition:transform .2s var(--spring)}
 .dock-btn:hover{transform:translateY(-2px) rotate(-1deg)}
 .dock-btn.on{background:var(--gold)}
 .dock-btn .num{font-size:.7rem;background:var(--ink);color:var(--paper);border-radius:999px;padding:0 .45rem}
-.dock-btn.ghost{background:rgba(10,24,38,.7);color:#F6FFFA;border-color:#F6FFFA;box-shadow:none}
+.dock-btn.ghost{background:var(--ground);box-shadow:none}
 .dock-btn:focus-visible,.panel-tabs button:focus-visible,.panel-x:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 
 /* The panel: slides in from the right over the sky, or up from the bottom on a phone. */

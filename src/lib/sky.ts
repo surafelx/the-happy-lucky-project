@@ -20,8 +20,13 @@ export const TALL: SkySize = { w: H, h: W, rx: 185, ry: 330 };
 /** The shape that best fills the clear part of the screen, given its width over its height. */
 export const skySizeFor = (aspect: number) => (aspect >= 1.3 ? WIDE : aspect >= 0.75 ? SQUARE : TALL);
 export const GENERAL_ID = "general";
-export const GENERAL_COLOR = "#F6EFD9";
-export const SKY_INK = "#0A1826";
+/** The general fund's stars: a deep blue, so they read on the light sky. */
+export const GENERAL_COLOR = "#2E5A78";
+/** The sky is white at its heart and fades to a very light blue at the edges. */
+export const SKY_LIGHT = "#FFFFFF";
+export const SKY_EDGE = "#DCEEF7";
+/** Outlines and names: the brand's ink, so pale goal colours still hold their shape. */
+export const SKY_INK = "#1F1A1C";
 
 /**
  * Two decimals is plenty for a 1000-wide sky, and it keeps every coordinate
