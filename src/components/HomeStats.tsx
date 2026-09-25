@@ -86,7 +86,7 @@ export function HomeStats() {
           <div className="jbig money">
             <span>We have now</span>
             <b className="num">{fmt(balance)}<small>ETB</small></b>
-            <em>{fmt(given)} given by {money.givers} {money.givers === 1 ? "person" : "people"}</em>
+            <em>{fmt(given)} given in {money.givers} {money.givers === 1 ? "gift" : "gifts"}</em>
           </div>
         ) : null}
       </div>

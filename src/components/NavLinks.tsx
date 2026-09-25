@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 
-// Kept short on purpose. The logo goes home; mentoring and requests from organisations are linked from the join card.
+// Kept short on purpose. The logo goes home; mentoring and requests from organisations are linked from the home page.
 const LINKS = MENTOR_FORM_ENABLED
   ? [
       { href: "/sundays", label: "Sundays" },

@@ -13,8 +13,10 @@ import type { Entry, Star } from "@/lib/sky";
 
 const POLL_MS = 15_000;
 const fmt = (n: number) => n.toLocaleString("en-US");
-const dateTime = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
-const shortDate = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+// Dates are read on the foundation's clock, so the server and every visitor print the same day (a mismatch fails hydration).
+const TZ = "Africa/Addis_Ababa";
+const dateTime = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: TZ });
+const shortDate = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: TZ });
 function ago(iso: string, now: number) {
   const s = Math.max(0, Math.round((now - Date.parse(iso)) / 1000));
   if (s < 10) return "just now";

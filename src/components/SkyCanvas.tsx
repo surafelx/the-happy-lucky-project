@@ -48,6 +48,8 @@ export function SkyCanvas({
   const [lean, setLean] = useState({ x: 0, y: 0 }); // where the pointer is, for the parallax
   const box = useRef<HTMLDivElement>(null);
   const drag = useRef<{ id: number; x: number; y: number; moved: boolean } | null>(null);
+  // Set when the last press turned into a drag, so the click that follows it is not taken as a tap.
+  const dragged = useRef(false);
   const pinch = useRef<Map<number, { x: number; y: number }>>(new Map());
 
   // The viewBox takes the shape of the box, so the sky fills the screen instead of letterboxing.
@@ -93,9 +95,10 @@ export function SkyCanvas({
 
   const onPointerDown = (e: ReactPointerEvent) => {
     if (!navigable) return;
+    dragged.current = false;
     pinch.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
     if (pinch.current.size === 1) drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, moved: false };
-    (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+    // No pointer capture yet: with it, the browser sends the click to the sky, not the star that was tapped.
   };
 
   const onPointerMove = (e: ReactPointerEvent) => {
@@ -119,7 +122,11 @@ export function SkyCanvas({
     if (!r2) return;
     const dx = ((e.clientX - d.x) / r2.width) * frame.w;
     const dy = ((e.clientY - d.y) / r2.height) * frame.h;
-    if (Math.abs(dx) + Math.abs(dy) > 2) d.moved = true;
+    if (!d.moved && Math.abs(dx) + Math.abs(dy) > 2) {
+      d.moved = true;
+      // Now it is a drag, keep following it even if the pointer leaves the sky.
+      box.current?.setPointerCapture?.(e.pointerId);
+    }
     d.x = e.clientX;
     d.y = e.clientY;
     setView((v) => ({ ...v, tx: v.tx + dx, ty: v.ty + dy }));
@@ -130,9 +137,8 @@ export function SkyCanvas({
     pinch.current.delete(-1);
     if (drag.current?.id === e.pointerId) {
       // A drag should not also open the star it finished on.
-      const moved = drag.current.moved;
+      dragged.current = drag.current.moved;
       drag.current = null;
-      if (moved) e.stopPropagation();
     }
   };
 
@@ -151,7 +157,7 @@ export function SkyCanvas({
   };
 
   const opened = (s: Star) => {
-    if (drag.current?.moved) return;
+    if (dragged.current) return;
     onOpen(s.entry);
   };
 
@@ -230,7 +236,7 @@ export function SkyCanvas({
             const pct = a.goal && a.goal.target > 0 ? a.goal.pct : null;
             const C = round(2 * Math.PI * 24);
             return (
-              <g key={a.id} className={`anchor${dim ? " dim" : ""}`} onClick={() => onFocus(focus === a.id ? null : a.id)}>
+              <g key={a.id} className={`anchor${dim ? " dim" : ""}`} onClick={() => !dragged.current && onFocus(focus === a.id ? null : a.id)}>
                 {own.length ? <line x1={a.x} y1={a.y} x2={own[0].x} y2={own[0].y} stroke={a.color} strokeOpacity={0.25} strokeDasharray="2 5" /> : null}
                 {path ? <path d={path} fill="none" stroke={a.color} strokeOpacity={0.32} strokeWidth={1.2} strokeLinejoin="round" /> : null}
                 <circle cx={a.x} cy={a.y} r={40} fill={a.color} opacity={0.07} />

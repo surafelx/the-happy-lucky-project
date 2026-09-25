@@ -37,6 +37,9 @@ export default function HomePage() {
                 <Link className="btn gold" href="/support">
                   Support us
                 </Link>
+                <Link className="btn" href="/mentor">
+                  Become a big sibling
+                </Link>
                 <Link className="btn" href="/partners">
                   Ask for help
                 </Link>
