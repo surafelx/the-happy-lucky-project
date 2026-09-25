@@ -9,6 +9,8 @@ type DbModule = typeof import("../src/lib/db.ts");
 let s: Store;
 let db: DbModule;
 
+import { LEDGER_SEED } from "../src/data/ledger-seed.ts";
+
 const JPEG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2Q==";
 const mentorForm = (email: string, name = "Almaz Tesfaye") => ({
   name, email, location: "Addis Ababa", share: ["Programming"], shareOther: "", contribute: ["Weekly group mentor"], note: "",
@@ -118,8 +120,28 @@ test("pledges: create, edit, prove, verify, delete", async () => {
   await assert.rejects(() => s.createPledge("a-year-covered", { ...fields, amount: 0 })); // the database itself refuses a zero pledge
 });
 
-test("the ledger starts empty, numbers receipts, and keeps the number through edits", async () => {
-  assert.deepEqual(await s.readLedger(), []); // no made-up entries: every line is real
+test("the ledger starts with the entries written down in the code, and only those", async () => {
+  const seeded = await s.readLedger();
+  assert.equal(seeded.length, LEDGER_SEED.length);
+  for (const [i, e] of seeded.entries()) {
+    // Newest first, so the seed comes back in reverse.
+    const want = LEDGER_SEED[LEDGER_SEED.length - 1 - i];
+    assert.equal(e.amount, want.amount);
+    assert.equal(e.name, want.name);
+    assert.equal(e.kind, want.kind);
+    assert.match(e.ref, /^HLP-\d{4}-\d{4}$/);
+  }
+  // Reading again does not write them a second time.
+  assert.equal((await s.readLedger()).length, LEDGER_SEED.length);
+  // Deleting a seeded entry keeps it deleted.
+  if (seeded[0]) {
+    assert.equal(await s.deleteLedgerEntry(seeded[0].id), true);
+    assert.equal((await s.readLedger()).length, LEDGER_SEED.length - 1);
+  }
+});
+
+test("the ledger numbers receipts and keeps the number through edits", async () => {
+  const before = (await s.readLedger()).length;
   const books = await s.createGoal({ title: "Reading club books", target: 5000, color: "#F3BC29", about: "", plan: "Buy 40 books.", status: "open" });
   const gift = await s.addLedgerEntry(
     { kind: "in", amount: 1500, name: "Abebe Kebede", anonymous: false, goalId: books.id, method: "telebirr", note: "", items: "", recipient: "", occurredAt: "2026-09-20T09:00:00.000Z" },
@@ -135,7 +157,8 @@ test("the ledger starts empty, numbers receipts, and keeps the number through ed
   assert.equal(kind.items, "4 packs of 12 diapers");
   assert.equal(kind.recipient, "One Heart Wholeness Center");
   assert.notEqual(paid.ref, gift.ref);
-  assert.deepEqual((await s.readLedger()).map((e) => e.ref), [kind.ref, paid.ref, gift.ref]); // newest first
+  assert.deepEqual((await s.readLedger()).slice(0, 3).map((e) => e.ref), [kind.ref, paid.ref, gift.ref]); // newest first
+  assert.equal((await s.readLedger()).length, before + 3);
 
   const edited = await s.editLedgerEntry(gift.id, { ...gift, amount: 2000 }, { removeReceipt: true });
   assert.equal(edited?.ref, gift.ref);
@@ -145,7 +168,7 @@ test("the ledger starts empty, numbers receipts, and keeps the number through ed
 
   assert.equal(await s.deleteLedgerEntry(paid.id), true);
   assert.equal(await s.deleteLedgerEntry(paid.id), false);
-  assert.deepEqual((await s.readLedger()).map((e) => e.ref), [kind.ref, gift.ref]);
+  assert.deepEqual((await s.readLedger()).slice(0, 2).map((e) => e.ref), [kind.ref, gift.ref]);
   assert.equal((await db.query("SELECT id FROM ledger WHERE id = $1", [paid.id])).length, 1); // still on record
 
   const done = await s.updateGoal(books.id, { ...books, status: "done" });

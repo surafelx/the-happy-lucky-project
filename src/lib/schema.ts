@@ -220,6 +220,14 @@ export const MIGRATIONS: { id: string; statements: string[] }[] = [
     ],
   },
   {
+    id: "007_seeded_photos",
+    statements: [
+      // A photo kept as a file in public/ rather than in the files table, for the
+      // handful of entries written down in the code.
+      `ALTER TABLE ledger ADD COLUMN photo_path TEXT NOT NULL DEFAULT ''`,
+    ],
+  },
+  {
     id: "005_drop_demo_receipts",
     statements: [
       // The old made-up donor list. The real ledger replaced it, and nothing read this table.

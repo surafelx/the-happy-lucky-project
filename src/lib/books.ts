@@ -42,6 +42,7 @@ export async function publicBooks() {
       occurredAt: e.occurredAt,
       loggedAt: e.at,
       receipt: Boolean(e.receipt),
+      photo: e.photo,
       // Whether a bank confirmed it, and which bank. The receipt link is a credential
       // and stays in the office; the bank's own reference could rebuild that link, so it stays too.
       verified: e.verify.state === "verified",

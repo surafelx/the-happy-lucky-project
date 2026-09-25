@@ -1,8 +1,9 @@
 import type { MentorInterest } from "@/data/mentor";
 import type { PartnerRequest } from "@/data/partner";
 import type { PledgeInput } from "@/data/campaign";
-import { one, query } from "./db.ts";
+import { getMeta, one, query, setMeta } from "./db.ts";
 import { importLegacyFiles } from "./db-import.ts";
+import { LEDGER_SEED } from "../data/ledger-seed.ts";
 import { PLEDGE_STATUSES, REQUEST_STATUSES, STATUSES, SUBSCRIPTION_STATUSES, clubFor, isoDate, nextMonth, nextSundays, receiptId, sundayKind } from "./office.ts";
 import type { ActivityKind, GoalFields, GoalStatus, LedgerFields, LedgerKind, MentorStatus, PledgeFields, PledgeStatus, RequestStatus, SubjectKind, SubscriptionStatus, SundayKind } from "./office.ts";
 
@@ -289,20 +290,21 @@ export type Verification = {
   paidAt: string | null;
   note: string;
 };
-export type LedgerEntry = LedgerFields & { id: number; ref: string; receipt: string | null; receiptUrl: string; verify: Verification; at: string; updatedAt: string };
+export type LedgerEntry = LedgerFields & { id: number; ref: string; receipt: string | null; receiptUrl: string; photo: string; verify: Verification; at: string; updatedAt: string };
 type LedgerRow = {
   id: number; ref: string; kind: LedgerKind; amount: number; name: string; anonymous: boolean; goal_id: string | null; method: string; note: string;
   items: string; recipient: string; receipt_file: string | null; occurred_at: string; at: string; updated_at: string;
-  receipt_url: string; verify_state: Verification["state"]; verify_at: string | null; verify_provider: string; verify_payer: string;
+  receipt_url: string; photo_path: string; verify_state: Verification["state"]; verify_at: string | null; verify_provider: string; verify_payer: string;
   verify_reference: string; verify_amount: number | null; verify_paid_at: string | null; verify_note: string;
 };
 const LEDGER_COLS =
   "id, ref, kind, amount, name, anonymous, goal_id, method, note, items, recipient, receipt_file, occurred_at, at, updated_at, " +
-  "receipt_url, verify_state, verify_at, verify_provider, verify_payer, verify_reference, verify_amount, verify_paid_at, verify_note";
+  "receipt_url, photo_path, verify_state, verify_at, verify_provider, verify_payer, verify_reference, verify_amount, verify_paid_at, verify_note";
 const toEntry = (r: LedgerRow): LedgerEntry => ({
   id: Number(r.id), ref: r.ref, kind: r.kind, amount: Number(r.amount), name: r.name, anonymous: r.anonymous, goalId: r.goal_id, method: r.method, note: r.note,
   items: r.items, recipient: r.recipient, receipt: r.receipt_file, occurredAt: r.occurred_at, at: r.at, updatedAt: r.updated_at,
   receiptUrl: r.receipt_url ?? "",
+  photo: r.photo_path ?? "",
   verify: {
     state: r.verify_state ?? "",
     at: r.verify_at,
@@ -332,9 +334,25 @@ export async function saveVerification(id: number, v: Verification): Promise<Led
   return readLedgerEntry(id);
 }
 
+/**
+ * Writes the handful of entries that predate the ledger, once. The marker means
+ * deleting one in the office keeps it deleted instead of bringing it back.
+ */
+const SEED_MARKER = "ledger_seed_v1";
+async function seedLedger(): Promise<void> {
+  if (await getMeta(SEED_MARKER)) return;
+  await setMeta(SEED_MARKER, new Date().toISOString());
+  for (const s of LEDGER_SEED) {
+    const { photo, ...fields } = s;
+    const entry = await addLedgerEntry(fields, "", fields.occurredAt);
+    if (photo) await query("UPDATE ledger SET photo_path = $2 WHERE id = $1", [entry.id, photo]);
+  }
+}
+
 /** Every live entry, newest first. Deleted ones stay in the table with `deleted_at` set and are never returned. */
 export async function readLedger(): Promise<LedgerEntry[]> {
   await prepared();
+  await seedLedger();
   return (await query<LedgerRow>(`SELECT ${LEDGER_COLS} FROM ledger WHERE deleted_at IS NULL ORDER BY occurred_at DESC, id DESC`)).map(toEntry);
 }
 export async function readLedgerEntry(id: number): Promise<LedgerEntry | null> {

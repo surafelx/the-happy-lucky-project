@@ -301,7 +301,7 @@ test("the sky spreads its goals out and never stacks two in one column", () => {
 
 test("stars stay inside the sky and keep off their goal's name", () => {
   const anchors = placeAnchors([goal(0), goal(1)], false);
-  const entries = Array.from({ length: 40 }, (_, i) => ({ ref: `HLP-2609-${i}`, kind: "in" as const, amount: 100 + i * 37, name: "A", goalId: i % 2 ? "g1" : "g0", method: "", note: "", items: "", recipient: "", occurredAt: `2026-09-${String(1 + (i % 28)).padStart(2, "0")}T09:00:00.000Z`, loggedAt: "", receipt: false, verified: false, verifiedBy: "", verifiedAt: null }));
+  const entries = Array.from({ length: 40 }, (_, i) => ({ ref: `HLP-2609-${i}`, kind: "in" as const, amount: 100 + i * 37, name: "A", goalId: i % 2 ? "g1" : "g0", method: "", note: "", items: "", recipient: "", occurredAt: `2026-09-${String(1 + (i % 28)).padStart(2, "0")}T09:00:00.000Z`, loggedAt: "", receipt: false, photo: "", verified: false, verifiedBy: "", verifiedAt: null }));
   const stars = placeStars(entries, anchors);
   assert.equal(stars.length, 40);
   for (const s of stars) {

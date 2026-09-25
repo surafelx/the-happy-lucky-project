@@ -250,7 +250,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
                   </span>
                   <span className="amt num">
                     {e.verified ? <i className="ticked" title={`${e.verifiedBy} confirmed this payment`} aria-label="confirmed by the bank">✓</i> : null}
-                    {e.kind === "in" ? "+" : e.kind === "out" ? "−" : "≈"}{fmt(e.amount)}{e.receipt ? " 📷" : ""}
+                    {e.kind === "in" ? "+" : e.kind === "out" ? "−" : "≈"}{fmt(e.amount)}{e.receipt || e.photo ? " 📷" : ""}
                   </span>
                 </button>
               </li>
@@ -351,6 +351,12 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
             <div className="row big"><span>{open.kind === "in" ? "Amount" : open.kind === "out" ? "Spent" : "Worth"}</span><span>{fmt(open.amount)} ETB</span></div>
             {open.verified ? (
               <div className="row verified"><span>Confirmed</span><span>✓ {open.verifiedBy}{open.verifiedAt ? `, ${shortDate(open.verifiedAt)}` : ""}</span></div>
+            ) : null}
+            {open.photo ? (
+              <a className="paper-photo" href={open.photo} target="_blank" rel="noopener">
+                {/* eslint-disable-next-line @next/next/no-img-element -- a file in public/, not a static import */}
+                <img src={open.photo} alt={open.kind === "inkind" ? `Photo of the gift, ${open.ref}` : `Photo of receipt ${open.ref}`} loading="lazy" />
+              </a>
             ) : null}
             {open.receipt ? (
               <a className="paper-photo" href={`/api/ledger/receipt?ref=${encodeURIComponent(open.ref)}`} target="_blank" rel="noopener">
