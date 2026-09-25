@@ -66,6 +66,23 @@ It is **not connected to any bank**. The office logs every entry by hand under *
   they were worth, and are deliberately kept out of the balance: that money never passed
   through us. Their photo is of the goods, not a receipt.
 
+## Checking payments against the bank
+
+The office can paste the Telebirr or bank receipt link on a ledger entry and ask
+[links.et](https://links.et) whether the bank agrees. Set `LINKS_API_KEY`; with no key the
+button says so and nothing else changes.
+
+- What comes back is compared with what was typed: the **amount** must match, and the
+  **day** must match. Agreement marks the entry `verified`; a difference marks it
+  `mismatch` and says what differs, in the office only.
+- **A receipt link is a credential.** Anyone holding it can open that transaction, so it is
+  stored for the office, sent only to links.et, never logged, and never published. The
+  bank's own reference is kept back too, since it can rebuild the link.
+- The public feed carries only `verified`, which bank confirmed it, and when.
+- `src/lib/verify.ts` holds the call and the parsing; the amount and date formats differ by
+  bank, so both are parsed defensively and an unreadable one counts as "no opinion" rather
+  than a mismatch.
+
 ## The join counter
 
 `/api/join/count` returns `{ count, goal }`. The count is `JOIN_COUNT_BASE` (people from

@@ -204,6 +204,22 @@ export const MIGRATIONS: { id: string; statements: string[] }[] = [
     ],
   },
   {
+    id: "006_verified_payments",
+    statements: [
+      // A receipt URL is a lookup key to somebody's transaction: office-only, never published.
+      `ALTER TABLE ledger ADD COLUMN receipt_url TEXT NOT NULL DEFAULT ''`,
+      // What the bank said, through links.et. `verify_state` is '', 'verified', 'mismatch' or 'failed'.
+      `ALTER TABLE ledger ADD COLUMN verify_state TEXT NOT NULL DEFAULT ''`,
+      `ALTER TABLE ledger ADD COLUMN verify_at TEXT`,
+      `ALTER TABLE ledger ADD COLUMN verify_provider TEXT NOT NULL DEFAULT ''`,
+      `ALTER TABLE ledger ADD COLUMN verify_payer TEXT NOT NULL DEFAULT ''`,
+      `ALTER TABLE ledger ADD COLUMN verify_reference TEXT NOT NULL DEFAULT ''`,
+      `ALTER TABLE ledger ADD COLUMN verify_amount INTEGER`,
+      `ALTER TABLE ledger ADD COLUMN verify_paid_at TEXT`,
+      `ALTER TABLE ledger ADD COLUMN verify_note TEXT NOT NULL DEFAULT ''`,
+    ],
+  },
+  {
     id: "005_drop_demo_receipts",
     statements: [
       // The old made-up donor list. The real ledger replaced it, and nothing read this table.

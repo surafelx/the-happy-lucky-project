@@ -1547,3 +1547,12 @@ body:has(.admin-page){padding-bottom:0}
   .give-go .btn{width:100%}
 }
 @media (prefers-reduced-motion:reduce){.give-plan:hover{transform:none}}
+
+/* ---------- payments confirmed by a bank ---------- */
+.verify-box{border-top:2px dashed var(--line);padding-top:.7rem}
+.verify-box input{width:100%;border:1.5px solid var(--ink);border-radius:10px;padding:.5rem .65rem;font:inherit;font-size:.85rem;background:var(--paper);color:var(--ink)}
+.verify-said{font-size:.78rem;line-height:1.45;color:var(--ink-2);background:var(--ground);border-radius:10px;padding:.5rem .65rem}
+.verify-said.ok{background:var(--teal-soft);color:var(--ink)}
+.verify-said.bad{background:var(--rose-soft);color:var(--rose-deep);font-weight:600}
+.books .rcpt .ticked{font-style:normal;color:var(--teal-deep);font-weight:800;margin-right:.25rem}
+.paper .row.verified span:last-child{color:#1F1A1C;font-weight:700}

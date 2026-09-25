@@ -3,8 +3,11 @@ import Link from "next/link";
 import { Logo } from "@/components/SvgDefs";
 import { NavLinks } from "@/components/NavLinks";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { MENTOR_FORM_ENABLED } from "@/lib/flags";
 
+/**
+ * The door to the office is not in the nav for now: the office is still at
+ * /enter for whoever needs it, it just isn't advertised to every visitor.
+ */
 export function Nav() {
   return (
     <nav className="nav">
@@ -15,11 +18,6 @@ export function Nav() {
           <span className="short">Happy Lucky</span>
         </Link>
         <NavLinks />
-        {MENTOR_FORM_ENABLED ? (
-          <Link className="enter-btn" href="/enter">
-            <span aria-hidden="true">🚪</span> Enter
-          </Link>
-        ) : null}
         <ThemeToggle />
       </div>
     </nav>

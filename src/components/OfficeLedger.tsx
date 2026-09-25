@@ -6,11 +6,12 @@ import type { ChangeEvent, FormEvent } from "react";
 import { shrinkImage } from "@/lib/image";
 
 type Kind = "in" | "out" | "inkind";
-type Entry = { id: number; ref: string; kind: Kind; amount: number; name: string; anonymous: boolean; goalId: string | null; method: string; note: string; items: string; recipient: string; receipt: string | null; occurredAt: string; at: string };
+type Verify = { state: "" | "verified" | "mismatch" | "failed"; at: string | null; provider: string; payer: string; reference: string; amount: number | null; paidAt: string | null; note: string };
+type Entry = { id: number; ref: string; kind: Kind; amount: number; name: string; anonymous: boolean; goalId: string | null; method: string; note: string; items: string; recipient: string; receipt: string | null; receiptUrl: string; verify: Verify; occurredAt: string; at: string };
 type Goal = { id: string; title: string; target: number; color: string; about: string; plan: string; status: "open" | "done"; raised: number; spent: number; remaining: number; pct: number };
 type Payload = { totals: { in: number; out: number; balance: number; count: number; needed: number; inKind: { value: number; count: number } }; goals: Goal[]; entries: Entry[]; colors: string[]; methods: { key: string; label: string }[] };
 
-type EntryDraft = { kind: Kind; amount: string; name: string; anonymous: boolean; goalId: string; method: string; note: string; items: string; recipient: string; when: string; image: string; removeReceipt: boolean };
+type EntryDraft = { kind: Kind; amount: string; name: string; anonymous: boolean; goalId: string; method: string; note: string; items: string; recipient: string; when: string; image: string; removeReceipt: boolean; receiptUrl: string };
 type GoalDraft = { title: string; target: string; color: string; about: string; plan: string; status: "open" | "done" };
 
 const fmt = (n: number) => n.toLocaleString("en-US");
@@ -21,7 +22,7 @@ const localInput = (iso: string) => {
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 };
 const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-const blankEntry = (): EntryDraft => ({ kind: "in", amount: "", name: "", anonymous: false, goalId: "", method: "telebirr", note: "", items: "", recipient: "", when: localInput(new Date().toISOString()), image: "", removeReceipt: false });
+const blankEntry = (): EntryDraft => ({ kind: "in", amount: "", name: "", anonymous: false, goalId: "", method: "telebirr", note: "", items: "", recipient: "", when: localInput(new Date().toISOString()), image: "", removeReceipt: false, receiptUrl: "" });
 
 async function call(url: string, method: "POST" | "PATCH" | "DELETE", body?: unknown) {
   const res = await fetch(url, { method, headers: body ? { "content-type": "application/json" } : undefined, body: body ? JSON.stringify(body) : undefined });
@@ -90,7 +91,7 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
     setSide({ type: "entry", id: e?.id ?? null });
     setEntry(
       e
-        ? { kind: e.kind, amount: String(e.amount), name: e.name, anonymous: e.anonymous, goalId: e.goalId ?? "", method: e.method, note: e.note, items: e.items, recipient: e.recipient, when: localInput(e.occurredAt), image: "", removeReceipt: false }
+        ? { kind: e.kind, amount: String(e.amount), name: e.name, anonymous: e.anonymous, goalId: e.goalId ?? "", method: e.method, note: e.note, items: e.items, recipient: e.recipient, when: localInput(e.occurredAt), image: "", removeReceipt: false, receiptUrl: e.receiptUrl }
         : blankEntry(),
     );
   };
@@ -147,6 +148,14 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
     });
   };
 
+  const askTheBank = (e: Entry, url: string) =>
+    run(async () => {
+      const res = await fetch("/api/office/ledger/verify", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id: e.id, url }) });
+      const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; message?: string; verified?: boolean };
+      if (!res.ok || !json.ok) throw new Error(json.error || `The check failed (${res.status})`);
+      toast(json.message || (json.verified ? "The bank confirmed it." : "The bank did not confirm it."));
+    }, "Checked");
+
   const currentGoal = side?.type === "goal" && side.id ? data.goals.find((g) => g.id === side.id) ?? null : null;
   const saveGoal = (ev: FormEvent) => {
     ev.preventDefault();
@@ -165,6 +174,7 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
           <div className="akpi"><span>Money in</span><b className="num">{fmt(t.in)}<small> ETB</small></b><em>{data.entries.filter((e) => e.kind === "in").length} gifts</em></div>
           <div className="akpi"><span>Money out</span><b className="num">{fmt(t.out)}<small> ETB</small></b><em>{data.entries.filter((e) => e.kind === "out").length} payments</em></div>
           <div className="akpi"><span>Given in kind</span><b className="num">{fmt(t.inKind.value)}<small> ETB</small></b><em>{t.inKind.count} {t.inKind.count === 1 ? "gift" : "gifts"} of goods</em></div>
+          <div className="akpi"><span>Confirmed by a bank</span><b className="num">{data.entries.filter((e) => e.verify.state === "verified").length}<small> of {data.entries.filter((e) => e.kind !== "inkind").length}</small></b><em>{data.entries.filter((e) => e.verify.state === "mismatch").length} don’t match</em></div>
           <div className="akpi"><span>Still needed</span><b className="num">{fmt(t.needed)}<small> ETB</small></b><em>across open goals</em></div>
         </div>
 
@@ -188,7 +198,7 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
           ) : (
             <div className="tblwrap">
               <table className="atable">
-                <thead><tr><th>Receipt</th><th>Who</th><th>For</th><th>When</th><th className="r">Amount</th></tr></thead>
+                <thead><tr><th>Receipt</th><th>Who</th><th>For</th><th>When</th><th>Bank</th><th className="r">Amount</th></tr></thead>
                 <tbody>
                   {rows.map((e) => (
                     <tr key={e.id} className={side?.type === "entry" && side.id === e.id ? "open" : ""} onClick={() => openEntry(e)}>
@@ -196,6 +206,12 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
                       <td><b>{e.name}</b>{e.anonymous ? <span className="pill">hidden</span> : null}{e.kind === "inkind" ? <span className="sub">{e.items} → {e.recipient}</span> : e.note ? <span className="sub">{e.note}</span> : null}</td>
                       <td><i className="dot" style={{ background: data.goals.find((g) => g.id === e.goalId)?.color ?? "var(--ink-3)" }} />{goalTitle(e.goalId)}</td>
                       <td>{when(e.occurredAt)}</td>
+                      <td>
+                        {e.verify.state === "verified" ? <span className="pill st-active" title={`${e.verify.provider} confirmed it`}>✓ {e.verify.provider}</span> : null}
+                        {e.verify.state === "mismatch" ? <span className="pill st-new" title={e.verify.note}>≠ doesn’t match</span> : null}
+                        {e.verify.state === "failed" ? <span className="pill" title={e.verify.note}>· not confirmed</span> : null}
+                        {e.verify.state === "" && e.kind !== "inkind" ? <span className="quiet">—</span> : null}
+                      </td>
                       <td className={`r num ledger-${e.kind}`}>{e.kind === "in" ? "+" : e.kind === "out" ? "−" : "≈"}{fmt(e.amount)} ETB</td>
                     </tr>
                   ))}
@@ -279,6 +295,36 @@ export function OfficeLedger({ toast, onChanged }: { toast: (msg: string) => voi
                 ) : null}
               </div>
             </div>
+
+            {entry.kind === "inkind" ? null : (
+              <div className="field verify-box">
+                <span>Receipt link from the bank <em>(kept private)</em></span>
+                <p className="quiet receipt-warn">
+                  Paste the Telebirr or bank receipt link. We ask the bank whether it is real, and the page shows a tick. The link itself is
+                  never published: anyone holding it can open the transaction.
+                </p>
+                <input value={entry.receiptUrl} onChange={(e) => setEntry({ ...entry, receiptUrl: e.target.value })} placeholder="https://…" inputMode="url" />
+                {current ? (
+                  <div className="aform-actions">
+                    <button type="button" className="abtn" disabled={busy || !entry.receiptUrl.trim()} onClick={() => void askTheBank(current, entry.receiptUrl.trim())}>
+                      Ask the bank
+                    </button>
+                    {current.verify.state ? <button type="button" className="abtn ghost" disabled={busy} onClick={() => void askTheBank(current, "")}>Forget the link</button> : null}
+                  </div>
+                ) : (
+                  <p className="quiet">Save the entry first, then check it.</p>
+                )}
+                {current?.verify.state === "verified" ? (
+                  <p className="verify-said ok">
+                    ✓ {current.verify.provider} confirmed it{current.verify.payer ? `, paid by ${current.verify.payer}` : ""}
+                    {current.verify.amount ? `, ${fmt(current.verify.amount)} ETB` : ""}
+                    {current.verify.paidAt ? ` on ${when(current.verify.paidAt)}` : ""}. Checked {current.verify.at ? when(current.verify.at) : ""}.
+                  </p>
+                ) : null}
+                {current?.verify.state === "mismatch" ? <p className="verify-said bad">≠ {current.verify.note}</p> : null}
+                {current?.verify.state === "failed" ? <p className="verify-said">· {current.verify.note}</p> : null}
+              </div>
+            )}
 
             <div className="aform-actions">
               <button type="submit" className="abtn primary" disabled={busy}>{current ? "Save changes" : entry.kind === "in" ? "Log gift" : entry.kind === "out" ? "Log payment" : "Log gift in kind"}</button>

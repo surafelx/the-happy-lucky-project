@@ -27,6 +27,7 @@ import {
 } from "../src/lib/office.ts";
 import { ETHIOPIA_BORDER, VIEW, inside, project, spread, toPath } from "../src/lib/geo.ts";
 import { H, W, placeAnchors, placeStars } from "../src/lib/sky.ts";
+import { agrees, parseAmount, parseWhen, providerName } from "../src/lib/verify.ts";
 
 test("sundaysOfMonth lists every Sunday of September 2026", () => {
   assert.deepEqual(sundaysOfMonth(2026, 8), [6, 13, 20, 27]);
@@ -300,7 +301,7 @@ test("the sky spreads its goals out and never stacks two in one column", () => {
 
 test("stars stay inside the sky and keep off their goal's name", () => {
   const anchors = placeAnchors([goal(0), goal(1)], false);
-  const entries = Array.from({ length: 40 }, (_, i) => ({ ref: `HLP-2609-${i}`, kind: "in" as const, amount: 100 + i * 37, name: "A", goalId: i % 2 ? "g1" : "g0", method: "", note: "", items: "", recipient: "", occurredAt: `2026-09-${String(1 + (i % 28)).padStart(2, "0")}T09:00:00.000Z`, loggedAt: "", receipt: false }));
+  const entries = Array.from({ length: 40 }, (_, i) => ({ ref: `HLP-2609-${i}`, kind: "in" as const, amount: 100 + i * 37, name: "A", goalId: i % 2 ? "g1" : "g0", method: "", note: "", items: "", recipient: "", occurredAt: `2026-09-${String(1 + (i % 28)).padStart(2, "0")}T09:00:00.000Z`, loggedAt: "", receipt: false, verified: false, verifiedBy: "", verifiedAt: null }));
   const stars = placeStars(entries, anchors);
   assert.equal(stars.length, 40);
   for (const s of stars) {
@@ -310,4 +311,39 @@ test("stars stay inside the sky and keep off their goal's name", () => {
     const onTheName = Math.abs(s.x - a.x) < labelHalf && s.y > a.y + 28 && s.y < a.y + 58;
     assert.equal(onTheName, false, `a star sits on ${a.title}`);
   }
+});
+
+test("bank amounts arrive as numbers or as decorated strings", () => {
+  assert.equal(parseAmount(3000), 3000);
+  assert.equal(parseAmount("3,000.00"), 3000);
+  assert.equal(parseAmount("ETB 24,500.40"), 24500);
+  assert.equal(parseAmount("1 200 birr"), 1200);
+  assert.equal(parseAmount(""), null);
+  assert.equal(parseAmount("not a number"), null);
+  assert.equal(parseAmount(0), null);
+});
+
+test("payment dates arrive in several shapes", () => {
+  assert.equal(parseWhen("2026-09-24T10:14:00.000Z"), "2026-09-24T10:14:00.000Z");
+  assert.match(parseWhen("24/09/2026, 10:14:02 AM") ?? "", /^2026-09-24T/);
+  assert.match(parseWhen("24-09-2026 22:14") ?? "", /^2026-09-24T/);
+  assert.equal(parseWhen("whenever"), null);
+  assert.equal(parseWhen(""), null);
+});
+
+test("the bank has to agree on the amount and the day, and silence is not disagreement", () => {
+  const entry = { amount: 3000, occurredAt: "2026-09-24T06:00:00.000Z" };
+  const said = { provider: "CBE", source: "cbe-pdf", payer: "A", reference: "FT1", status: "Completed" };
+  assert.deepEqual(agrees(entry, { ...said, amount: 3000, at: "2026-09-24T18:00:00.000Z" }), { amount: true, day: true, ok: true });
+  assert.equal(agrees(entry, { ...said, amount: 2500, at: "2026-09-24T18:00:00.000Z" }).ok, false);
+  assert.equal(agrees(entry, { ...said, amount: 3000, at: "2026-09-25T06:00:00.000Z" }).ok, false);
+  // A bank that does not say is not a bank that disagrees.
+  assert.equal(agrees(entry, { ...said, amount: null, at: null }).ok, true);
+});
+
+test("the bank is named from the receipt source, not the hostname", () => {
+  assert.equal(providerName("cbe-pdf", "cbe"), "CBE");
+  assert.equal(providerName("telebirr-html", "telebirr"), "Telebirr");
+  assert.equal(providerName("something-new", "dashen"), "Dashen Bank");
+  assert.equal(providerName("", ""), "the bank");
 });

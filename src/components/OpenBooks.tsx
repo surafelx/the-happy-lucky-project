@@ -248,7 +248,10 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
                     <br />
                     <span className="id">{e.ref} · {shortDate(e.occurredAt)} · {e.kind === "inkind" ? `${e.items} → ${e.recipient}` : goalOf(e)?.title ?? "General fund"}</span>
                   </span>
-                  <span className="amt num">{e.kind === "in" ? "+" : e.kind === "out" ? "−" : "≈"}{fmt(e.amount)}{e.receipt ? " 📷" : ""}</span>
+                  <span className="amt num">
+                    {e.verified ? <i className="ticked" title={`${e.verifiedBy} confirmed this payment`} aria-label="confirmed by the bank">✓</i> : null}
+                    {e.kind === "in" ? "+" : e.kind === "out" ? "−" : "≈"}{fmt(e.amount)}{e.receipt ? " 📷" : ""}
+                  </span>
                 </button>
               </li>
             ))}
@@ -292,6 +295,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
           <li><b>Logged by hand.</b> When a Telebirr, bank or cash payment reaches us, someone on the team logs it here, usually the same day. The page updates by itself.</li>
           <li><b>Not connected to our bank.</b> This is our own record, kept in the open. “What we have now” is everything in minus everything out.</li>
           <li><b>Find your gift.</b> Search your name or the receipt number we sent you. The date shows when your money arrived.</li>
+          <li><b>A tick means the bank agrees.</b> Where a payment has a bank or Telebirr receipt, we check it against the bank itself and mark it ✓. The receipt link stays private, because anyone holding it can open the transaction.</li>
           <li><b>Gifts in kind.</b> Goods bought by someone else and handed straight over. They show what they were worth, but they never move “what we have now”, because that money never passed through us.</li>
           <li><b>Receipts for spending.</b> Where we have a receipt, you can open it. Phone and account numbers are covered before they go up.</li>
           <li><b>See a mistake?</b> Tell us and we’ll fix it. A corrected entry keeps its receipt number.</li>
@@ -345,6 +349,9 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
             {open.method ? <div className="row"><span>How</span><span>{open.method}</span></div> : null}
             {open.note ? <div className="row"><span>Note</span><span>{open.note}</span></div> : null}
             <div className="row big"><span>{open.kind === "in" ? "Amount" : open.kind === "out" ? "Spent" : "Worth"}</span><span>{fmt(open.amount)} ETB</span></div>
+            {open.verified ? (
+              <div className="row verified"><span>Confirmed</span><span>✓ {open.verifiedBy}{open.verifiedAt ? `, ${shortDate(open.verifiedAt)}` : ""}</span></div>
+            ) : null}
             {open.receipt ? (
               <a className="paper-photo" href={`/api/ledger/receipt?ref=${encodeURIComponent(open.ref)}`} target="_blank" rel="noopener">
                 {/* eslint-disable-next-line @next/next/no-img-element -- served from the database, not a static asset */}

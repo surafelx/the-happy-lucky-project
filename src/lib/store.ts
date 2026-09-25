@@ -279,16 +279,58 @@ export async function updateGoal(id: string, f: GoalFields): Promise<Goal | null
   return r ? toGoal(r) : null;
 }
 
-export type LedgerEntry = LedgerFields & { id: number; ref: string; receipt: string | null; at: string; updatedAt: string };
+export type Verification = {
+  state: "" | "verified" | "mismatch" | "failed";
+  at: string | null;
+  provider: string;
+  payer: string;
+  reference: string;
+  amount: number | null;
+  paidAt: string | null;
+  note: string;
+};
+export type LedgerEntry = LedgerFields & { id: number; ref: string; receipt: string | null; receiptUrl: string; verify: Verification; at: string; updatedAt: string };
 type LedgerRow = {
   id: number; ref: string; kind: LedgerKind; amount: number; name: string; anonymous: boolean; goal_id: string | null; method: string; note: string;
   items: string; recipient: string; receipt_file: string | null; occurred_at: string; at: string; updated_at: string;
+  receipt_url: string; verify_state: Verification["state"]; verify_at: string | null; verify_provider: string; verify_payer: string;
+  verify_reference: string; verify_amount: number | null; verify_paid_at: string | null; verify_note: string;
 };
-const LEDGER_COLS = "id, ref, kind, amount, name, anonymous, goal_id, method, note, items, recipient, receipt_file, occurred_at, at, updated_at";
+const LEDGER_COLS =
+  "id, ref, kind, amount, name, anonymous, goal_id, method, note, items, recipient, receipt_file, occurred_at, at, updated_at, " +
+  "receipt_url, verify_state, verify_at, verify_provider, verify_payer, verify_reference, verify_amount, verify_paid_at, verify_note";
 const toEntry = (r: LedgerRow): LedgerEntry => ({
   id: Number(r.id), ref: r.ref, kind: r.kind, amount: Number(r.amount), name: r.name, anonymous: r.anonymous, goalId: r.goal_id, method: r.method, note: r.note,
   items: r.items, recipient: r.recipient, receipt: r.receipt_file, occurredAt: r.occurred_at, at: r.at, updatedAt: r.updated_at,
+  receiptUrl: r.receipt_url ?? "",
+  verify: {
+    state: r.verify_state ?? "",
+    at: r.verify_at,
+    provider: r.verify_provider ?? "",
+    payer: r.verify_payer ?? "",
+    reference: r.verify_reference ?? "",
+    amount: r.verify_amount === null || r.verify_amount === undefined ? null : Number(r.verify_amount),
+    paidAt: r.verify_paid_at,
+    note: r.verify_note ?? "",
+  },
 });
+
+/** The receipt link the office keeps for an entry. It never leaves the office. */
+export async function setReceiptUrl(id: number, url: string): Promise<void> {
+  await prepared();
+  await query("UPDATE ledger SET receipt_url = $2, updated_at = $3 WHERE id = $1", [id, url.slice(0, 1000), now()]);
+}
+
+/** Stores what the bank said about an entry. */
+export async function saveVerification(id: number, v: Verification): Promise<LedgerEntry | null> {
+  await prepared();
+  await query(
+    `UPDATE ledger SET verify_state = $2, verify_at = $3, verify_provider = $4, verify_payer = $5, verify_reference = $6,
+       verify_amount = $7, verify_paid_at = $8, verify_note = $9, updated_at = $10 WHERE id = $1`,
+    [id, v.state, v.at, v.provider, v.payer, v.reference, v.amount, v.paidAt, v.note.slice(0, 300), now()],
+  );
+  return readLedgerEntry(id);
+}
 
 /** Every live entry, newest first. Deleted ones stay in the table with `deleted_at` set and are never returned. */
 export async function readLedger(): Promise<LedgerEntry[]> {
