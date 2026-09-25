@@ -1331,33 +1331,42 @@ body:has(.admin-page){padding-bottom:0}
   background-image:radial-gradient(50rem 26rem at 100% 0,var(--gold-soft),transparent 70%),radial-gradient(36rem 22rem at 0 60%,var(--teal-soft),transparent 70%)
 }
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
-.books{padding:clamp(2.2rem,6vw,4rem) 0 4rem}
 .books .mono{font-family:ui-monospace,Menlo,monospace}
-.books-head h1{font-family:var(--font-lucky);font-weight:400;font-size:clamp(2.6rem,7.5vw,5.2rem);line-height:.98;margin:.5rem 0 .9rem}
-.books-head h1 em,.books h2 em{font-style:normal;color:var(--teal-deep);display:inline-block;transform:rotate(-2deg)}
-.books-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.9rem;margin-top:1.8rem}
-.bstat{background:var(--paper);border:2.5px solid var(--ink);border-radius:20px;padding:.9rem 1rem;box-shadow:4px 4px 0 var(--ink);display:grid;gap:.15rem;align-content:start;min-width:0}
-.bstat span{font-size:.72rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);display:flex;align-items:center;gap:.4rem}
-.bstat b{font-family:var(--font-lucky);font-weight:400;font-size:clamp(1.6rem,3vw,2.2rem);line-height:1.05;overflow-wrap:anywhere}
-.bstat b small{font-family:var(--font-poppins);font-weight:700;font-size:.8rem;color:var(--teal-deep)}
-.bstat em{font-style:normal;font-size:.78rem;color:var(--ink-2);font-weight:600}
-.bstat.big{background:var(--gold);box-shadow:8px 8px 0 var(--ink);transform:rotate(-.7deg);grid-column:1/-1;padding:1.4rem 1.6rem 1.5rem;justify-items:start;gap:.3rem}
-.bstat.big span{font-size:.85rem;letter-spacing:.16em}
-.bstat.big b{font-size:clamp(3.4rem,13vw,9rem);letter-spacing:-.01em;line-height:.92;display:flex;align-items:baseline;gap:.2em;flex-wrap:wrap}
-.bstat.big b small{font-size:clamp(1rem,2.4vw,1.8rem)}
-.bstat.big em{font-size:.95rem}
-.bstat.big b small,.bstat.big span,.bstat.big em{color:var(--ink)}
-.bstat.need{background:var(--rose-soft)}
-.bstat.live span i{width:9px;height:9px;border-radius:50%;background:#2DBE6C;box-shadow:0 0 0 0 rgba(45,190,108,.6);animation:livepulse 1.8s infinite}
-.bstat.live span i.off{background:var(--ink-3);animation:none}
-@keyframes livepulse{70%{box-shadow:0 0 0 8px rgba(45,190,108,0)}100%{box-shadow:0 0 0 0 rgba(45,190,108,0)}}
-.books-latest{min-height:1.6rem;margin:1.2rem 0 .8rem;font-size:.95rem}
-.books-latest b{color:var(--teal-deep)}
-.books-latest button{border:0;background:none;padding:0;font:inherit;font-weight:700;color:var(--rose-deep);text-decoration:underline;cursor:pointer}
-.books-latest:not(:empty){animation:fadeup .6s var(--spring)}
+.books h2 em{font-style:normal;color:var(--teal-deep);display:inline-block;transform:rotate(-2deg)}
 
-.books-sky{margin-top:.4rem;grid-template-columns:minmax(0,1.5fr) minmax(0,.85fr)}
-.books-sky>*{min-width:0}
+/* The page is one screen: the sky fills everything under the nav, and nothing scrolls but the panel. */
+body:has(.sky-page){height:100dvh;overflow:hidden}
+body:has(.sky-page) main{min-height:0}
+.books-page.sky-page{position:absolute;inset:0;overflow:hidden;background:#0A1826}
+.sky-stage{position:absolute;inset:0}
+.sky-stage>.skybox{position:absolute;inset:0;min-height:0}
+
+/* The money, floating across the top of the sky. */
+.sky-cash{position:absolute;z-index:3;top:clamp(.6rem,2vw,1.1rem);left:clamp(.6rem,2.5vw,1.4rem);right:clamp(.6rem,2.5vw,1.4rem);display:flex;flex-wrap:wrap;align-items:stretch;gap:.7rem;pointer-events:none}
+.cash-main,.cash-stats>div,.sky-latest button{pointer-events:auto}
+.cash-main{background:var(--gold);color:#1F1A1C;border:2.5px solid var(--ink);border-radius:20px;box-shadow:6px 6px 0 var(--ink);padding:.55rem 1.2rem .7rem;display:grid;gap:.1rem;align-content:center;align-self:flex-start;transform:rotate(-.6deg);min-width:0}
+.cash-main h1{margin:0;font:800 .7rem/1.3 var(--font-poppins);letter-spacing:.14em;text-transform:uppercase}
+.cash-main b{font-family:var(--font-lucky);font-weight:400;font-size:clamp(2.3rem,5.4vw,3.8rem);line-height:.95;letter-spacing:-.01em;display:flex;align-items:baseline;gap:.2em;flex-wrap:wrap}
+.cash-main b small{font-family:var(--font-poppins);font-weight:800;font-size:.3em;letter-spacing:.06em}
+.cash-main em{font-style:normal;font-size:.76rem;font-weight:600}
+.cash-stats{margin:0;flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:.55rem;align-content:start;align-items:stretch}
+.cash-stats>div{background:rgba(10,24,38,.72);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1.5px solid rgba(246,255,250,.28);border-radius:16px;padding:.45rem .85rem .5rem;color:#F6FFFA;display:grid;align-content:center;min-width:0}
+.cash-stats dt{font-size:.62rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;opacity:.82;display:flex;align-items:center;gap:.35rem}
+.cash-stats dd{margin:0}
+.cash-stats dd.num{font-family:var(--font-lucky);font-size:1.45rem;line-height:1.1;letter-spacing:.01em;white-space:nowrap}
+.cash-stats dd small{font-family:var(--font-poppins);font-weight:700;font-size:.62rem;opacity:.8}
+.cash-stats dd.note{font-size:.68rem;font-weight:500;opacity:.72}
+.cash-stats .need{border-color:var(--rose)}
+.cash-stats .need dd.num{color:#F7B3E2}
+.cash-stats .live i{width:8px;height:8px;border-radius:50%;background:#2DBE6C;box-shadow:0 0 0 0 rgba(45,190,108,.6);animation:livepulse 1.8s infinite}
+.cash-stats .live i.off{background:#8B8386;animation:none}
+@keyframes livepulse{70%{box-shadow:0 0 0 8px rgba(45,190,108,0)}100%{box-shadow:0 0 0 0 rgba(45,190,108,0)}}
+/* Out of the flow, so a new gift arriving never moves the sky. */
+.sky-latest{position:absolute;top:calc(100% + .6rem);left:0;margin:0;max-width:100%;font-size:.85rem;color:#F6FFFA;background:rgba(10,24,38,.85);border:1.5px solid var(--gold);border-radius:999px;padding:.35rem .95rem;animation:fadeup .6s var(--spring)}
+.sky-latest:empty{display:none}
+.sky-latest b{color:var(--gold)}
+.sky-latest button{border:0;background:none;padding:0;font:inherit;font-weight:700;color:#F7B3E2;text-decoration:underline;cursor:pointer}
+
 .skybox.night{background:#0A1826;aspect-ratio:1000/620;min-height:0;box-shadow:8px 8px 0 var(--gold)}
 .skybox.night>svg{width:100%;height:100%;display:block}
 .skybox.night .sky-legend,.skybox.night .sky-hint{color:#F6FFFA}
@@ -1375,7 +1384,6 @@ body:has(.admin-page){padding-bottom:0}
 .skybox .tip{z-index:3}
 .skybox .tip .mono{font-size:.68rem;color:var(--ink-3)}
 
-.books .receipts h3 .num{font-family:var(--font-poppins);font-size:.85rem;font-weight:700;color:var(--ink-3)}
 .rsearch input{width:100%;border:2px solid var(--ink);border-radius:12px;padding:.55rem .75rem;font:inherit;font-size:.88rem;background:var(--paper);color:var(--ink);margin-bottom:.5rem}
 .rsearch input:focus-visible{outline:3px solid var(--gold);outline-offset:1px}
 .books .rlist{list-style:none;margin:0;padding:0 .2rem 0 0}
@@ -1387,8 +1395,7 @@ body:has(.admin-page){padding-bottom:0}
 .books .rcpt:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
 .rmore{width:100%;border:2px dashed var(--ink);background:transparent;border-radius:12px;padding:.45rem;font:inherit;font-weight:700;font-size:.8rem;cursor:pointer}
 
-.books-goals{margin-top:3.5rem}
-.books-goals h2,.books-how h2{margin-bottom:1.2rem}
+.panel-title{font-size:1.5rem;line-height:1.1;margin:0 0 .3rem}
 .goal-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,280px),1fr));gap:1.1rem}
 .goal-card{background:var(--paper);border:2.5px solid var(--ink);border-radius:22px;padding:1.1rem 1.1rem 1rem;box-shadow:5px 5px 0 var(--goal);display:grid;gap:.5rem;align-content:start}
 .goal-card header{display:flex;align-items:start;justify-content:space-between;gap:.6rem}
@@ -1403,8 +1410,8 @@ body:has(.admin-page){padding-bottom:0}
 .goal-look{justify-self:start;margin-top:.3rem;border:2px solid var(--ink);background:var(--paper);border-radius:999px;padding:.3rem .8rem;font:inherit;font-weight:700;font-size:.8rem;cursor:pointer;transition:transform .2s var(--spring)}
 .goal-look:hover{transform:rotate(-2deg) scale(1.05)}
 
-.books-how{margin-top:3.5rem;background:var(--paper);border:2.5px solid var(--ink);border-radius:24px;padding:1.4rem 1.5rem;box-shadow:6px 6px 0 var(--teal)}
-.books-how ul{margin:0;padding-left:1.1rem;display:grid;gap:.55rem;max-width:75ch}
+.books-how .lede{font-size:.95rem;color:var(--ink-2);margin:0 0 .9rem}
+.books-how ul{margin:0;padding-left:1.1rem;display:grid;gap:.6rem;font-size:.9rem}
 .books-how li{color:var(--ink-2)}
 .books-how li b{color:var(--ink)}
 
@@ -1413,10 +1420,7 @@ body:has(.admin-page){padding-bottom:0}
 .paper-photo{display:block;margin-top:.9rem}
 .paper-photo img{display:block;width:100%;border:1.5px solid #1F1A1C;border-radius:4px}
 
-@media (max-width:1000px){.books-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:900px){.books-sky{grid-template-columns:minmax(0,1fr)}.skybox.night{aspect-ratio:auto;height:auto}.skybox.night>svg{height:auto}}
-@media (max-width:520px){.books-stats{gap:.6rem}.bstat{padding:.7rem .8rem}.skybox.night .sky-legend span:last-child{display:none}}
-@media (prefers-reduced-motion:reduce){.skybox .star.born,.bstat.live span i{animation:none}.skybox .star:hover{transform:none}}
+@media (prefers-reduced-motion:reduce){.skybox .star.born,.cash-stats .live i,.sky-latest{animation:none}.skybox .star:hover{transform:none}}
 
 /* ---------- office: the ledger ---------- */
 .atable td.ledger-in{color:var(--teal-deep);font-weight:700}
@@ -1438,10 +1442,9 @@ body:has(.admin-page){padding-bottom:0}
 .goal-row .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:.4rem;border:1px solid var(--ink)}
 .goal-row .pill{margin-left:.4rem}
 
-.bstat.big,.bstat.big b,.bstat.big b small,.bstat.big span,.bstat.big em{color:#1F1A1C}
 
-.sky-key{display:none;list-style:none;margin:.9rem 0 0;padding:0;flex-wrap:wrap;gap:.45rem}
-.sky-key button{display:inline-flex;align-items:center;gap:.4rem;border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:999px;padding:.25rem .7rem;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
+.sky-key{display:none;list-style:none;margin:0;padding:0;flex-wrap:wrap;gap:.4rem}
+.sky-key button{pointer-events:auto;display:inline-flex;align-items:center;gap:.4rem;border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:999px;padding:.25rem .7rem;font:inherit;font-size:.8rem;font-weight:700;cursor:pointer}
 .sky-key button.on{background:var(--ink);color:var(--ground)}
 .sky-key i{width:10px;height:10px;border-radius:50%;border:1.5px solid var(--ink)}
 @media (max-width:600px){.skybox .anchor-title,.skybox.night .sky-hint{display:none}.sky-key{display:flex}.skybox .anchor-pct{font-size:20px}}
@@ -1470,23 +1473,68 @@ body:has(.admin-page){padding-bottom:0}
 @media (max-width:420px){.jsplit{grid-template-columns:1fr}.jbig+.jbig{border-left:0;border-top:2.5px solid var(--ink)}}
 
 
-/* ---------- the whole sky: full screen, pannable, with a little depth ---------- */
+/* ---------- the audit sky: full screen, pannable, with a little depth ---------- */
 .skybox.navigable{cursor:grab;touch-action:none;border-radius:0;border:0;box-shadow:none;aspect-ratio:auto;height:100%;width:100%}
 .skybox.navigable:active{cursor:grabbing}
 .skybox.navigable:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
-.sky-open{position:absolute;right:.8rem;bottom:.7rem;z-index:2;border:2px solid #F6FFFA;background:rgba(10,24,38,.72);color:#F6FFFA;border-radius:999px;padding:.35rem .85rem;font:inherit;font-weight:700;font-size:.78rem;cursor:pointer;transition:transform .2s var(--spring)}
-.sky-open:hover{transform:translateY(-2px) rotate(-1.5deg)}
-.sky-full{position:fixed;inset:0;z-index:70;background:#0A1826;display:grid;grid-template-rows:auto minmax(0,1fr);animation:skyin .35s ease-out}
-@keyframes skyin{from{opacity:0}to{opacity:1}}
-.sky-full-bar{display:flex;align-items:center;gap:1rem;flex-wrap:wrap;padding:.7rem clamp(.8rem,3vw,1.6rem);color:#F6FFFA;font-size:.85rem;border-bottom:1px solid rgba(246,255,250,.14)}
-.sky-full-bar b{font-family:var(--font-lucky);font-weight:400;font-size:1.15rem;letter-spacing:.02em}
-.sky-full-hint{margin-left:auto;font-size:.75rem;opacity:.7}
-.sky-close{border:2px solid #F6FFFA;background:transparent;color:#F6FFFA;border-radius:999px;padding:.3rem .9rem;font:inherit;font-weight:700;font-size:.8rem;cursor:pointer}
-.sky-close:hover{background:#F6FFFA;color:#0A1826}
 .sky-zoom{position:absolute;right:.8rem;top:.8rem;z-index:2;display:grid;gap:.35rem}
+.sky-stage .sky-zoom{top:auto;right:clamp(.6rem,2.5vw,1.4rem);bottom:calc(var(--dock-h) + .3rem)}
 .sky-zoom button{width:38px;height:38px;border:2px solid rgba(246,255,250,.7);background:rgba(10,24,38,.6);color:#F6FFFA;border-radius:50%;font:inherit;font-size:1.05rem;font-weight:700;cursor:pointer;line-height:1}
 .sky-zoom button:hover{background:#F6FFFA;color:#0A1826}
-.sky-full .sky-legend{bottom:1rem;left:clamp(.8rem,3vw,1.6rem)}
 .lightbox{z-index:90}
-@media (max-width:600px){.sky-full-hint{display:none}.sky-full .sky-legend{font-size:.64rem}}
-@media (prefers-reduced-motion:reduce){.sky-full{animation:none}.sky-open:hover{transform:none}}
+
+/* The dock along the bottom: what the marks mean, and the way into receipts, goals and how it works. */
+.sky-dock{position:absolute;z-index:3;left:0;right:0;bottom:0;padding:1.6rem clamp(.6rem,2.5vw,1.4rem) max(.8rem,env(safe-area-inset-bottom));display:grid;gap:.55rem;pointer-events:none;background:linear-gradient(to top,rgba(10,24,38,.92) 35%,rgba(10,24,38,0))}
+.sky-dock-bar{display:flex;align-items:center;gap:.6rem 1rem;flex-wrap:wrap}
+.sky-dock .sky-legend{position:static;display:flex;align-items:center;gap:.4rem .9rem;flex-wrap:wrap;color:#F6EFD9}
+.sky-dock .sky-legend span,.how-legend span{display:inline-flex;align-items:center;gap:.3rem}
+.sky-dock .sky-legend .sky-hint{color:#F6FFFA}
+.how-legend{display:flex;flex-wrap:wrap;gap:.4rem 1rem;margin:0 0 1rem;padding:.5rem .8rem;border-radius:12px;background:#0A1826;color:#F6EFD9;font-size:.8rem;font-weight:600}
+.sky-dock .sky-hint{position:static;opacity:.65}
+.dock-buttons{margin-left:auto;display:flex;flex-wrap:wrap;gap:.45rem}
+.dock-btn{pointer-events:auto;white-space:nowrap;display:inline-flex;align-items:center;gap:.45rem;border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:999px;padding:.4rem .95rem;font:inherit;font-weight:700;font-size:.85rem;cursor:pointer;box-shadow:3px 3px 0 var(--gold);transition:transform .2s var(--spring)}
+.dock-btn:hover{transform:translateY(-2px) rotate(-1deg)}
+.dock-btn.on{background:var(--gold)}
+.dock-btn .num{font-size:.7rem;background:var(--ink);color:var(--paper);border-radius:999px;padding:0 .45rem}
+.dock-btn.ghost{background:rgba(10,24,38,.7);color:#F6FFFA;border-color:#F6FFFA;box-shadow:none}
+.dock-btn:focus-visible,.panel-tabs button:focus-visible,.panel-x:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* The panel: slides in from the right over the sky, or up from the bottom on a phone. */
+.sky-panel{position:absolute;z-index:5;right:clamp(.6rem,2.5vw,1.4rem);top:var(--cash-h);bottom:var(--dock-h);width:min(410px,100% - 1.2rem);background:var(--paper);color:var(--ink);border:2.5px solid var(--ink);border-radius:22px;box-shadow:6px 6px 0 var(--gold);display:flex;flex-direction:column;overflow:hidden;transform:translateX(calc(100% + 3rem));visibility:hidden;transition:transform .45s var(--spring),visibility 0s .45s}
+.sky-panel.open{transform:none;visibility:visible;transition:transform .45s var(--spring)}
+.panel-head{display:flex;align-items:center;gap:.4rem;padding:.55rem .6rem .55rem .7rem;border-bottom:2px solid var(--ink);background:var(--ground)}
+.panel-tabs{display:flex;gap:.2rem;min-width:0;overflow-x:auto;scrollbar-width:none}
+.panel-tabs button{flex:none;white-space:nowrap;border:2px solid transparent;background:transparent;border-radius:999px;padding:.25rem .7rem;font:inherit;font-weight:700;font-size:.8rem;color:var(--ink-2);cursor:pointer}
+.panel-tabs button.on{border-color:var(--ink);background:var(--paper);color:var(--ink)}
+.panel-x{margin-left:auto;flex:none;width:34px;height:34px;border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:50%;font:inherit;font-size:1.2rem;line-height:1;cursor:pointer}
+.panel-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;padding:.9rem 1rem 1.3rem}
+.sky-panel .rlist{max-height:none;overflow:visible}
+.sky-panel .goal-cards{grid-template-columns:minmax(0,1fr)}
+
+/* Too narrow for every tile in one row: they scroll sideways rather than stack and eat the sky. */
+@media (max-width:1200px){
+  .cash-stats{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:0 0 3px}
+  .cash-stats::-webkit-scrollbar{display:none}
+  .cash-stats>div{flex:none}
+}
+@media (max-width:700px){
+  .sky-cash{gap:.45rem}
+  .cash-main{flex:1 1 100%;padding:.45rem .9rem .55rem;box-shadow:4px 4px 0 var(--ink)}
+  .cash-main b{font-size:2.4rem}
+  .cash-main em{display:none}
+  .cash-stats>div{padding:.35rem .75rem .4rem}
+  .cash-stats dd.num{font-size:1.15rem}
+  .cash-stats dd.note{display:none}
+  .sky-dock{padding-top:1.1rem;gap:.45rem}
+  .sky-key{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 calc(-1 * clamp(.6rem,2.5vw,1.4rem));padding:0 clamp(.6rem,2.5vw,1.4rem) 3px}
+  .sky-key::-webkit-scrollbar,.panel-tabs::-webkit-scrollbar{display:none}
+  .sky-key li{flex:none}
+  .sky-key button{font-size:.75rem;padding:.2rem .6rem}
+  .sky-zoom button{width:32px;height:32px;font-size:.95rem}
+  .panel-tabs button{font-size:.76rem;padding:.25rem .55rem}
+  .sky-dock .sky-legend{display:none}
+  .dock-buttons{margin-left:0;width:100%}
+  .dock-btn{flex:1;justify-content:center;padding:.4rem .5rem;font-size:.78rem;gap:.3rem}
+  .sky-panel{left:.5rem;right:.5rem;width:auto;top:auto;bottom:.5rem;height:min(76%,640px);transform:translateY(calc(100% + 2rem))}
+}
+@media (prefers-reduced-motion:reduce){.sky-panel,.sky-panel.open{transition:none}.dock-btn:hover{transform:none}}

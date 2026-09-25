@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description: "The audit: what Happy Lucky Chacho has, what it needs, and where every birr went. Every gift and every payment, with receipts, drawn as a sky of stars.",
 };
 
-/** The public audit. Local only until the mentor flag goes on, and on Vercel only with a database. */
+/** The public audit, a full-screen sky. Local only until the mentor flag goes on, and on Vercel only with a database. */
 export default async function OpenBooksPage() {
   if (!booksEnabled()) notFound();
   let initial: PublicBooks | null = null;
@@ -22,7 +22,7 @@ export default async function OpenBooksPage() {
     console.error("[audit] read failed:", err); // the page still renders and the client tries again
   }
   return (
-    <div className="page page-enter books-page light" data-theme="light">
+    <div className="page page-enter books-page sky-page light" data-theme="light">
       <OpenBooks initial={initial} />
     </div>
   );

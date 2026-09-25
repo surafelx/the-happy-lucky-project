@@ -26,7 +26,7 @@ import {
   weekStart,
 } from "../src/lib/office.ts";
 import { ETHIOPIA_BORDER, VIEW, inside, project, spread, toPath } from "../src/lib/geo.ts";
-import { H, W, placeAnchors, placeStars } from "../src/lib/sky.ts";
+import { H, SQUARE, TALL, W, WIDE, placeAnchors, placeStars, skySizeFor } from "../src/lib/sky.ts";
 
 test("sundaysOfMonth lists every Sunday of September 2026", () => {
   assert.deepEqual(sundaysOfMonth(2026, 8), [6, 13, 20, 27]);
@@ -309,5 +309,27 @@ test("stars stay inside the sky and keep off their goal's name", () => {
     const labelHalf = Math.min(34, a.title.length) * 4.4 + 10; // the same band placeStars keeps clear
     const onTheName = Math.abs(s.x - a.x) < labelHalf && s.y > a.y + 28 && s.y < a.y + 58;
     assert.equal(onTheName, false, `a star sits on ${a.title}`);
+  }
+});
+
+test("a phone gets a sky shaped like the room it has, and every shape keeps its goals apart and inside", () => {
+  assert.equal(skySizeFor(2.4), WIDE); // a laptop
+  assert.equal(skySizeFor(0.95), SQUARE); // a phone, once the numbers and buttons take their share
+  assert.equal(skySizeFor(0.6), TALL);
+  const two = placeAnchors([goal(0), goal(1)], false, TALL);
+  assert.ok(Math.abs(two[0].y - two[1].y) > 400, "on a tall sky two goals stack");
+  assert.equal(two[0].x, two[1].x);
+  for (const size of [SQUARE, TALL]) {
+    for (const n of [1, 2, 3, 5]) {
+      const out = placeAnchors(Array.from({ length: n }, (_, i) => goal(i)), true, size);
+      for (const a of out) assert.ok(a.x > 60 && a.x < size.w - 60 && a.y > 60 && a.y < size.h - 60, `${a.title} stays inside a ${size.w}x${size.h} sky`);
+      for (let i = 0; i < out.length; i++) {
+        for (let j = i + 1; j < out.length; j++) {
+          assert.ok(Math.hypot(out[i].x - out[j].x, out[i].y - out[j].y) > 150, `${out[i].title} and ${out[j].title} keep their distance on a ${size.w}x${size.h} sky`);
+        }
+      }
+      const entries = Array.from({ length: 30 }, (_, i) => ({ ref: `HLP-2609-${i}`, kind: "in" as const, amount: 500 + i * 91, name: "A", goalId: `g${i % n}`, method: "", note: "", items: "", recipient: "", occurredAt: `2026-09-${String(1 + (i % 28)).padStart(2, "0")}T09:00:00.000Z`, loggedAt: "", receipt: false }));
+      for (const st of placeStars(entries, out, size)) assert.ok(st.x >= 16 && st.x <= size.w - 16 && st.y >= 16 && st.y <= size.h - 16);
+    }
   }
 });

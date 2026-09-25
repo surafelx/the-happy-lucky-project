@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent, ReactNode, WheelEvent as ReactWheelEvent } from "react";
 
-import { BACKDROP, H, SKY_INK, W, bundle, round, sparkle } from "@/lib/sky";
-import type { Anchor, Entry, Star } from "@/lib/sky";
+import { SKY_INK, WIDE, backdrop, bundle, round, sparkle } from "@/lib/sky";
+import type { Anchor, Entry, SkySize, Star } from "@/lib/sky";
 import { prefersReducedMotion } from "@/lib/format";
 
 type StarState = { dim: boolean; hit: boolean; born: boolean };
@@ -12,6 +12,7 @@ type View = { k: number; tx: number; ty: number };
 const START: View = { k: 1, tx: 0, ty: 0 };
 const MIN_ZOOM = 0.7;
 const MAX_ZOOM = 6;
+const NO_INSET = { top: 0, bottom: 0 };
 
 /**
  * The sky itself. `navigable` turns on dragging, zooming and a little parallax,
@@ -29,6 +30,8 @@ export function SkyCanvas({
   tip,
   renderTip,
   navigable = false,
+  size = WIDE,
+  inset = NO_INSET,
   children,
 }: {
   anchors: Anchor[];
@@ -41,9 +44,14 @@ export function SkyCanvas({
   tip: Star | null;
   renderTip: (s: Star) => ReactNode;
   navigable?: boolean;
+  /** The sky's own units: wide for a landscape screen, tall for a phone held upright. */
+  size?: SkySize;
+  /** Pixels at the top and bottom covered by things floating over the sky; the stars are laid out between them. */
+  inset?: { top: number; bottom: number };
   children?: ReactNode;
 }) {
   const [view, setView] = useState<View>(START);
+  const { w: W, h: H } = size;
   const [frame, setFrame] = useState({ x: 0, y: 0, w: W, h: H });
   const [lean, setLean] = useState({ x: 0, y: 0 }); // where the pointer is, for the parallax
   const box = useRef<HTMLDivElement>(null);
@@ -52,22 +60,25 @@ export function SkyCanvas({
   const dragged = useRef(false);
   const pinch = useRef<Map<number, { x: number; y: number }>>(new Map());
 
-  // The viewBox takes the shape of the box, so the sky fills the screen instead of letterboxing.
+  // The viewBox takes the shape of the box, so the sky fills the screen instead of letterboxing,
+  // and the sky is fitted into the band left clear between the top and bottom insets.
+  const { top, bottom } = inset;
   useEffect(() => {
     const el = box.current;
-    if (!el || !navigable) return; // the small sky keeps the plain 1000x620 frame
+    if (!el || !navigable) return; // a sky that stays still keeps its plain frame
     const measure = () => {
       const r = el.getBoundingClientRect();
       if (!r.width || !r.height) return;
-      const w = r.width / r.height > W / H ? H * (r.width / r.height) : W;
-      const h = w === W ? W / (r.width / r.height) : H;
-      setFrame({ x: round((W - w) / 2), y: round((H - h) / 2), w: round(w), h: round(h) });
+      const clear = Math.max(r.height * 0.35, r.height - top - bottom); // never squeeze the sky to nothing
+      const s = Math.min(r.width / W, clear / H); // pixels per sky unit
+      const middle = Math.min(top, r.height - clear) + clear / 2; // where the sky's centre lands, in pixels from the top
+      setFrame({ x: round(W / 2 - r.width / 2 / s), y: round(H / 2 - middle / s), w: round(r.width / s), h: round(r.height / s) });
     };
     measure();
     const ro = new ResizeObserver(measure);
     ro.observe(el);
     return () => ro.disconnect();
-  }, [navigable]);
+  }, [navigable, top, bottom, W, H]);
 
   /** Client pixels to sky units, so zooming can keep the point under the pointer still. */
   const toSky = useCallback(
@@ -76,7 +87,7 @@ export function SkyCanvas({
       if (!r) return { x: W / 2, y: H / 2 };
       return { x: frame.x + ((clientX - r.left) / r.width) * frame.w, y: frame.y + ((clientY - r.top) / r.height) * frame.h };
     },
-    [frame],
+    [frame, W, H],
   );
 
   const zoomAt = useCallback((factor: number, clientX?: number, clientY?: number) => {
@@ -86,7 +97,7 @@ export function SkyCanvas({
       // The sky point under the pointer stays under the pointer.
       return { k, tx: p.x - ((p.x - v.tx) / v.k) * k, ty: p.y - ((p.y - v.ty) / v.k) * k };
     });
-  }, [toSky]);
+  }, [toSky, W, H]);
 
   const onWheel = (e: ReactWheelEvent) => {
     if (!navigable) return;
@@ -223,7 +234,7 @@ export function SkyCanvas({
         <rect x={frame.x} y={frame.y} width={frame.w} height={frame.h} fill="url(#sky-glow)" />
 
         <g transform={layer(0.55, 9)}>
-          {BACKDROP.map((s, i) => (
+          {backdrop(size).map((s, i) => (
             <circle key={i} cx={s.x} cy={s.y} r={s.r} fill="#fff" opacity={s.o} />
           ))}
         </g>
