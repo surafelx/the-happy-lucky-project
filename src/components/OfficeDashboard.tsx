@@ -22,16 +22,16 @@ type Request = {
   needs: string[]; needsOther: string; where: string[]; when: string; note: string; status: RequestStatus; notes: string; matched: string[];
   suggestions: { id: string; name: string; club: string; because: string[]; score: number }[];
 };
-type Sunday = { date: string; kind: SundayKind; kidsExpected: number; slots: { time: string; title: string; lead: string }[]; going: number; notGoing: number };
+type Sunday = { date: string; kind: SundayKind; slots: { time: string; title: string; lead: string }[]; going: number; notGoing: number };
 type Summary = {
   today: string;
-  kpis: { joined: number; joinedThisWeek: number; pool: number; byStatus: Record<MentorStatus, number>; requestsOpen: number; pledgesToVerify: number; supportersActive: number; supportersMonthly: number; supportersDue: number; remindersDue: number; campaignsOpen: number; raisedThisMonth: number; yearTarget: number; balance: number; needed: number };
+  kpis: { joined: number; joinedThisWeek: number; pool: number; byStatus: Record<MentorStatus, number>; requestsOpen: number; pledgesToVerify: number; supportersActive: number; supportersMonthly: number; supportersDue: number; remindersDue: number; campaignsOpen: number; raisedThisMonth: number; balance: number; needed: number };
   weekly: { week: string; count: number }[];
   skills: { skill: string; count: number }[];
   mentors: Mentor[];
   tasks: { id: string; text: string; sub?: string; done: boolean }[];
   sundays: Sunday[];
-  thisSunday: Sunday & { goingIds: string[]; kidsTotal: number };
+  thisSunday: Sunday & { goingIds: string[] };
   requests: Request[];
 };
 
@@ -194,8 +194,8 @@ export function OfficeDashboard() {
           <div className="apanel">
             <div className="ahead"><h2>This Sunday</h2><span className="quiet">{day(ts.date)} · {KIND_LABEL[ts.kind]}</span></div>
             <div className="kpis three">
-              <div className="kpi"><b className="num">{ts.kidsExpected}</b><span>kids expected</span></div>
               <div className="kpi"><b className="num">{going.length}</b><span>mentors coming</span></div>
+              <div className="kpi"><b className="num">{ts.notGoing}</b><span>can’t come</span></div>
               <div className="kpi"><b className="num">{ts.slots.length}</b><span>slots</span></div>
             </div>
             <div className="slots">{ts.slots.map((s) => <span key={s.time + s.title}><b>{s.time}</b> {s.title} · {s.lead}</span>)}</div>
@@ -214,6 +214,7 @@ export function OfficeDashboard() {
           <div className="apanel">
             <div className="ahead"><h2>To do</h2><span className="quiet">{openTasks} open</span></div>
             <div className="tasks">
+              {openTasks === 0 ? <p className="quiet">Nothing to do yet.</p> : null}
               {data.tasks.filter((t) => !t.done).slice(0, 4).map((t) => (
                 <label key={t.id} className="task"><input type="checkbox" checked={t.done} onChange={(e) => void act("/api/office/tasks", { id: t.id, done: e.target.checked })} /><span><b>{t.text}</b>{t.sub ? <small>{t.sub}</small> : null}</span></label>
               ))}
@@ -366,7 +367,7 @@ export function OfficeDashboard() {
             const rs = data.mentors;
             return (
               <div key={s.date} className={`apanel${i === 0 ? " span2" : ""}`}>
-                <div className="ahead"><h2>{day(s.date, true)}</h2><span className={`pill k-${s.kind}`}>{KIND_LABEL[s.kind]}</span><span className="quiet" style={{ marginLeft: "auto" }}>{s.kidsExpected} kids expected · {s.going} yes · {s.notGoing} no</span></div>
+                <div className="ahead"><h2>{day(s.date, true)}</h2><span className={`pill k-${s.kind}`}>{KIND_LABEL[s.kind]}</span><span className="quiet" style={{ marginLeft: "auto" }}>{s.going} yes · {s.notGoing} no</span></div>
                 <div className="slots">{s.slots.map((x) => <span key={x.time + x.title}><b>{x.time}</b> {x.title} · {x.lead}</span>)}</div>
                 <details className="adetails" open={i === 0}>
                   <summary>Attendance ({rs.filter((m) => m.attended.includes(s.date)).length} marked)</summary>
@@ -387,6 +388,7 @@ export function OfficeDashboard() {
         <div className="apanel narrow">
           <div className="ahead"><h2>To do</h2><span className="quiet">{openTasks} open · {data.tasks.length - openTasks} done</span></div>
           <div className="tasks">
+            {data.tasks.length === 0 ? <p className="quiet">Nothing here yet. Add the first one below.</p> : null}
             {data.tasks.map((t) => (
               <label key={t.id} className={`task${t.done ? " done" : ""}`}><input type="checkbox" checked={t.done} onChange={(e) => void act("/api/office/tasks", { id: t.id, done: e.target.checked })} /><span><b>{t.text}</b>{t.sub ? <small>{t.sub}</small> : null}</span></label>
             ))}

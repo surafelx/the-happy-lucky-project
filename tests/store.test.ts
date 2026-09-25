@@ -52,14 +52,31 @@ test("a mentor keeps their id, status and photo when they send the form again", 
   assert.equal(await s.updateMentor("nobody", { status: "active" }), null);
 });
 
-test("tasks seed themselves, then add and update", async () => {
-  assert.equal((await s.readTasks()).length, 4);
+test("the app writes nothing of its own: no starter to-dos, no welcome messages", async () => {
+  assert.deepEqual(await s.readTasks(), []);
+  assert.deepEqual(await s.readMessages(), []);
+  assert.deepEqual(await s.readTasks(), []); // reading an empty list never fills it
+});
+
+test("the cleanup migration takes out the old demo rows and nothing the office made its own", async () => {
+  const { MIGRATIONS } = await import("../src/lib/schema.ts");
+  const cleanup = MIGRATIONS.find((m) => m.id === "006_drop_demo_messages_and_tasks")!;
+  await db.query("INSERT INTO messages (sender, text, club, at) VALUES ('Dawit', 'Coding club finished the maze game. Next up, a quiz app. Materials attached.', 'coding', '2026-09-01'), ('Surafel', 'See you on Sunday.', '', '2026-09-02')");
+  await db.query("INSERT INTO tasks (id, text, sub, done) VALUES ('t-refs', 'Send reference checks to new mentors', '', FALSE), ('t-consent', 'Guardian consent for photos', '', TRUE)");
+  for (const sql of cleanup.statements) await db.query(sql);
+  assert.deepEqual((await s.readMessages()).map((m) => m.text), ["See you on Sunday."]); // a real message stays
+  assert.deepEqual((await s.readTasks()).map((t) => t.id), ["t-consent"]); // ticked by the office, so it stays
+  await db.query("DELETE FROM messages");
+  await db.query("DELETE FROM tasks");
+});
+
+test("tasks add and update", async () => {
   const t = await s.addTask("  Call the home  ");
   assert.equal((await s.updateTask(t.id, { done: true }))?.done, true);
   assert.equal((await s.updateTask(t.id, { text: "Call the matron" }))?.text, "Call the matron");
   const all = await s.readTasks();
-  assert.equal(all.length, 5);
-  assert.deepEqual(all[4], { id: t.id, text: "Call the matron", sub: undefined, done: true });
+  assert.equal(all.length, 1);
+  assert.deepEqual(all[0], { id: t.id, text: "Call the matron", sub: undefined, done: true });
   assert.equal(await s.updateTask("t-nope", { done: true }), null);
 });
 
@@ -151,11 +168,6 @@ test("the ledger starts empty, numbers receipts, and keeps the number through ed
   const done = await s.updateGoal(books.id, { ...books, status: "done" });
   assert.equal(done?.status, "done");
   assert.equal(await s.updateGoal("nope", books), null);
-});
-
-test("messages seed once", async () => {
-  assert.equal((await s.readMessages()).length, 3);
-  assert.equal((await s.readMessages()).length, 3);
 });
 
 test("a supporter goes pending -> active on the first payment, and the due date walks forward", async () => {

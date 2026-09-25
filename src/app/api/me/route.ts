@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { ME_ENABLED, ME_COOKIE, meEmail, notAvailable } from "@/lib/guard";
 import { KIND_LABEL, badgeProgress, onboardingSteps } from "@/lib/office";
-import { kidsFor, readMentors, readMessages, readRsvps, readSundays } from "@/lib/store";
+import { readMentors, readMessages, readRsvps, readSundays } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -53,7 +53,6 @@ export async function GET() {
       induction: me.status === "contacted",
     },
     upcoming: sundays.slice(1).map((s) => ({ date: s.date, kind: s.kind, kindLabel: KIND_LABEL[s.kind], rsvp: rsvps[s.date]?.[me.id] ?? null })),
-    kids: kidsFor(club),
     messages: messages.filter((m) => !m.club || m.club === club),
   });
 }

@@ -128,22 +128,11 @@ export async function updateMentor(
 
 // ---------- tasks ----------
 export type Task = { id: string; text: string; sub?: string; done: boolean };
-const DEFAULT_TASKS: Task[] = [
-  { id: "t-refs", text: "Send reference checks to new mentors", sub: "Template: two referees, one week", done: false },
-  { id: "t-reply", text: "Reply to every new mentor", sub: "Template: “Welcome, next Sunday”", done: false },
-  { id: "t-receipts", text: "Publish last month’s receipts", sub: "Before the Showcase Sunday", done: false },
-  { id: "t-consent", text: "Guardian consent for photos", sub: "Nothing published without it", done: false },
-];
 const toTask = (r: { id: string; text: string; sub: string; done: boolean }): Task => ({ id: r.id, text: r.text, sub: r.sub || undefined, done: r.done });
 
 export async function readTasks(): Promise<Task[]> {
   await prepared();
-  let rows = await query<{ id: string; text: string; sub: string; done: boolean }>("SELECT id, text, sub, done FROM tasks ORDER BY position");
-  if (rows.length === 0) {
-    for (const t of DEFAULT_TASKS) await query("INSERT INTO tasks (id, text, sub, done) VALUES ($1, $2, $3, $4) ON CONFLICT (id) DO NOTHING", [t.id, t.text, t.sub ?? "", t.done]);
-    rows = await query("SELECT id, text, sub, done FROM tasks ORDER BY position");
-  }
-  return rows.map(toTask);
+  return (await query<{ id: string; text: string; sub: string; done: boolean }>("SELECT id, text, sub, done FROM tasks ORDER BY position")).map(toTask);
 }
 export async function updateTask(id: string, patch: { done?: boolean; text?: string }): Promise<Task | null> {
   await prepared();
@@ -166,7 +155,6 @@ export async function addTask(text: string, sub?: string): Promise<Task> {
 export type SundayPlan = {
   date: string; // ISO
   kind: SundayKind;
-  kidsExpected: number;
   slots: { time: string; title: string; lead: string }[];
 };
 export type Rsvps = Record<string, Record<string, "yes" | "no">>; // date -> mentorId -> answer
@@ -195,7 +183,7 @@ export async function readSundays(mentors: Mentor[], today = new Date()): Promis
     if (kind === "showcase") slots.push({ time: "14:30", title: "Impact showcase", lead: "the kids" });
     slots.push({ time: "13:00", title: "Parents and guardians circle", lead: "volunteer teacher" });
     slots.sort((a, b) => a.time.localeCompare(b.time));
-    return { date: isoDate(d), kind, kidsExpected: 18 + slots.length * 3, slots };
+    return { date: isoDate(d), kind, slots };
   });
 }
 export async function readRsvps(): Promise<Rsvps> {
@@ -214,41 +202,11 @@ export async function setRsvp(date: string, mentorId: string, answer: "yes" | "n
   );
 }
 
-// ---------- kids (example roster) ----------
-export type Kid = { name: string; age: number; note: string; club: string };
-const KIDS: Kid[] = [
-  { name: "Meron", age: 12, note: "Loves Scratch. Shy for the first ten minutes.", club: "coding" },
-  { name: "Abenezer", age: 11, note: "Asks a lot of “why”. Keep him busy.", club: "coding" },
-  { name: "Selam", age: 10, note: "New this month. Guardian: Tigist.", club: "coding" },
-  { name: "Kaleb", age: 13, note: "Wants to build a game. Has a plan already.", club: "coding" },
-  { name: "Hana", age: 9, note: "Reads ahead of the group. Give her the hard book.", club: "reading" },
-  { name: "Dawit", age: 8, note: "Quiet. Warms up when it’s his turn to read.", club: "reading" },
-  { name: "Ruth", age: 11, note: "Writes stories about her cat.", club: "reading" },
-  { name: "Yonas", age: 12, note: "Paints big. Bring the large paper.", club: "art" },
-  { name: "Lily", age: 10, note: "Sings. Loudly. Wonderfully.", club: "art" },
-  { name: "Biruk", age: 14, note: "Chemistry questions, all of them.", club: "science" },
-  { name: "Sara", age: 13, note: "Maths ahead of her class.", club: "science" },
-  { name: "Nahom", age: 9, note: "Homework first, football talk after.", club: "general" },
-  { name: "Eden", age: 10, note: "Needs reminding to eat lunch.", club: "general" },
-];
-export const kidsFor = (club: string) => KIDS.filter((k) => k.club === club);
-export const kidsTotal = () => KIDS.length;
-
 // ---------- messages from the centre ----------
 export type Message = { from: string; at: string; text: string; club?: string };
 export async function readMessages(): Promise<Message[]> {
   await prepared();
-  const read = () => query<{ sender: string; at: string; text: string; club: string }>("SELECT sender, at, text, club FROM messages ORDER BY at DESC");
-  let rows = await read();
-  if (rows.length === 0) {
-    const seed: Message[] = [
-      { from: "Surafel", at: now(), text: "Welcome. Someone from the centre will meet you at the gate at 09:20 on your first Sunday." },
-      { from: "Dawit", at: new Date(Date.now() - 864e5).toISOString(), text: "Coding club finished the maze game. Next up, a quiz app. Materials attached.", club: "coding" },
-      { from: "Lily", at: new Date(Date.now() - 2 * 864e5).toISOString(), text: "Reading club is halfway through the story collection. Bring your favourite short one.", club: "reading" },
-    ];
-    for (const m of seed) await query("INSERT INTO messages (sender, text, club, at) VALUES ($1, $2, $3, $4)", [m.from, m.text, m.club ?? "", m.at]);
-    rows = await read();
-  }
+  const rows = await query<{ sender: string; at: string; text: string; club: string }>("SELECT sender, at, text, club FROM messages ORDER BY at DESC");
   return rows.map((r) => ({ from: r.sender, at: r.at, text: r.text, club: r.club || undefined }));
 }
 

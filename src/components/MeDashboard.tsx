@@ -18,7 +18,6 @@ type Me = {
   attended: string[]; hoursWithKids: number;
   next: { date: string; kind: string; kindLabel: string; slot: { time: string; title: string; lead: string }; slots: { time: string; title: string; lead: string }[]; rsvp: "yes" | "no" | null; induction: boolean };
   upcoming: { date: string; kind: string; kindLabel: string; rsvp: "yes" | "no" | null }[];
-  kids: { name: string; age: number; note: string }[];
   messages: { from: string; at: string; text: string }[];
 };
 
@@ -120,7 +119,7 @@ export function MeDashboard() {
             <div className="kpis three">
               <div className="kpi"><b className="num">{data.attended.length}</b><span>Sundays</span></div>
               <div className="kpi"><b className="num">{data.hoursWithKids}h</b><span>with kids</span></div>
-              <div className="kpi"><b className="num">{data.kids.length}</b><span>kids waiting</span></div>
+              <div className="kpi"><b className="num">{badge.total - badge.done}</b><span>steps to your badge</span></div>
             </div>
             <div className="bar-track"><b style={{ width: `${pct}%` }} /></div>
             <p className="quiet">Badge: {badge.done} of {badge.total} steps</p>
@@ -147,9 +146,8 @@ export function MeDashboard() {
 
       {tab === "group" ? (
         <div className="apanel narrow">
-          <div className="ahead"><h2>{CLUB_LABEL[me.club]}</h2><span className="quiet">{data.kids.length} kids · example roster</span></div>
-          <div className="kids">{data.kids.map((k) => <div className="kid" key={k.name}><i>{k.name[0]}</i><div>{k.name}, {k.age}<small>{k.note}</small></div></div>)}</div>
-          <p className="quiet">First names only. Never share these outside the centre.</p>
+          <div className="ahead"><h2>{CLUB_LABEL[me.club]}</h2></div>
+          <p className="quiet">The centre introduces you to the children in your group on your first Sunday. Their names stay at the centre, never online.</p>
         </div>
       ) : null}
 
@@ -173,6 +171,7 @@ export function MeDashboard() {
       {tab === "messages" ? (
         <div className="apanel narrow">
           <div className="ahead"><h2>From the centre</h2></div>
+          {data.messages.length === 0 ? <p className="quiet">No messages from the centre yet.</p> : null}
           <div className="msgs">{data.messages.map((m, i) => <div className="msg" key={i}>{m.text}<small>{m.from} · {new Date(m.at).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</small></div>)}</div>
           <div className="office-actions"><span className="abtn">Club plan (PDF)</span><Link className="abtn" href="/sundays">Read the Sunday letters</Link></div>
         </div>

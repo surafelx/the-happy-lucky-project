@@ -839,11 +839,6 @@ table.pool tr.detail td{background:color-mix(in srgb,var(--teal) 8%,transparent)
 .me .check i.done{background:var(--gold);color:#1F1A1C} .me .check i.now{background:var(--rose);color:#1F1A1C}
 .me .check small{color:var(--ink-3);font-weight:600}
 .me .rsvp{display:flex;gap:.5rem;flex-wrap:wrap}
-.me .kids{display:grid}
-.me .kid{display:grid;grid-template-columns:auto 1fr;gap:.6rem;align-items:center;padding:.45rem 0;border-top:2px solid var(--line);font-size:.88rem}
-.me .kid:first-child{border-top:0}
-.me .kid i{width:32px;height:32px;border-radius:50%;background:var(--teal-soft);display:grid;place-items:center;font-style:normal;border:2px solid var(--ink);color:#1F1A1C}
-.me .kid small{display:block;color:var(--ink-3)}
 .me .badge{display:grid;grid-template-columns:auto 1fr;gap:.8rem;align-items:center}
 .me .badge .coin{width:74px;height:74px;border-radius:50%;border:2.5px solid var(--ink);background:var(--gold-soft);display:grid;place-items:center;position:relative;filter:grayscale(.6);opacity:.75;font-size:2rem}
 .me .badge .coin svg{width:46px;height:46px}
@@ -1008,11 +1003,6 @@ table.pool tr.detail td{background:color-mix(in srgb,var(--teal) 8%,transparent)
 .admin .check i{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center;font-style:normal;font-size:.75rem;font-weight:800;background:var(--paper)}
 .admin .check i.done{background:var(--gold)} .admin .check i.now{background:var(--rose)}
 .admin .check small{color:var(--ink-3);font-weight:600}
-.admin .kids{display:grid}
-.admin .kid{display:grid;grid-template-columns:auto 1fr;gap:.6rem;align-items:center;padding:.45rem 0;border-top:1px solid var(--line);font-size:.88rem}
-.admin .kid:first-child{border-top:0}
-.admin .kid i{width:32px;height:32px;border-radius:50%;background:var(--teal-soft);display:grid;place-items:center;font-style:normal;border:1.5px solid var(--ink)}
-.admin .kid small{display:block;color:var(--ink-3)}
 .admin .badge{display:grid;grid-template-columns:auto 1fr;gap:.8rem;align-items:center}
 .admin .badge .coin{width:74px;height:74px;border-radius:50%;border:2px solid var(--ink);background:var(--gold-soft);display:grid;place-items:center;position:relative;filter:grayscale(.6);opacity:.75;font-size:2rem}
 .admin .badge .coin svg{width:46px;height:46px}

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { DASHBOARDS_ENABLED, forbidden, notAvailable, officeAllowed } from "@/lib/guard";
 import { CAMPAIGN } from "@/data/campaign";
 import { daysUntil, isoDate, ledgerTotals, skillCounts, suggestMentors, weeklyCounts } from "@/lib/office";
-import { kidsTotal, readJoins, readMentors, readActivity, readGoals, readLedger, readPartners, readPledges, readSubscriptions, readRsvps, readSundays, readTasks } from "@/lib/store";
+import { readJoins, readMentors, readActivity, readGoals, readLedger, readPartners, readPledges, readSubscriptions, readRsvps, readSundays, readTasks } from "@/lib/store";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,7 +46,6 @@ export async function GET() {
       balance: books.balance,
       needed: books.needed,
       raisedThisMonth,
-      yearTarget: 8_000_000,
     },
     weekly: weeklyCounts(joins.map((j) => new Date(j.at)), now, 8),
     skills: skillCounts(mentors).slice(0, 8),
@@ -73,7 +72,7 @@ export async function GET() {
       going: Object.entries(rsvps[s.date] ?? {}).filter(([, a]) => a === "yes").length,
       notGoing: Object.entries(rsvps[s.date] ?? {}).filter(([, a]) => a === "no").length,
     })),
-    thisSunday: { ...thisSunday, goingIds: going, kidsTotal: kidsTotal() },
+    thisSunday: { ...thisSunday, goingIds: going, going: going.length, notGoing: Object.values(rsvps[thisSunday.date] ?? {}).filter((a) => a === "no").length },
     requests: partners.map((p) => ({
       id: p.id,
       at: p.at,

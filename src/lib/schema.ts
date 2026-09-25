@@ -210,4 +210,22 @@ export const MIGRATIONS: { id: string; statements: string[] }[] = [
       `DROP TABLE IF EXISTS receipts`,
     ],
   },
+  {
+    id: "006_drop_demo_messages_and_tasks",
+    statements: [
+      // The welcome messages and starter to-dos the app used to write into an empty table. The messages
+      // came from people and clubs that did not exist; a starter to-do goes only if nobody has touched it.
+      `DELETE FROM messages WHERE text IN (
+        'Welcome. Someone from the centre will meet you at the gate at 09:20 on your first Sunday.',
+        'Coding club finished the maze game. Next up, a quiz app. Materials attached.',
+        'Reading club is halfway through the story collection. Bring your favourite short one.'
+      )`,
+      `DELETE FROM tasks WHERE done = FALSE AND (id, text) IN (
+        ('t-refs', 'Send reference checks to new mentors'),
+        ('t-reply', 'Reply to every new mentor'),
+        ('t-receipts', 'Publish last month’s receipts'),
+        ('t-consent', 'Guardian consent for photos')
+      )`,
+    ],
+  },
 ];
