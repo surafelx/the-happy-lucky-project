@@ -272,4 +272,16 @@ export const MIGRATIONS: { id: string; statements: string[] }[] = [
       )`,
     ],
   },
+  {
+    id: "009_letters_stay_claimed",
+    statements: [
+      // Taking a Sunday down does not give its address back. A link to
+      // /sundays/sunday-3 will have been sent to people and kept; if the slug
+      // were free again, a later, different letter could be written there and
+      // everyone holding the old link would read it without noticing. So a taken
+      // down letter stays in the table with `deleted_at` set, and is never
+      // returned. The same as the ledger and the pledges.
+      `ALTER TABLE letters ADD COLUMN deleted_at TEXT`,
+    ],
+  },
 ];

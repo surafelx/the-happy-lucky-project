@@ -740,14 +740,16 @@ async function seedLetters(): Promise<void> {
 }
 
 /** Every letter, in the order they were written. */
+/** Live letters in order. Taken down ones stay in the table with `deleted_at` set and are never returned. */
 export async function readLetters(): Promise<LetterRowRecord[]> {
   await prepared();
   await seedLetters();
-  return (await query<LetterDbRow>(`SELECT ${LETTER_COLS} FROM letters ORDER BY position NULLS LAST, at DESC`)).map(toLetter);
+  return (await query<LetterDbRow>(`SELECT ${LETTER_COLS} FROM letters WHERE deleted_at IS NULL ORDER BY position NULLS LAST, at DESC`)).map(toLetter);
 }
 export async function readLetter(slug: string): Promise<LetterRowRecord | null> {
   await prepared();
-  const r = await one<LetterDbRow>(`SELECT ${LETTER_COLS} FROM letters WHERE slug = $1`, [slug]);
+  await seedLetters();
+  const r = await one<LetterDbRow>(`SELECT ${LETTER_COLS} FROM letters WHERE slug = $1 AND deleted_at IS NULL`, [slug]);
   return r ? toLetter(r) : null;
 }
 export async function createLetter(f: LetterFields, at = now()): Promise<LetterRowRecord> {
@@ -767,7 +769,8 @@ export async function updateLetter(slug: string, f: LetterFields): Promise<Lette
   );
   return r ? toLetter(r) : null;
 }
+/** Takes a letter down for good, but leaves its address claimed. See migration 009. */
 export async function deleteLetter(slug: string): Promise<boolean> {
   await prepared();
-  return (await query("DELETE FROM letters WHERE slug = $1 RETURNING slug", [slug])).length > 0;
+  return (await query("UPDATE letters SET deleted_at = $2, updated_at = $2 WHERE slug = $1 AND deleted_at IS NULL RETURNING slug", [slug, now()])).length > 0;
 }

@@ -281,4 +281,25 @@ test("letters: the Sundays come from the database, and a new one is a page that 
   assert.equal(await s.deleteLetter("sunday-9"), true);
   assert.equal(await s.readLetter("sunday-9"), null);
   assert.equal((await s.readLetters()).length, LETTERS.length);
+  assert.equal(await s.deleteLetter("sunday-9"), false); // already down
+});
+
+test("a taken down Sunday keeps its address, so an old link can never show a different letter", async () => {
+  const body = [{ type: "p" as const, text: "The first one." }];
+  await s.createLetter({ slug: "sunday-keep", title: "Sunday Keep", date: "October 11, 2026", summary: "s", body, draft: false });
+  assert.equal(await s.deleteLetter("sunday-keep"), true);
+
+  // Gone from the page, gone from a direct hit, gone from the list.
+  assert.equal(await s.readLetter("sunday-keep"), null);
+  assert.equal((await s.readLetters()).some((l) => l.slug === "sunday-keep"), false);
+
+  // But the address is still taken: a different letter cannot be written there.
+  await assert.rejects(
+    () => s.createLetter({ slug: "sunday-keep", title: "A different letter", date: "October 18, 2026", summary: "s", body, draft: false }),
+    /duplicate key|unique/i,
+  );
+  // And the other direction: it cannot be quietly brought back either.
+  const rows = await db.query<{ slug: string; deleted_at: string | null }>("SELECT slug, deleted_at FROM letters WHERE slug = 'sunday-keep'");
+  assert.equal(rows.length, 1);
+  assert.ok(rows[0].deleted_at, "the row is still there, marked as taken down");
 });
