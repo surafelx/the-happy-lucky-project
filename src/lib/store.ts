@@ -335,14 +335,16 @@ export async function saveVerification(id: number, v: Verification): Promise<Led
 }
 
 /**
- * Writes the handful of entries that predate the ledger, once. The marker means
- * deleting one in the office keeps it deleted instead of bringing it back.
+ * Writes the handful of entries that predate the ledger. Each one is marked
+ * separately, so adding one to the file writes only that one, and deleting one
+ * in the office keeps it deleted instead of bringing it back on the next read.
  */
-const SEED_MARKER = "ledger_seed_v1";
+const seedKey = (s: { kind: string; amount: number; occurredAt: string }) => `ledger_seed:${s.kind}:${s.amount}:${s.occurredAt}`;
 async function seedLedger(): Promise<void> {
-  if (await getMeta(SEED_MARKER)) return;
-  await setMeta(SEED_MARKER, new Date().toISOString());
   for (const s of LEDGER_SEED) {
+    const key = seedKey(s);
+    if (await getMeta(key)) continue;
+    await setMeta(key, new Date().toISOString());
     const { photo, ...fields } = s;
     const entry = await addLedgerEntry(fields, "", fields.occurredAt);
     if (photo) await query("UPDATE ledger SET photo_path = $2 WHERE id = $1", [entry.id, photo]);

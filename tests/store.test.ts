@@ -123,14 +123,10 @@ test("pledges: create, edit, prove, verify, delete", async () => {
 test("the ledger starts with the entries written down in the code, and only those", async () => {
   const seeded = await s.readLedger();
   assert.equal(seeded.length, LEDGER_SEED.length);
-  for (const [i, e] of seeded.entries()) {
-    // Newest first, so the seed comes back in reverse.
-    const want = LEDGER_SEED[LEDGER_SEED.length - 1 - i];
-    assert.equal(e.amount, want.amount);
-    assert.equal(e.name, want.name);
-    assert.equal(e.kind, want.kind);
-    assert.match(e.ref, /^HLP-\d{4}-\d{4}$/);
-  }
+  // The ledger comes back newest first, which need not be the order they are written in.
+  const line = (e: { kind: string; amount: number; name: string }) => `${e.kind} ${e.amount} ${e.name}`;
+  assert.deepEqual(seeded.map(line).sort(), LEDGER_SEED.map(line).sort());
+  for (const e of seeded) assert.match(e.ref, /^HLP-\d{4}-\d{4}$/);
   // Reading again does not write them a second time.
   assert.equal((await s.readLedger()).length, LEDGER_SEED.length);
   // Deleting a seeded entry keeps it deleted.
@@ -157,7 +153,8 @@ test("the ledger numbers receipts and keeps the number through edits", async () 
   assert.equal(kind.items, "4 packs of 12 diapers");
   assert.equal(kind.recipient, "One Heart Wholeness Center");
   assert.notEqual(paid.ref, gift.ref);
-  assert.deepEqual((await s.readLedger()).slice(0, 3).map((e) => e.ref), [kind.ref, paid.ref, gift.ref]); // newest first
+  const mine = async () => (await s.readLedger()).map((e) => e.ref).filter((r) => [gift.ref, paid.ref, kind.ref].includes(r));
+  assert.deepEqual(await mine(), [kind.ref, paid.ref, gift.ref]); // newest first
   assert.equal((await s.readLedger()).length, before + 3);
 
   const edited = await s.editLedgerEntry(gift.id, { ...gift, amount: 2000 }, { removeReceipt: true });
@@ -168,7 +165,7 @@ test("the ledger numbers receipts and keeps the number through edits", async () 
 
   assert.equal(await s.deleteLedgerEntry(paid.id), true);
   assert.equal(await s.deleteLedgerEntry(paid.id), false);
-  assert.deepEqual((await s.readLedger()).slice(0, 2).map((e) => e.ref), [kind.ref, gift.ref]);
+  assert.deepEqual(await mine(), [kind.ref, gift.ref]);
   assert.equal((await db.query("SELECT id FROM ledger WHERE id = $1", [paid.id])).length, 1); // still on record
 
   const done = await s.updateGoal(books.id, { ...books, status: "done" });

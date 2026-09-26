@@ -17,6 +17,20 @@ export type SeedEntry = LedgerFields & { receiptUrl?: string; photo?: string };
 
 export const LEDGER_SEED: SeedEntry[] = [
   {
+    kind: "in",
+    amount: 24591,
+    // Asked not to be named, so the page shows "Anonymous". The office keeps this line.
+    name: "A friend in the United States",
+    anonymous: true,
+    goalId: null,
+    method: "bank",
+    note: "Sent from the United States, by bank transfer.",
+    items: "",
+    recipient: "",
+    // Read from the CBE reference (FT26 + day 268 of 2026). Correct it here if the slip says otherwise.
+    occurredAt: "2026-09-25T09:00:00.000Z",
+  },
+  {
     kind: "inkind",
     amount: 3000,
     name: "Surafel",
