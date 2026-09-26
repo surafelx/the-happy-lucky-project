@@ -64,6 +64,11 @@ export async function countSubscribers(): Promise<number> {
   await prepared();
   return Number((await one<{ n: number | string }>("SELECT COUNT(*) AS n FROM subscribers"))?.n ?? 0);
 }
+/** Takes someone off the list for good, which is what has to happen when they ask. */
+export async function removeSubscriber(email: string): Promise<boolean> {
+  await prepared();
+  return (await query("DELETE FROM subscribers WHERE email = $1 RETURNING id", [email.trim().toLowerCase()])).length > 0;
+}
 
 // ---------- mentors ----------
 export type MentorRecord = MentorInterest & { kind: "mentor"; at: string; id: string; photo: string };

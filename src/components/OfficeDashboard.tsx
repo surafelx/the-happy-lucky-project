@@ -6,8 +6,11 @@ import { useRouter } from "next/navigation";
 
 import { OfficeActivity, Timeline } from "@/components/OfficeActivity";
 import { OfficeLedger } from "@/components/OfficeLedger";
+import { OfficeLetters } from "@/components/OfficeLetters";
+import { OfficeMembers } from "@/components/OfficeMembers";
 import { OfficePledges } from "@/components/OfficePledges";
 import { OfficeSupporters } from "@/components/OfficeSupporters";
+import { OfficeVisits } from "@/components/OfficeVisits";
 import { AdminShell, useHashTab } from "@/components/AdminShell";
 import { KIND_LABEL, REQUEST_LABEL, REQUEST_STATUSES, STATUSES, STATUS_LABEL } from "@/lib/office";
 import type { MentorStatus, RequestStatus, SundayKind } from "@/lib/office";
@@ -37,9 +40,12 @@ type Summary = {
 
 const TABS = [
   { key: "overview", label: "Overview", icon: "▦" },
+  { key: "members", label: "Members", icon: "✉️" },
   { key: "mentors", label: "Mentors", icon: "👥" },
   { key: "requests", label: "Requests", icon: "📨" },
   { key: "sundays", label: "Sundays", icon: "📅" },
+  { key: "visits", label: "Visits", icon: "📍" },
+  { key: "letters", label: "Letters", icon: "✉️" },
   { key: "tasks", label: "To do", icon: "☑" },
   { key: "pledges", label: "Pledges", icon: "🤝" },
   { key: "supporters", label: "Supporters", icon: "💛" },
@@ -87,7 +93,6 @@ export function OfficeDashboard() {
   const [openMentor, setOpenMentor] = useState<string | null>(null);
   const [openReq, setOpenReq] = useState<string | null>(null);
   const [newTask, setNewTask] = useState("");
-  const [paste, setPaste] = useState("");
 
   const load = useCallback(async () => {
     const res = await fetch("/api/office/summary", { cache: "no-store" });
@@ -149,7 +154,7 @@ export function OfficeDashboard() {
   return (
     <AdminShell
       product="The office"
-      tabs={TABS.map((t) => ({ ...t, badge: t.key === "mentors" ? kpis.byStatus.new || undefined : t.key === "requests" ? newReqs || undefined : t.key === "tasks" ? openTasks || undefined : t.key === "pledges" ? kpis.pledgesToVerify || undefined : t.key === "supporters" ? kpis.supportersDue || undefined : t.key === "activity" ? kpis.remindersDue || undefined : undefined }))}
+      tabs={TABS.map((t) => ({ ...t, badge: t.key === "members" ? kpis.joined || undefined : t.key === "mentors" ? kpis.byStatus.new || undefined : t.key === "requests" ? newReqs || undefined : t.key === "tasks" ? openTasks || undefined : t.key === "pledges" ? kpis.pledgesToVerify || undefined : t.key === "supporters" ? kpis.supportersDue || undefined : t.key === "activity" ? kpis.remindersDue || undefined : undefined }))}
       active={tab}
       onTab={setTab}
       who={{ name: "Office", role: day(data.today, true), initial: "O" }}
@@ -221,18 +226,9 @@ export function OfficeDashboard() {
             <button type="button" className="abtn" onClick={() => setTab("tasks")}>All tasks</button>
           </div>
           <div className="apanel span2">
-            <div className="ahead"><h2>Bring in emails</h2><span className="quiet">paste the email column from the Google Sheet; duplicates are skipped</span></div>
-            <form
-              className="aimport"
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (!paste.trim()) return;
-                void act("/api/office/subscribers", { text: paste, source: "sheet-import" }, "Emails brought in").then(() => setPaste(""));
-              }}
-            >
-              <textarea rows={3} value={paste} onChange={(e) => setPaste(e.target.value)} placeholder="one@example.com&#10;two@example.com" aria-label="Emails to import" />
-              <button type="submit" className="abtn primary" disabled={!paste.trim()}>Add to the list</button>
-            </form>
+            <div className="ahead"><h2>Members</h2><span className="quiet">{kpis.joined} have joined the letter</span></div>
+            <p className="quiet">Everyone who left an email, with the paste-in box for the Google Sheet column.</p>
+            <button type="button" className="abtn" onClick={() => setTab("members")}>Open the list</button>
           </div>
         </div>
       ) : null}
@@ -401,6 +397,9 @@ export function OfficeDashboard() {
       {tab === "pledges" ? <OfficePledges toast={toast} onChanged={() => void load()} /> : null}
       {tab === "supporters" ? <OfficeSupporters toast={toast} onChanged={() => void load()} /> : null}
       {tab === "activity" ? <OfficeActivity toast={toast} onChanged={() => void load()} /> : null}
+      {tab === "members" ? <OfficeMembers toast={toast} onChanged={() => void load()} /> : null}
+      {tab === "visits" ? <OfficeVisits toast={toast} onChanged={() => void load()} /> : null}
+      {tab === "letters" ? <OfficeLetters toast={toast} onChanged={() => void load()} /> : null}
 
       {tab === "ledger" ? <OfficeLedger toast={toast} onChanged={() => void load()} /> : null}
     </AdminShell>

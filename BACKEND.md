@@ -2,7 +2,9 @@
 
 Everything the site collects lives in one Postgres database: people who joined the
 letter, the mentor pool, requests from organisations, campaign pledges and their
-payment proofs, office tasks, RSVPs, messages and receipts.
+payment proofs, office tasks, RSVPs, messages and receipts. The pages read their
+content from it too: the pins on `/visits`, the letters on `/sundays`, the goals and
+entries behind `/audit`, and the members who joined.
 
 ## Two databases, one set of SQL
 
@@ -38,6 +40,15 @@ To use the hosted database from your laptop instead of the local one, put the sa
 
 ## Things worth knowing
 
+- **A new migration needs a restart.** Migrations run once per process, when the
+  connection is first made, so a `next dev` that is already running will not apply
+  one you have just written. Restart it. On Vercel every cold start runs them, so
+  there is nothing to remember to do.
+- **A seed is only marked once its row is in.** The handful of visits and letters
+  that predate the tables are written from `src/data/*` on the first read, each
+  marked separately in `_meta`. The marker is written *after* the row, so a write
+  that fails is simply retried next time instead of being remembered as done.
+  Anything the seed has already written is edited in the office, not in the file.
 - **Images** (mentor photos, payment screenshots) are stored in the `files` table as base64, and only ever served through office-only routes. They are small because the browser shrinks them before upload. If volume grows, move them to Vercel Blob and keep only the URL.
 - **Deleting a pledge is soft.** The row stays with `deleted_at` set, and `original` always holds what the giver first sent, whatever was edited later.
 - **The Google Sheet still gets a copy** of joins and forms when `JOIN_WEBHOOK_URL` is set. With a database in place, a webhook failure no longer fails the request.

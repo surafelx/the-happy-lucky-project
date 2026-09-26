@@ -10,6 +10,8 @@ let s: Store;
 let db: DbModule;
 
 import { LEDGER_SEED } from "../src/data/ledger-seed.ts";
+import { WORK } from "../src/data/work.ts";
+import { letters as LETTERS } from "../src/data/letter.ts";
 
 const JPEG = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEASABIAAD/2Q==";
 const mentorForm = (email: string, name = "Almaz Tesfaye") => ({
@@ -213,4 +215,70 @@ test("the activity log keeps a timeline per person and open reminders across eve
   assert.equal(await s.completeReminder(999999), null);
   assert.ok((await s.markActivitySeen()) >= 1);
   assert.ok((await s.readActivity()).every((a) => a.seen));
+});
+
+test("visits: the map starts from what was written down in code, and takes new pins", async () => {
+  const seeded = await s.readVisits();
+  assert.equal(seeded.length, WORK.length);
+  for (const w of WORK) {
+    const got = seeded.find((v) => v.id === w.id);
+    assert.ok(got, w.id);
+    // The coordinates are stored one number each, and come back in that order.
+    assert.equal(got.lon, w.at[0]);
+    assert.equal(got.lat, w.at[1]);
+    assert.equal(got.what, w.what);
+  }
+  assert.equal((await s.readVisits()).length, WORK.length); // reading again adds nothing
+
+  const added = await s.createVisit({ name: "St Mary", kind: "School", town: "Bahir Dar", lon: 37.4, lat: 11.6, since: "2026", what: "A story.", reached: 30, href: "", now: false, example: false });
+  assert.match(added.id, /^v-/);
+  assert.equal((await s.readVisits()).length, WORK.length + 1);
+
+  const edited = await s.updateVisit(added.id, { ...added, name: "St Mary's School", reached: 31 });
+  assert.equal(edited?.name, "St Mary's School");
+  assert.equal(edited?.reached, 31);
+  assert.equal(await s.deleteVisit(added.id), true);
+  assert.equal(await s.deleteVisit(added.id), false);
+  assert.equal((await s.readVisits()).length, WORK.length);
+});
+
+test("a seeded visit stays deleted, the way a seeded ledger entry does", async () => {
+  const first = WORK[0];
+  assert.ok(first);
+  assert.equal(await s.deleteVisit(first.id), true);
+  assert.equal((await s.readVisits()).some((v) => v.id === first.id), false);
+  // Reading again must not put it back.
+  assert.equal((await s.readVisits()).some((v) => v.id === first.id), false);
+  const back = await s.createVisit({ name: first.name, kind: first.kind, town: first.town, lon: first.at[0], lat: first.at[1], since: first.since, what: first.what, reached: first.reached ?? null, href: first.href ?? "", now: first.now ?? false, example: false }, new Date().toISOString(), first.id);
+  assert.equal(back.id, first.id); // put back under the same id, so the test ends tidy
+});
+
+test("letters: the Sundays come from the database, and a new one is a page that did not exist", async () => {
+  const all = await s.readLetters();
+  assert.equal(all.length, LETTERS.length);
+  for (const l of LETTERS) {
+    const got = all.find((x) => x.slug === l.slug);
+    assert.ok(got, l.slug);
+    assert.equal(got.title, l.title);
+    assert.equal(got.date, l.date);
+    // The blocks survive the round trip through JSONB with their types intact.
+    assert.deepEqual(got.body.map((b) => b.type), l.body.map((b) => b.type));
+    assert.equal(got.body.length, l.body.length);
+  }
+
+  const body = [{ type: "p" as const, text: "Hello." }, { type: "key" as const, text: "A line." }];
+  const made = await s.createLetter({ slug: "sunday-9", title: "Sunday 9", date: "October 4, 2026", summary: "s", body, draft: false });
+  assert.equal(made.slug, "sunday-9");
+  assert.deepEqual(made.body, body);
+  assert.equal((await s.readLetter("sunday-9"))?.title, "Sunday 9");
+  assert.equal(await s.readLetter("no-such-letter"), null);
+
+  const edited = await s.updateLetter("sunday-9", { ...made, title: "Sunday Nine", draft: true });
+  assert.equal(edited?.title, "Sunday Nine");
+  assert.equal(edited?.draft, true);
+  assert.equal(edited?.slug, "sunday-9"); // the address never changes
+
+  assert.equal(await s.deleteLetter("sunday-9"), true);
+  assert.equal(await s.readLetter("sunday-9"), null);
+  assert.equal((await s.readLetters()).length, LETTERS.length);
 });
