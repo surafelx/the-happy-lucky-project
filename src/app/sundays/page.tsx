@@ -1,8 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
-import { hasVideo, letterLength, visibleLetters } from "@/data/letter";
+import { hasVideo, letterLength } from "@/data/letter";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
+import { dbConfigured } from "@/lib/db";
+import { readLetters } from "@/lib/store";
+import type { LetterRowRecord } from "@/lib/store";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Sundays",
@@ -11,7 +16,10 @@ export const metadata: Metadata = {
 
 const pop = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
-export default function SundaysPage() {
+export default async function SundaysPage() {
+  // A draft is only visible while the mentor flag is on (local). Remove the flag to publish.
+  const all = dbConfigured() ? await readLetters() : [];
+  const letters = all.filter((l) => MENTOR_FORM_ENABLED || !l.draft);
   return (
     <div className="page page-enter sundays-page">
       <div className="wrap">
@@ -24,7 +32,7 @@ export default function SundaysPage() {
           </p>
         </div>
         <div className="stories">
-          {[...visibleLetters(MENTOR_FORM_ENABLED)].reverse().map((l, i) => (
+          {[...letters].reverse().map((l: LetterRowRecord, i) => (
             <Link
               key={l.slug}
               className={`story-card pop${i === 0 ? " feature" : ""}`}

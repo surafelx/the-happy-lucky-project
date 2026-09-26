@@ -1,14 +1,16 @@
 import type { LonLat } from "@/lib/geo";
 
 /**
- * Everywhere Happy Lucky has worked, for the map on /work.
+ * Everywhere Happy Lucky has worked, for the map on /visits.
  *
- * To add a place: copy an entry, set `at` to [longitude, latitude] (right-click
- * the spot in Google Maps; note that Google shows latitude first), and remove
- * `example`. Entries marked `example: true` are placeholders and show a tag.
+ * These are the places that predate the database: they are written into the
+ * `visits` table once, on the first read, and the page reads them from there
+ * after that. Add new places in the office, not here.
  */
-export const WORK_KINDS = ["School", "Children's home", "Community", "Campaign"] as const;
-export type WorkKind = (typeof WORK_KINDS)[number];
+export { WORK_KINDS } from "../lib/office.ts";
+export type { WorkKind } from "../lib/office.ts";
+import type { WorkKind } from "../lib/office.ts";
+
 export const KIND_TONE: Record<WorkKind, "teal" | "rose" | "gold" | "ink"> = { School: "teal", "Children's home": "gold", Community: "ink", Campaign: "rose" };
 export const KIND_EMOJI: Record<WorkKind, string> = { School: "🏫", "Children's home": "🏠", Community: "🤝", Campaign: "🌸" };
 

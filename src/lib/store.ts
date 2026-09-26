@@ -1,11 +1,14 @@
 import type { MentorInterest } from "@/data/mentor";
 import type { PartnerRequest } from "@/data/partner";
 import type { PledgeInput } from "@/data/campaign";
+import type { Block } from "@/data/letter";
+import { WORK } from "../data/work.ts";
+import { letters as LETTERS } from "../data/letter.ts";
 import { getMeta, one, query, setMeta } from "./db.ts";
 import { importLegacyFiles } from "./db-import.ts";
 import { LEDGER_SEED } from "../data/ledger-seed.ts";
 import { PLEDGE_STATUSES, REQUEST_STATUSES, STATUSES, SUBSCRIPTION_STATUSES, clubFor, isoDate, nextMonth, nextSundays, receiptId, sundayKind } from "./office.ts";
-import type { ActivityKind, GoalFields, GoalStatus, LedgerFields, LedgerKind, MentorStatus, PledgeFields, PledgeStatus, RequestStatus, SubjectKind, SubscriptionStatus, SundayKind } from "./office.ts";
+import type { ActivityKind, GoalFields, GoalStatus, LedgerFields, LedgerKind, LetterFields, MentorStatus, PledgeFields, PledgeStatus, RequestStatus, SubjectKind, SubscriptionStatus, SundayKind, VisitFields } from "./office.ts";
 
 /**
  * The data layer. Every read and write in the app goes through here, and here
@@ -344,10 +347,12 @@ async function seedLedger(): Promise<void> {
   for (const s of LEDGER_SEED) {
     const key = seedKey(s);
     if (await getMeta(key)) continue;
-    await setMeta(key, new Date().toISOString());
     const { photo, ...fields } = s;
     const entry = await addLedgerEntry(fields, "", fields.occurredAt);
     if (photo) await query("UPDATE ledger SET photo_path = $2 WHERE id = $1", [entry.id, photo]);
+    // Marked only once the row is safely in, so a failed write is simply retried
+    // on the next read instead of being remembered as done for good.
+    await setMeta(key, new Date().toISOString());
   }
 }
 
@@ -645,4 +650,119 @@ export async function completeReminder(id: number, done = true): Promise<Activit
 export async function markActivitySeen(): Promise<number> {
   await prepared();
   return (await query("UPDATE activity SET seen = TRUE WHERE seen = FALSE RETURNING id")).length;
+}
+
+// ---------- visits: the pins on the map ----------
+export type Visit = VisitFields & { id: string; at: string; updatedAt: string };
+type VisitRow = {
+  id: string; name: string; kind: VisitFields["kind"]; town: string; lon: number; lat: number; since: string; what: string;
+  reached: number | null; href: string; now: boolean; example: boolean; at: string; updated_at: string;
+};
+const VISIT_COLS = "id, name, kind, town, lon, lat, since, what, reached, href, now, example, at, updated_at";
+const toVisit = (r: VisitRow): Visit => ({
+  id: r.id, name: r.name, kind: r.kind, town: r.town, lon: Number(r.lon), lat: Number(r.lat), since: r.since, what: r.what,
+  reached: r.reached === null || r.reached === undefined ? null : Number(r.reached),
+  href: r.href ?? "", now: r.now, example: r.example, at: r.at, updatedAt: r.updated_at,
+});
+
+/**
+ * The places that were written down in src/data/work.ts, brought in once so the
+ * map starts from the truth rather than empty. Each is marked on its own, the
+ * way the ledger seed is: adding a pin to the file writes only that pin, and a
+ * pin deleted in the office stays deleted.
+ */
+async function seedVisits(): Promise<void> {
+  for (const w of WORK) {
+    const key = `visit_seed:${w.id}`;
+    if (await getMeta(key)) continue;
+    await query(
+      `INSERT INTO visits (id, name, kind, town, lon, lat, since, what, reached, href, now, example, at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13) ON CONFLICT (id) DO NOTHING`,
+      [w.id, w.name, w.kind, w.town, w.at[0], w.at[1], w.since, w.what, w.reached ?? null, w.href ?? "", w.now ?? false, w.example ?? false, new Date().toISOString()],
+    );
+    // Marked only once the row is safely in, so a failed write is simply retried
+    // on the next read instead of being remembered as done for good.
+    await setMeta(key, new Date().toISOString());
+  }
+}
+
+export async function readVisits(): Promise<Visit[]> {
+  await prepared();
+  await seedVisits();
+  return (await query<VisitRow>(`SELECT ${VISIT_COLS} FROM visits ORDER BY position NULLS LAST, name`)).map(toVisit);
+}
+export async function createVisit(f: VisitFields, at = now(), id = newId("v-", at)): Promise<Visit> {
+  await prepared();
+  const rows = await query<VisitRow>(
+    `INSERT INTO visits (id, name, kind, town, lon, lat, since, what, reached, href, now, example, at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13) RETURNING ${VISIT_COLS}`,
+    [id, f.name, f.kind, f.town, f.lon, f.lat, f.since, f.what, f.reached, f.href, f.now, f.example, at],
+  );
+  return toVisit(rows[0]);
+}
+export async function updateVisit(id: string, f: VisitFields): Promise<Visit | null> {
+  await prepared();
+  const r = await one<VisitRow>(
+    `UPDATE visits SET name = $2, kind = $3, town = $4, lon = $5, lat = $6, since = $7, what = $8, reached = $9, href = $10, now = $11, example = $12, updated_at = $13 WHERE id = $1 RETURNING ${VISIT_COLS}`,
+    [id, f.name, f.kind, f.town, f.lon, f.lat, f.since, f.what, f.reached, f.href, f.now, f.example, now()],
+  );
+  return r ? toVisit(r) : null;
+}
+export async function deleteVisit(id: string): Promise<boolean> {
+  await prepared();
+  return (await query("DELETE FROM visits WHERE id = $1 RETURNING id", [id])).length > 0;
+}
+
+// ---------- the Sunday letters ----------
+export type LetterRowRecord = LetterFields & { at: string; updatedAt: string };
+type LetterDbRow = { slug: string; title: string; date: string; summary: string; body: Block[]; draft: boolean; at: string; updated_at: string };
+const LETTER_COLS = "slug, title, date, summary, body, draft, at, updated_at";
+const toLetter = (r: LetterDbRow): LetterRowRecord => ({
+  slug: r.slug, title: r.title, date: r.date, summary: r.summary, body: Array.isArray(r.body) ? r.body : [], draft: r.draft, at: r.at, updatedAt: r.updated_at,
+});
+
+/** The letters that were written down in src/data/letter.ts, brought in once, each marked on its own. */
+async function seedLetters(): Promise<void> {
+  for (const l of LETTERS) {
+    const key = `letter_seed:${l.slug}`;
+    if (await getMeta(key)) continue;
+    await query(
+      `INSERT INTO letters (slug, title, date, summary, body, draft, at, updated_at) VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$7) ON CONFLICT (slug) DO NOTHING`,
+      [l.slug, l.title, l.date, l.summary, JSON.stringify(l.body), l.draft ?? false, new Date().toISOString()],
+    );
+    // Marked only once the row is safely in, so a failed write is simply retried
+    // on the next read instead of being remembered as done for good.
+    await setMeta(key, new Date().toISOString());
+  }
+}
+
+/** Every letter, in the order they were written. */
+export async function readLetters(): Promise<LetterRowRecord[]> {
+  await prepared();
+  await seedLetters();
+  return (await query<LetterDbRow>(`SELECT ${LETTER_COLS} FROM letters ORDER BY position NULLS LAST, at DESC`)).map(toLetter);
+}
+export async function readLetter(slug: string): Promise<LetterRowRecord | null> {
+  await prepared();
+  const r = await one<LetterDbRow>(`SELECT ${LETTER_COLS} FROM letters WHERE slug = $1`, [slug]);
+  return r ? toLetter(r) : null;
+}
+export async function createLetter(f: LetterFields, at = now()): Promise<LetterRowRecord> {
+  await prepared();
+  const rows = await query<LetterDbRow>(
+    `INSERT INTO letters (slug, title, date, summary, body, draft, at, updated_at) VALUES ($1,$2,$3,$4,$5::jsonb,$6,$7,$7) RETURNING ${LETTER_COLS}`,
+    [f.slug, f.title, f.date, f.summary, JSON.stringify(f.body), f.draft, at],
+  );
+  return toLetter(rows[0]);
+}
+/** Corrects a letter. The slug is the address, so it is left alone. */
+export async function updateLetter(slug: string, f: LetterFields): Promise<LetterRowRecord | null> {
+  await prepared();
+  const r = await one<LetterDbRow>(
+    `UPDATE letters SET title = $2, date = $3, summary = $4, body = $5::jsonb, draft = $6, updated_at = $7 WHERE slug = $1 RETURNING ${LETTER_COLS}`,
+    [slug, f.title, f.date, f.summary, JSON.stringify(f.body), f.draft, now()],
+  );
+  return r ? toLetter(r) : null;
+}
+export async function deleteLetter(slug: string): Promise<boolean> {
+  await prepared();
+  return (await query("DELETE FROM letters WHERE slug = $1 RETURNING slug", [slug])).length > 0;
 }

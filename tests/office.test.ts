@@ -5,7 +5,10 @@ import {
   badgeProgress,
   checkGoal,
   checkLedgerEntry,
+  checkLetter,
   checkPledge,
+  checkVisit,
+  blockWords,
   ledgerTotals,
   cleanReceiptLink,
   clubFor,
@@ -346,4 +349,69 @@ test("the bank is named from the receipt source, not the hostname", () => {
   assert.equal(providerName("telebirr-html", "telebirr"), "Telebirr");
   assert.equal(providerName("something-new", "dashen"), "Dashen Bank");
   assert.equal(providerName("", ""), "the bank");
+});
+
+test("a pin has to be somewhere in Ethiopia, with a kind and a town", () => {
+  const good = { name: "One Heart", kind: "Children's home", town: "Bahir Dar", lon: 37.39, lat: 11.59, since: "2026", what: "Diapers." };
+  const ok = checkVisit(good);
+  assert.equal(ok.ok, true);
+  if (ok.ok) {
+    assert.equal(ok.value.kind, "Children's home");
+    assert.equal(ok.value.reached, null); // left empty, not zero
+    assert.equal(ok.value.href, "");
+  }
+  assert.equal(checkVisit({ ...good, name: "x" }).ok, false);
+  assert.equal(checkVisit({ ...good, kind: "Cafe" }).ok, false);
+  assert.equal(checkVisit({ ...good, town: "" }).ok, false);
+  // The sea is not a place we have been.
+  assert.equal(checkVisit({ ...good, lon: 0, lat: 0 }).ok, false);
+  assert.equal(checkVisit({ ...good, lat: 40 }).ok, false);
+  // A link out is either a path on this site or a real address, never script.
+  assert.equal(checkVisit({ ...good, href: "javascript:alert(1)" }).ok, false);
+  assert.equal(checkVisit({ ...good, href: "//evil.test" }).ok, false);
+  const linked = checkVisit({ ...good, href: "/campaigns/a-year-covered" });
+  assert.equal(linked.ok && linked.value.href, "/campaigns/a-year-covered");
+  const reached = checkVisit({ ...good, reached: "120" });
+  assert.equal(reached.ok && reached.value.reached, 120);
+  assert.equal(checkVisit({ ...good, reached: "lots" }).ok, false);
+});
+
+test("a letter needs a usable address and at least one block", () => {
+  const body = [{ type: "p", text: "Hello." }];
+  const ok = checkLetter({ slug: "Sunday-2", title: "Sunday 2", date: "September 27, 2026", summary: "s", body });
+  assert.equal(ok.ok, true);
+  if (ok.ok) {
+    assert.equal(ok.value.slug, "sunday-2"); // lowercased, because it is the address
+    assert.equal(ok.value.body.length, 1);
+    assert.equal(ok.value.draft, false);
+  }
+  assert.equal(checkLetter({ slug: "Sunday 2!", title: "t", date: "d", body }).ok, false);
+  assert.equal(checkLetter({ slug: "sunday-2", title: "", date: "d", body }).ok, false);
+  assert.equal(checkLetter({ slug: "sunday-2", title: "t", date: "", body }).ok, false);
+  assert.equal(checkLetter({ slug: "sunday-2", title: "t", date: "d", body: [] }).ok, false);
+});
+
+test("a letter keeps the blocks it understands and drops the ones it does not", () => {
+  const r = checkLetter({
+    slug: "sunday-2",
+    title: "Sunday 2",
+    date: "September 27, 2026",
+    body: [
+      { type: "p", text: "A paragraph." },
+      { type: "key", text: "A line that stands out." },
+      { type: "sign", text: "Surafel" },
+      { type: "image", caption: "The room", alt: "The room", src: "/public/x.jpg" },
+      { type: "image", caption: "no alt", src: "/x.jpg" }, // no alt text, so it is not usable
+      { type: "video", youtubeId: "abc123", title: "A video" },
+      { type: "video", youtubeId: "", title: "No id" },
+      { type: "script", text: "nope" },
+      "not even an object",
+    ],
+  });
+  assert.equal(r.ok, true);
+  if (!r.ok) return;
+  assert.deepEqual(r.value.body.map((b) => b.type), ["p", "key", "sign", "image", "video"]);
+  // The words in a letter are what the "min read" is worked out from.
+  assert.equal(blockWords(r.value.body), 8);
+  assert.equal(blockWords([]), 0);
 });

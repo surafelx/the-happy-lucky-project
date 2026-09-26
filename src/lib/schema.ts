@@ -234,4 +234,42 @@ export const MIGRATIONS: { id: string; statements: string[] }[] = [
       `DROP TABLE IF EXISTS receipts`,
     ],
   },
+  {
+    id: "008_visits_and_letters",
+    statements: [
+      // Everywhere we have shown up, for the map on /visits. The coordinates are
+      // [longitude, latitude] to match src/lib/geo.ts, which projects the map.
+      `CREATE TABLE IF NOT EXISTS visits (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('School', 'Children''s home', 'Community', 'Campaign')),
+        town TEXT NOT NULL,
+        lon REAL NOT NULL,
+        lat REAL NOT NULL,
+        since TEXT NOT NULL DEFAULT '',
+        what TEXT NOT NULL DEFAULT '',
+        reached INTEGER,
+        href TEXT NOT NULL DEFAULT '',
+        now BOOLEAN NOT NULL DEFAULT FALSE,
+        example BOOLEAN NOT NULL DEFAULT FALSE,
+        position SERIAL,
+        at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`,
+
+      // The Sunday letters. `body` is the block list exactly as src/data/letter.ts
+      // writes it, so the page renders the same either way.
+      `CREATE TABLE IF NOT EXISTS letters (
+        slug TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        date TEXT NOT NULL,
+        summary TEXT NOT NULL DEFAULT '',
+        body JSONB NOT NULL DEFAULT '[]',
+        draft BOOLEAN NOT NULL DEFAULT FALSE,
+        position SERIAL,
+        at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`,
+    ],
+  },
 ];

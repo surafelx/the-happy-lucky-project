@@ -2,23 +2,32 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { hasVideo, letterLength, visibleLetters } from "@/data/letter";
+import { hasVideo, letterLength } from "@/data/letter";
 import { JoinForm } from "@/components/JoinForm";
 import { JoinCount } from "@/components/JoinCount";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
+import { dbConfigured } from "@/lib/db";
+import { readLetter } from "@/lib/store";
 import { Reveal } from "@/components/Reveal";
 import { YouTubeEmbed } from "@/components/YouTubeEmbed";
 import { renderInline } from "@/lib/inline";
 
 type Params = { slug: string };
 
-export function generateStaticParams(): Params[] {
-  return visibleLetters(MENTOR_FORM_ENABLED).map((l) => ({ slug: l.slug }));
+// The letters live in the database now, so there is nothing to prerender at build time.
+export const dynamic = "force-dynamic";
+
+/** One letter, if it is one anyone may see. A draft needs the local flag. */
+async function findLetter(slug: string) {
+  if (!dbConfigured()) return null;
+  const l = await readLetter(slug);
+  if (!l) return null;
+  return MENTOR_FORM_ENABLED || !l.draft ? l : null;
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { slug } = await params;
-  const l = visibleLetters(MENTOR_FORM_ENABLED).find((x) => x.slug === slug);
+  const l = await findLetter(slug);
   if (!l) return {};
   return {
     title: l.title,
@@ -31,7 +40,7 @@ const pop = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
 export default async function LetterPage({ params }: { params: Promise<Params> }) {
   const { slug } = await params;
-  const l = visibleLetters(MENTOR_FORM_ENABLED).find((x) => x.slug === slug);
+  const l = await findLetter(slug);
   if (!l) notFound();
 
   return (

@@ -1,7 +1,13 @@
 /**
- * Pure logic for the dashboards. No Next.js, no filesystem, so it is
- * unit-testable with `node --test` (see tests/office.test.ts).
+ * Pure logic for the dashboards. No Next.js, no filesystem, and no imports at
+ * runtime, so it is unit-testable with `node --test` (see tests/office.test.ts).
+ * (The one `import type` below is erased at build time.)
  */
+import type { Block } from "@/data/letter";
+
+/** The kinds of place a pin on the map can be. Kept here so this file stays import-free. */
+export const WORK_KINDS = ["School", "Children's home", "Community", "Campaign"] as const;
+export type WorkKind = (typeof WORK_KINDS)[number];
 
 export const STATUSES = ["new", "contacted", "inducted", "active"] as const;
 export type MentorStatus = (typeof STATUSES)[number];
@@ -417,4 +423,137 @@ export function ledgerTotals<G extends { id: string; target: number; status: Goa
     general: { raised: sum("in", null), spent: sum("out", null) },
     goals: perGoal,
   };
+}
+
+// ---------- visits: the pins on the map ----------
+export type VisitFields = {
+  name: string;
+  kind: WorkKind;
+  town: string;
+  lon: number;
+  lat: number;
+  since: string;
+  what: string;
+  reached: number | null;
+  href: string;
+  now: boolean;
+  example: boolean;
+};
+
+/** A link out of the office: a path on this site, or an absolute http(s) address. Nothing else is clickable. */
+function cleanOutbound(raw: unknown, max = 300): string | null {
+  const s = text(raw, max);
+  if (!s) return "";
+  if (s.startsWith("/") && !s.startsWith("//")) return s;
+  try {
+    const url = new URL(s);
+    if ((url.protocol === "https:" || url.protocol === "http:") && url.hostname.includes(".") && !url.username && !url.password) {
+      return url.toString();
+    }
+  } catch {
+    /* not a URL */
+  }
+  return null;
+}
+
+/**
+ * One visit for the map, from the office form. Longitude and latitude are checked
+ * for real, because a pin in the sea looks like a bug and there is no map to check it against.
+ */
+export function checkVisit(raw: Record<string, unknown>): { ok: true; value: VisitFields } | { ok: false; error: string } {
+  const name = text(raw.name, 120);
+  if (name.length < 2) return { ok: false, error: "Which place was it? Enter a name." };
+  const kind = text(raw.kind, 40);
+  if (!(WORK_KINDS as readonly string[]).includes(kind)) return { ok: false, error: "Pick what kind of place it is." };
+  const town = text(raw.town, 80);
+  if (town.length < 2) return { ok: false, error: "Which town is it in?" };
+  const lon = Number(raw.lon);
+  const lat = Number(raw.lat);
+  if (!Number.isFinite(lon) || lon < 33 || lon > 48) return { ok: false, error: "Longitude should be between 33 and 48 (Ethiopia runs about 33°E to 48°E)." };
+  if (!Number.isFinite(lat) || lat < 3 || lat > 15) return { ok: false, error: "Latitude should be between 3 and 15 (Ethiopia runs about 3°N to 15°N)." };
+  const reachedRaw = raw.reached;
+  const reached = reachedRaw === "" || reachedRaw === null || reachedRaw === undefined ? null : Math.round(Number(reachedRaw));
+  if (reached !== null && (!Number.isFinite(reached) || reached < 0 || reached > 100_000_000)) {
+    return { ok: false, error: "How many were reached should be a number, or left empty." };
+  }
+  const href = cleanOutbound(raw.href);
+  if (href === null) return { ok: false, error: "That link should start with / or be an http(s) address." };
+  return {
+    ok: true,
+    value: {
+      name,
+      kind: kind as VisitFields["kind"],
+      town,
+      lon: Math.round(lon * 1e5) / 1e5,
+      lat: Math.round(lat * 1e5) / 1e5,
+      since: text(raw.since, 20),
+      what: text(raw.what, 600),
+      reached,
+      href,
+      now: raw.now === true,
+      example: raw.example === true,
+    },
+  };
+}
+
+// ---------- the Sunday letters ----------
+export type LetterFields = { slug: string; title: string; date: string; summary: string; body: Block[]; draft: boolean };
+
+const TONES = ["teal", "rose", "gold"] as const;
+const tone = (v: unknown) => (TONES as readonly unknown[]).includes(v) ? (v as (typeof TONES)[number]) : "rose";
+
+/** Each kind of block, checked on its own. An unknown type is dropped rather than rendered. */
+function checkBlock(raw: unknown): Block | null {
+  if (!raw || typeof raw !== "object") return null;
+  const b = raw as Record<string, unknown>;
+  switch (b.type) {
+    case "p":
+    case "key":
+    case "sign": {
+      const s = text(b.text, 8000);
+      return s ? ({ type: b.type, text: s } as Block) : null;
+    }
+    case "image": {
+      const alt = text(b.alt, 300);
+      if (!alt) return null;
+      const src = cleanOutbound(b.src, 500);
+      if (src === null) return null;
+      return { type: "image", caption: text(b.caption, 300), alt, ...(src ? { src } : {}), tone: tone(b.tone) };
+    }
+    case "video": {
+      const youtubeId = text(b.youtubeId, 40);
+      const title = text(b.title, 200);
+      if (!youtubeId || !title) return null;
+      const caption = text(b.caption, 300);
+      return { type: "video", youtubeId, title, ...(caption ? { caption } : {}), tone: tone(b.tone) };
+    }
+    default:
+      return null;
+  }
+}
+
+/**
+ * One letter. The slug is the address, so it is lowercase and hyphenated and can
+ * never be changed to something that would break a link that has already been shared.
+ */
+export function checkLetter(raw: Record<string, unknown>): { ok: true; value: LetterFields } | { ok: false; error: string } {
+  const slug = text(raw.slug, 80).toLowerCase();
+  if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) return { ok: false, error: "The web address can only be lowercase letters, numbers and single dashes." };
+  const title = text(raw.title, 200);
+  if (title.length < 2) return { ok: false, error: "Give the letter a title." };
+  const date = text(raw.date, 60);
+  if (date.length < 2) return { ok: false, error: "Which Sunday is it from?" };
+  const bodyIn = Array.isArray(raw.body) ? raw.body : [];
+  const body = bodyIn.map(checkBlock).filter((b): b is Block => b !== null);
+  if (!body.length) return { ok: false, error: "A letter needs at least one paragraph." };
+  return { ok: true, value: { slug, title, date, summary: text(raw.summary, 600), body, draft: raw.draft === true } };
+}
+
+/** How long a letter reads, for the byline. Counts words, not blocks. */
+export function blockWords(blocks: Block[]): number {
+  let n = 0;
+  for (const b of blocks) {
+    if (b.type === "p" || b.type === "key" || b.type === "sign") n += b.text.trim().split(/\s+/).filter(Boolean).length;
+  }
+  return n;
 }

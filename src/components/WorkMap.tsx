@@ -3,27 +3,49 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
-import { KIND_EMOJI, KIND_TONE, TOWNS, WORK, WORK_KINDS } from "@/data/work";
-import type { WorkKind } from "@/data/work";
+import { KIND_EMOJI, KIND_TONE, TOWNS, WORK_KINDS } from "@/data/work";
+import type { WorkKind, WorkPlace } from "@/data/work";
 import { ETHIOPIA_BORDER, LAKE_TANA, VIEW, project, spread, toPath } from "@/lib/geo";
+import type { Visit } from "@/lib/store";
 
 const BORDER = toPath(ETHIOPIA_BORDER);
 const LAKE = toPath(LAKE_TANA);
 const fmt = (n: number) => n.toLocaleString("en-US");
 
 /** The map and the list are two views of the same thing: picking in one picks in the other. */
-export function WorkMap() {
+export function WorkMap({ visits }: { visits: Visit[] }) {
   const [kind, setKind] = useState<WorkKind | "All">("All");
-  const [picked, setPicked] = useState<string | null>(WORK.find((w) => w.now)?.id ?? null);
+  // The rows carry lon/lat; the map works in [longitude, latitude] pairs.
+  const places: WorkPlace[] = useMemo(
+    () =>
+      visits.map((v) => ({
+        id: v.id,
+        name: v.name,
+        kind: v.kind,
+        town: v.town,
+        at: [v.lon, v.lat],
+        since: v.since,
+        what: v.what,
+        reached: v.reached ?? undefined,
+        href: v.href || undefined,
+        now: v.now,
+        example: v.example,
+      })),
+    [visits],
+  );
+  const [picked, setPicked] = useState<string | null>(null);
 
-  const shown = useMemo(() => WORK.filter((w) => kind === "All" || w.kind === kind), [kind]);
+  // Nothing picked yet means the place that is happening now, or else the first.
+  const active = picked && places.some((w) => w.id === picked) ? picked : (places.find((w) => w.now)?.id ?? places[0]?.id ?? null);
+
+  const shown = useMemo(() => places.filter((w) => kind === "All" || w.kind === kind), [places, kind]);
   const pins = useMemo(() => spread(shown.map((w) => ({ ...project(w.at), place: w }))), [shown]);
-  const towns = new Set(WORK.map((w) => w.town)).size;
-  const reached = WORK.reduce((s, w) => s + (w.reached ?? 0), 0);
+  const towns = new Set(places.map((w) => w.town)).size;
+  const reached = places.reduce((s, w) => s + (w.reached ?? 0), 0);
   // A campaign that is still raising is not a place we have shown up, so it is counted apart.
-  const planned = WORK.filter((w) => w.kind === "Campaign");
-  const done = WORK.filter((w) => w.kind !== "Campaign");
-  const hasExamples = WORK.some((w) => w.example);
+  const planned = places.filter((w) => w.kind === "Campaign");
+  const done = places.filter((w) => w.kind !== "Campaign");
+  const hasExamples = places.some((w) => w.example);
 
   const pick = (id: string, scroll = false) => {
     setPicked(id);
@@ -75,12 +97,12 @@ export function WorkMap() {
             {pins.map(({ x, y, place }) => (
               <g
                 key={place.id}
-                className={`pin ${KIND_TONE[place.kind]}${picked === place.id ? " on" : ""}${place.now ? " now" : ""}`}
+                className={`pin ${KIND_TONE[place.kind]}${active === place.id ? " on" : ""}${place.now ? " now" : ""}`}
                 transform={`translate(${x} ${y})`}
                 role="button"
                 tabIndex={0}
                 aria-label={`${place.name}, ${place.town}`}
-                aria-pressed={picked === place.id}
+                aria-pressed={active === place.id}
                 onClick={() => pick(place.id, true)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
@@ -95,7 +117,7 @@ export function WorkMap() {
               </g>
             ))}
             {pins
-              .filter((p) => p.place.id === picked)
+              .filter((p) => p.place.id === active)
               .map(({ x, y, place }) => {
                 const left = x > VIEW.w * 0.62;
                 const w = Math.max(120, place.name.length * 8.6 + 28);
@@ -116,8 +138,8 @@ export function WorkMap() {
 
         <ol className="work-list">
           {shown.map((w) => (
-            <li key={w.id} id={`work-${w.id}`} className={`${KIND_TONE[w.kind]}${picked === w.id ? " on" : ""}`}>
-              <button type="button" onClick={() => pick(w.id)} aria-pressed={picked === w.id}>
+            <li key={w.id} id={`work-${w.id}`} className={`${KIND_TONE[w.kind]}${active === w.id ? " on" : ""}`}>
+              <button type="button" onClick={() => pick(w.id)} aria-pressed={active === w.id}>
                 <span className="emoji" aria-hidden="true">{KIND_EMOJI[w.kind]}</span>
                 <span className="body">
                   <b>{w.name}</b>
@@ -129,7 +151,7 @@ export function WorkMap() {
                   <span className="what">{w.what}</span>
                 </span>
               </button>
-              {w.href && picked === w.id ? (
+              {w.href && active === w.id ? (
                 <Link className="btn sm rose" href={w.href}>See the campaign</Link>
               ) : null}
             </li>
@@ -139,7 +161,7 @@ export function WorkMap() {
 
       {hasExamples ? (
         <p className="work-note">
-          <b>Draft.</b> Places tagged “example” are placeholders until the real list goes into src/data/work.ts.
+          <b>Draft.</b> Places tagged “example” are placeholders until the real list is entered in the office.
         </p>
       ) : null}
 
