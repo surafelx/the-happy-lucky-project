@@ -21,7 +21,8 @@ if (!process.env.DATABASE_URL?.trim()) {
 
 const { neon } = await import("@neondatabase/serverless");
 const sql = neon(process.env.DATABASE_URL);
-const q = async <T>(text: string, params: unknown[] = []) => (await sql.query(text, params)) as T[];
+// The trailing comma is required in .mts: bare <T> reads as JSX there.
+const q = async <T,>(text: string, params: unknown[] = []) => (await sql.query(text, params)) as T[];
 
 const tables = await q<{ table_name: string }>(
   `SELECT table_name FROM information_schema.tables
