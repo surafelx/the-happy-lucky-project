@@ -42,3 +42,9 @@ next-env.d.ts
 
 # collected join emails (see src/app/api/join/route.ts)
 /data/
+
+.vercel
+.env*.local
+
+# the copy script writes a log of what moved
+copy-result.txt
