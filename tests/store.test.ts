@@ -131,9 +131,17 @@ test("the ledger starts with the entries written down in the code, and only thos
   for (const e of seeded) assert.match(e.ref, /^HLP-\d{4}-\d{4}$/);
   // Reading again does not write them a second time.
   assert.equal((await s.readLedger()).length, LEDGER_SEED.length);
-  // Deleting a seeded entry keeps it deleted.
+
+  // Losing the markers must not write them again either. Changing how the keys
+  // were built once did exactly that, and the audit page showed the same bank
+  // transfer twice, so the row itself has the last word.
+  await db.query("DELETE FROM _meta WHERE key LIKE 'ledger_seed%'");
+  assert.equal((await s.readLedger()).length, LEDGER_SEED.length);
+
+  // Deleting a seeded entry keeps it deleted, markers or no markers.
   if (seeded[0]) {
     assert.equal(await s.deleteLedgerEntry(seeded[0].id), true);
+    await db.query("DELETE FROM _meta WHERE key LIKE 'ledger_seed%'");
     assert.equal((await s.readLedger()).length, LEDGER_SEED.length - 1);
   }
 });

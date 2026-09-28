@@ -102,7 +102,40 @@ export const sunday1: Letter = {
   ] as Block[],
 };
 
-export const letters: Letter[] = [letter, sunday1];
+/**
+ * Sunday 2: the hack house, the first big donation, and why the books are open.
+ * Written from the video, so the words are the author's own. People stay
+ * unnamed, as in Sunday 1; organisations are named as the author met them.
+ */
+export const sunday2: Letter = {
+  slug: "sunday-2",
+  title: "Sunday 2",
+  date: "September 27, 2026",
+  summary:
+    "A house in Bahir Dar that is becoming a hack house, the first big donation and why we never asked for one, the guilt families carry, and the audit that puts every birr in the open.",
+  body: [
+    { type: "video", youtubeId: "A2w7FZXZLUg", title: "Sunday 2", tone: "teal" },
+    p("I have moved to [[Bahir Dar]]. The place I am staying in looks like a fortress, and I want to be clear that it is not for me. It is for the project."),
+    p("We are turning it into a {{hack house}}. Somewhere people can come and sit, work, and pass ideas back and forth until they turn into something better than what anyone walked in with. Give people a room to gather in and you get a community, and a community is where the ideas are born and where they grow into something beautiful."),
+    key("So this is meant to be the home for that community."),
+    p("This week somebody made a big donation. It is big for a reason that has nothing to do with the amount: we never started asking for donations."),
+    p("I am grateful for it, and for anyone who can help in any way at all. But I do not want to build something that lives on donations, because a project that depends on them lasts exactly as long as they do. A few months. Maybe a year. Then it is a story people used to tell."),
+    key("If this is going to last a lifetime, it has to be able to stand on its own."),
+    p("That is the thing I keep coming back to. Not resenting help, but refusing to build a dependency on it, so that what we make here can outlive whoever is paying attention this month. I met two people on Saturday and we came out of that conversation with a handful of ideas, and there are a few of them moving already. I will break them down properly when there is something real to show."),
+    p("We also went back to [[One Heart Wholeness Center]], this time with a physiotherapist, and sat with some of the families and some of the children."),
+    p("The thing that stayed with me is the guilt the parents carry. The mothers, and the fathers too. These conditions are genetic. They are one in a million. They can happen to anyone. But the people around them ridicule them, or decide the family is cursed, and the parents end up carrying it as though they had done something wrong."),
+    key("You cannot help a child and ignore the world that child goes home to."),
+    p("There is only so much a child can do for themselves. They are a child. But the environment around them is ours to change, and a child in a good environment can thrive, and live a normal life, and get on with being a child. So if you want to help a kid who is not in the right environment, you change the environment."),
+    p("Which is how the project got bigger this week. Sustainable first, so it lasts. A community, so nobody is doing it alone. And then the help itself, which is the whole point."),
+    p("The other thing I want to tell you about is the {{audit}} on the site. Every birr that comes in and every birr that goes out is written down, with the receipt, and anyone can look at it. You can see what we have, what we spent it on and what we still need."),
+    p("Not because anyone asked us to prove ourselves, but because we are doing this from our hearts, and people should be able to check that rather than take our word for it."),
+    key("__We would rather be checked than believed.__"),
+    p("I will show you inside the house midweek. A few rooms, space to work, nothing finished. You can come and use it."),
+    { type: "sign", text: "Have a good rest of the week. See you next Sunday." },
+  ] as Block[],
+};
+
+export const letters: Letter[] = [letter, sunday1, sunday2];
 
 /** The letters people can see: drafts only while the preview flag is on. */
 export const visibleLetters = (preview: boolean): Letter[] => letters.filter((l) => preview || !l.draft);

@@ -2,13 +2,23 @@ import Link from "next/link";
 
 import { JoinForm } from "@/components/JoinForm";
 import { HomeStats } from "@/components/HomeStats";
+import { RecentVisits } from "@/components/RecentVisits";
+import { dbConfigured } from "@/lib/db";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
+import { readVisits } from "@/lib/store";
 import { Logo } from "@/components/SvgDefs";
 
 const pop = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
-/** The home page: who we are in one line, the numbers (people and money together), and a way to join. */
-export default function HomePage() {
+// Visits change rarely, so the page is built and then rebuilt a minute later at
+// most, rather than reading the database for every visitor.
+export const revalidate = 60;
+
+/** The home page: who we are in one line, the numbers, the last visits, and a way to join. */
+export default async function HomePage() {
+  // Newest first. A visit marked "now" comes first whatever its date.
+  const visits = MENTOR_FORM_ENABLED && dbConfigured() ? await readVisits().catch(() => []) : [];
+  const recent = [...visits].sort((a, b) => Number(b.now) - Number(a.now) || b.at.localeCompare(a.at)).slice(0, 2);
   return (
     <div className="page page-enter">
       <header className="hero full home">
@@ -44,12 +54,15 @@ export default function HomePage() {
             ) : null}
           </div>
 
-          <section id="join" className="join join-card pop" style={pop(2)} aria-labelledby="join-h">
-            <span className="eyebrow">Come and build it with me</span>
-            <h2 id="join-h">Join us</h2>
-            <p className="note">Leave your email and you&apos;ll hear from us when there is something real to share.</p>
-            <JoinForm />
-          </section>
+          <div className="hero-side pop" style={pop(2)}>
+            <RecentVisits visits={recent} />
+            <section id="join" className="join join-card" aria-labelledby="join-h">
+              <span className="eyebrow">Come and build it with me</span>
+              <h2 id="join-h">Join us</h2>
+              <p className="note">Leave your email and you&apos;ll hear from us when there is something real to share.</p>
+              <JoinForm />
+            </section>
+          </div>
         </div>
       </header>
     </div>

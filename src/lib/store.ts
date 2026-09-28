@@ -352,6 +352,14 @@ async function seedLedger(): Promise<void> {
   for (const s of LEDGER_SEED) {
     const key = seedKey(s);
     if (await getMeta(key)) continue;
+    // The marker is a shortcut, not the truth: changing how keys are built once
+    // wrote every seeded entry a second time. The row itself decides. Deleted
+    // rows count, so one removed in the office stays removed.
+    const already = await one<{ id: number }>("SELECT id FROM ledger WHERE kind = $1 AND amount = $2 AND occurred_at = $3 LIMIT 1", [s.kind, s.amount, s.occurredAt]);
+    if (already) {
+      await setMeta(key, new Date().toISOString());
+      continue;
+    }
     const { photo, ...fields } = s;
     const entry = await addLedgerEntry(fields, "", fields.occurredAt);
     if (photo) await query("UPDATE ledger SET photo_path = $2 WHERE id = $1", [entry.id, photo]);

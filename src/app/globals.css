@@ -460,8 +460,9 @@ html::-webkit-scrollbar-thumb:hover{background:var(--teal-deep)}
 }
 .backdrop .ribbon{opacity:.85;animation:sway 12s ease-in-out infinite alternate}
 .backdrop .plane{position:absolute;top:calc(var(--nav-h) + 18px);left:auto;right:6%;width:150px;animation:fly 11s ease-in-out infinite}
-/* The arrow points up at the hero's buttons, so it sits just under them rather than in the corner. */
 .backdrop .scribble{position:absolute;left:4.5%;bottom:22%;width:96px;opacity:.9;animation:bob 8s ease-in-out infinite}
+/* The home page is busy enough without it. */
+body:has(.hero.home) .backdrop .scribble{display:none}
 @keyframes sway{to{transform:translateY(-14px) rotate(3deg)}}
 
 /* hero: full screen */
@@ -1554,3 +1555,17 @@ body:has(.admin-page){padding-bottom:0}
 .verify-said.bad{background:var(--rose-soft);color:var(--rose-deep);font-weight:600}
 .books .rcpt .ticked{font-style:normal;color:var(--teal-deep);font-weight:800;margin-right:.25rem}
 .paper .row.verified span:last-child{color:#1F1A1C;font-weight:700}
+
+/* ---------- home: the last visits, above the join box ---------- */
+.hero-side{display:grid;gap:1.1rem;min-width:0;align-content:start}
+.recent{display:grid;gap:.5rem;padding-left:.2rem}
+.recent-head{display:flex;align-items:baseline;justify-content:space-between;gap:.8rem}
+.recent-head a{font-size:.8rem;font-weight:700;color:var(--rose-deep);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:.2em;white-space:nowrap}
+.recent-head a:hover{color:var(--ink)}
+.recent ul{list-style:none;margin:0;padding:0;display:grid;gap:.6rem}
+.recent li{display:grid;gap:.1rem;padding-left:.9rem;border-left:3px solid var(--gold);min-width:0}
+.recent li b{font-size:.95rem;display:flex;align-items:center;gap:.35rem;flex-wrap:wrap}
+.recent-now{font-style:normal;font-size:.6rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:var(--teal);color:var(--paper);border-radius:999px;padding:.05rem .4rem}
+.recent-where{font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
+.recent p{font-size:.85rem;color:var(--ink-2);line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+@media (max-width:900px){.recent{order:2}}
