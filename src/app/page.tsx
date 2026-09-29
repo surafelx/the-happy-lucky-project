@@ -56,15 +56,16 @@ export default async function HomePage() {
             ) : null}
           </div>
 
-          <div className="hero-side pop" style={pop(2)}>
+          {/* One card: the latest Sunday on top, the way in underneath. */}
+          <section id="join" className="join join-card hero-side pop" style={pop(2)} aria-labelledby="join-h">
             <RecentSunday letter={latest} length={latest ? letterLength(latest as unknown as Letter) : ""} />
-            <section id="join" className="join join-card" aria-labelledby="join-h">
+            <div className="join-part">
               <span className="eyebrow">Come and build it with me</span>
               <h2 id="join-h">Join us</h2>
               <p className="note">Leave your email and you&apos;ll hear from us when there is something real to share.</p>
               <JoinForm />
-            </section>
-          </div>
+            </div>
+          </section>
         </div>
       </header>
     </div>

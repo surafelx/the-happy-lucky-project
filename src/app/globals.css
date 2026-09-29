@@ -1556,20 +1556,23 @@ body:has(.admin-page){padding-bottom:0}
 .books .rcpt .ticked{font-style:normal;color:var(--teal-deep);font-weight:800;margin-right:.25rem}
 .paper .row.verified span:last-child{color:#1F1A1C;font-weight:700}
 
-/* ---------- home: the latest Sunday, above the join box ---------- */
-.hero-side{display:grid;gap:1.1rem;min-width:0;align-content:start}
+/* ---------- home: one card, the latest Sunday over the way in ---------- */
+.hero-side{display:grid;gap:1rem;min-width:0;align-content:start}
 .recent-head{display:flex;align-items:baseline;justify-content:space-between;gap:.8rem}
-.recent-head a{font-size:.8rem;font-weight:700;color:var(--rose-deep);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:.2em;white-space:nowrap}
+.recent-head a{font-size:.78rem;font-weight:700;color:var(--rose-deep);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:.2em;white-space:nowrap}
 .recent-head a:hover{color:var(--ink)}
-.last-sunday{display:grid;gap:.6rem;min-width:0}
-.last-sunday-card{display:grid;grid-template-columns:minmax(0,7.5rem) minmax(0,1fr);gap:.9rem;align-items:center;text-decoration:none;color:inherit;border:2.5px solid var(--ink);border-radius:20px;padding:.6rem;background:var(--paper);box-shadow:5px 5px 0 var(--ink);transition:transform .25s var(--spring),box-shadow .25s}
-.last-sunday-card:hover{transform:translate(-2px,-2px);box-shadow:7px 7px 0 var(--ink)}
-.last-sunday-shot{position:relative;display:block;border-radius:14px;overflow:hidden;border:2px solid var(--ink);aspect-ratio:16/10;background:var(--ink)}
+/* The Sunday sits inside the join card, so it brings no frame of its own. */
+.last-sunday{display:grid;gap:.5rem;min-width:0;padding-bottom:1rem;border-bottom:2px dashed var(--line)}
+.last-sunday-card{display:grid;grid-template-columns:minmax(0,7rem) minmax(0,1fr);gap:.8rem;align-items:center;text-decoration:none;color:inherit;border-radius:16px;padding:.35rem;margin:-.35rem;transition:background .2s,transform .25s var(--spring)}
+.last-sunday-card:hover{background:var(--ground);transform:translateX(2px)}
+.last-sunday-card:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.last-sunday-shot{position:relative;display:block;border-radius:12px;overflow:hidden;border:2px solid var(--ink);aspect-ratio:16/10;background:var(--ink)}
 .last-sunday-shot img{width:100%;height:100%;object-fit:cover;display:block}
-.last-sunday-shot .yt-play{position:absolute;inset:0;display:grid;place-items:center;font-size:1.5rem;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6)}
-.last-sunday-text{display:grid;gap:.15rem;min-width:0}
-.last-sunday-text b{font-family:var(--font-lucky);font-weight:400;font-size:1.3rem;line-height:1.05;letter-spacing:.02em}
-.last-sunday-text small{font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
-.last-sunday-text em{font-style:normal;font-size:.82rem;color:var(--ink-2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.last-sunday-shot .yt-play{position:absolute;inset:0;display:grid;place-items:center;font-size:1.3rem;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.6)}
+.last-sunday-text{display:grid;gap:.1rem;min-width:0}
+.last-sunday-text b{font-family:var(--font-lucky);font-weight:400;font-size:1.2rem;line-height:1.05;letter-spacing:.02em}
+.last-sunday-text small{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3)}
+.last-sunday-text em{font-style:normal;font-size:.8rem;color:var(--ink-2);line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.join-part{display:grid;gap:.1rem;min-width:0}
 @media (max-width:520px){.last-sunday-card{grid-template-columns:minmax(0,1fr)}}
 @media (prefers-reduced-motion:reduce){.last-sunday-card:hover{transform:none}}
