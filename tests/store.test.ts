@@ -238,7 +238,7 @@ test("visits: the map starts from what was written down in code, and takes new p
   }
   assert.equal((await s.readVisits()).length, WORK.length); // reading again adds nothing
 
-  const added = await s.createVisit({ name: "St Mary", kind: "School", town: "Bahir Dar", lon: 37.4, lat: 11.6, since: "2026", what: "A story.", reached: 30, href: "", now: false, example: false });
+  const added = await s.createVisit({ name: "St Mary", kind: "School", town: "Bahir Dar", lon: 37.4, lat: 11.6, since: "2026", what: "A story.", reached: 30, href: "", logo: "", now: false, example: false });
   assert.match(added.id, /^v-/);
   assert.equal((await s.readVisits()).length, WORK.length + 1);
 
@@ -257,7 +257,7 @@ test("a seeded visit stays deleted, the way a seeded ledger entry does", async (
   assert.equal((await s.readVisits()).some((v) => v.id === first.id), false);
   // Reading again must not put it back.
   assert.equal((await s.readVisits()).some((v) => v.id === first.id), false);
-  const back = await s.createVisit({ name: first.name, kind: first.kind, town: first.town, lon: first.at[0], lat: first.at[1], since: first.since, what: first.what, reached: first.reached ?? null, href: first.href ?? "", now: first.now ?? false, example: false }, new Date().toISOString(), first.id);
+  const back = await s.createVisit({ name: first.name, kind: first.kind, town: first.town, lon: first.at[0], lat: first.at[1], since: first.since, what: first.what, reached: first.reached ?? null, href: first.href ?? "", logo: first.logo ?? "", now: first.now ?? false, example: false }, new Date().toISOString(), first.id);
   assert.equal(back.id, first.id); // put back under the same id, so the test ends tidy
 });
 

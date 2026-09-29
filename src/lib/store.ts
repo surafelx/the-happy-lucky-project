@@ -669,13 +669,13 @@ export async function markActivitySeen(): Promise<number> {
 export type Visit = VisitFields & { id: string; at: string; updatedAt: string };
 type VisitRow = {
   id: string; name: string; kind: VisitFields["kind"]; town: string; lon: number; lat: number; since: string; what: string;
-  reached: number | null; href: string; now: boolean; example: boolean; at: string; updated_at: string;
+  reached: number | null; href: string; logo: string; now: boolean; example: boolean; at: string; updated_at: string;
 };
-const VISIT_COLS = "id, name, kind, town, lon, lat, since, what, reached, href, now, example, at, updated_at";
+const VISIT_COLS = "id, name, kind, town, lon, lat, since, what, reached, href, logo, now, example, at, updated_at";
 const toVisit = (r: VisitRow): Visit => ({
   id: r.id, name: r.name, kind: r.kind, town: r.town, lon: Number(r.lon), lat: Number(r.lat), since: r.since, what: r.what,
   reached: r.reached === null || r.reached === undefined ? null : Number(r.reached),
-  href: r.href ?? "", now: r.now, example: r.example, at: r.at, updatedAt: r.updated_at,
+  href: r.href ?? "", logo: r.logo ?? "", now: r.now, example: r.example, at: r.at, updatedAt: r.updated_at,
 });
 
 /**
@@ -689,8 +689,8 @@ async function seedVisits(): Promise<void> {
     const key = `visit_seed:${w.id}`;
     if (await getMeta(key)) continue;
     await query(
-      `INSERT INTO visits (id, name, kind, town, lon, lat, since, what, reached, href, now, example, at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13) ON CONFLICT (id) DO NOTHING`,
-      [w.id, w.name, w.kind, w.town, w.at[0], w.at[1], w.since, w.what, w.reached ?? null, w.href ?? "", w.now ?? false, w.example ?? false, new Date().toISOString()],
+      `INSERT INTO visits (id, name, kind, town, lon, lat, since, what, reached, href, logo, now, example, at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$14) ON CONFLICT (id) DO NOTHING`,
+      [w.id, w.name, w.kind, w.town, w.at[0], w.at[1], w.since, w.what, w.reached ?? null, w.href ?? "", w.logo ?? "", w.now ?? false, w.example ?? false, new Date().toISOString()],
     );
     // Marked only once the row is safely in, so a failed write is simply retried
     // on the next read instead of being remembered as done for good.
@@ -706,16 +706,16 @@ export async function readVisits(): Promise<Visit[]> {
 export async function createVisit(f: VisitFields, at = now(), id = newId("v-", at)): Promise<Visit> {
   await prepared();
   const rows = await query<VisitRow>(
-    `INSERT INTO visits (id, name, kind, town, lon, lat, since, what, reached, href, now, example, at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$13) RETURNING ${VISIT_COLS}`,
-    [id, f.name, f.kind, f.town, f.lon, f.lat, f.since, f.what, f.reached, f.href, f.now, f.example, at],
+    `INSERT INTO visits (id, name, kind, town, lon, lat, since, what, reached, href, logo, now, example, at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$14) RETURNING ${VISIT_COLS}`,
+    [id, f.name, f.kind, f.town, f.lon, f.lat, f.since, f.what, f.reached, f.href, f.logo, f.now, f.example, at],
   );
   return toVisit(rows[0]);
 }
 export async function updateVisit(id: string, f: VisitFields): Promise<Visit | null> {
   await prepared();
   const r = await one<VisitRow>(
-    `UPDATE visits SET name = $2, kind = $3, town = $4, lon = $5, lat = $6, since = $7, what = $8, reached = $9, href = $10, now = $11, example = $12, updated_at = $13 WHERE id = $1 RETURNING ${VISIT_COLS}`,
-    [id, f.name, f.kind, f.town, f.lon, f.lat, f.since, f.what, f.reached, f.href, f.now, f.example, now()],
+    `UPDATE visits SET name = $2, kind = $3, town = $4, lon = $5, lat = $6, since = $7, what = $8, reached = $9, href = $10, logo = $11, now = $12, example = $13, updated_at = $14 WHERE id = $1 RETURNING ${VISIT_COLS}`,
+    [id, f.name, f.kind, f.town, f.lon, f.lat, f.since, f.what, f.reached, f.href, f.logo, f.now, f.example, now()],
   );
   return r ? toVisit(r) : null;
 }

@@ -284,4 +284,11 @@ export const MIGRATIONS: { id: string; statements: string[] }[] = [
       `ALTER TABLE letters ADD COLUMN deleted_at TEXT`,
     ],
   },
+  {
+    id: "010_visit_logos",
+    statements: [
+      // A partner's own logo, shown beside their name. A file in public/, with their permission.
+      `ALTER TABLE visits ADD COLUMN logo TEXT NOT NULL DEFAULT ''`,
+    ],
+  },
 ];

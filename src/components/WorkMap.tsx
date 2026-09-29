@@ -28,6 +28,7 @@ export function WorkMap({ visits }: { visits: Visit[] }) {
         what: v.what,
         reached: v.reached ?? undefined,
         href: v.href || undefined,
+        logo: v.logo || undefined,
         now: v.now,
         example: v.example,
       })),
@@ -140,7 +141,13 @@ export function WorkMap({ visits }: { visits: Visit[] }) {
           {shown.map((w) => (
             <li key={w.id} id={`work-${w.id}`} className={`${KIND_TONE[w.kind]}${active === w.id ? " on" : ""}`}>
               <button type="button" onClick={() => pick(w.id)} aria-pressed={active === w.id}>
-                <span className="emoji" aria-hidden="true">{KIND_EMOJI[w.kind]}</span>
+                {w.logo ? (
+                  // Their own logo, shown with their permission.
+                  // eslint-disable-next-line @next/next/no-img-element -- a file in public/, not a static import
+                  <img className="work-logo" src={w.logo} alt={`${w.name} logo`} loading="lazy" />
+                ) : (
+                  <span className="emoji" aria-hidden="true">{KIND_EMOJI[w.kind]}</span>
+                )}
                 <span className="body">
                   <b>{w.name}</b>
                   <small>
@@ -152,7 +159,9 @@ export function WorkMap({ visits }: { visits: Visit[] }) {
                 </span>
               </button>
               {w.href && active === w.id ? (
-                <Link className="btn sm rose" href={w.href}>See the campaign</Link>
+                <Link className="btn sm rose" href={w.href} {...(w.href.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+                  {w.href.startsWith("http") ? "Their own site" : "See the campaign"}
+                </Link>
               ) : null}
             </li>
           ))}

@@ -24,6 +24,8 @@ export type WorkPlace = {
   what: string;
   reached?: number; // kids or women reached, shown in the totals
   href?: string;
+  /** Their own logo, kept in public/ and used with their permission. */
+  logo?: string;
   now?: boolean; // happening right now
   example?: boolean;
 };
@@ -37,6 +39,8 @@ export const WORK: WorkPlace[] = [
     at: [37.39, 11.59],
     since: "2026",
     what: "Four packs of diapers, forty-eight in all, bought and carried over in person. The first thing we have handed to anyone.",
+    logo: "/visits/one-heart-wholeness-centre.png",
+    href: "https://ohwc.org.et",
     now: true,
   },
 ];

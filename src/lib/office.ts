@@ -438,6 +438,8 @@ export type VisitFields = {
   href: string;
   now: boolean;
   example: boolean;
+  /** A path in public/, or an http(s) address. Empty for most places. */
+  logo: string;
 };
 
 /** A link out of the office: a path on this site, or an absolute http(s) address. Nothing else is clickable. */
@@ -478,6 +480,8 @@ export function checkVisit(raw: Record<string, unknown>): { ok: true; value: Vis
   }
   const href = cleanOutbound(raw.href);
   if (href === null) return { ok: false, error: "That link should start with / or be an http(s) address." };
+  const logo = cleanOutbound(raw.logo);
+  if (logo === null) return { ok: false, error: "The logo should be a path like /visits/name.png, or an http(s) address." };
   return {
     ok: true,
     value: {
@@ -490,6 +494,7 @@ export function checkVisit(raw: Record<string, unknown>): { ok: true; value: Vis
       what: text(raw.what, 600),
       reached,
       href,
+      logo,
       now: raw.now === true,
       example: raw.example === true,
     },

@@ -1580,7 +1580,7 @@ body:has(.admin-page){padding-bottom:0}
 /* The visits, between the Sunday and the way in. */
 .recent{display:grid;gap:.5rem;min-width:0;padding-bottom:1.1rem;border-bottom:2px dashed var(--line)}
 .recent ul{list-style:none;margin:0;padding:0;display:grid;gap:.55rem}
-.recent li{display:grid;gap:.1rem;padding-left:.85rem;border-left:3px solid var(--gold);min-width:0}
+.recent li{display:grid;gap:.1rem;min-width:0}
 .recent li b{font-size:.95rem;display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
 .recent-now{font-style:normal;font-size:.58rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;background:var(--teal);color:var(--paper);border-radius:999px;padding:.05rem .4rem}
 .recent-where{font-size:.68rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-3)}
@@ -1590,3 +1590,5 @@ body:has(.admin-page){padding-bottom:0}
 @media (max-width:900px){.hero.home .wrap{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:520px){.last-sunday-card{grid-template-columns:minmax(0,1fr)}.hero.home .join-card{padding:1.2rem 1.1rem}}
 @media (prefers-reduced-motion:reduce){.last-sunday-card:hover{transform:none}}
+
+.work-list .work-logo{width:48px;height:48px;object-fit:contain;border-radius:10px;background:var(--paper);border:2px solid var(--ink);padding:3px;flex:none}
