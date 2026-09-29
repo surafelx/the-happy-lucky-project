@@ -3,11 +3,12 @@ import Link from "next/link";
 import { JoinForm } from "@/components/JoinForm";
 import { HomeStats } from "@/components/HomeStats";
 import { RecentSunday } from "@/components/RecentSunday";
+import { RecentVisits } from "@/components/RecentVisits";
 import { letterLength } from "@/data/letter";
 import type { Letter } from "@/data/letter";
 import { dbConfigured } from "@/lib/db";
 import { MENTOR_FORM_ENABLED } from "@/lib/flags";
-import { readLetters } from "@/lib/store";
+import { readLetters, readVisits } from "@/lib/store";
 import { Logo } from "@/components/SvgDefs";
 
 const pop = (i: number) => ({ "--i": i }) as React.CSSProperties;
@@ -21,6 +22,9 @@ export default async function HomePage() {
   const letters = dbConfigured() ? await readLetters().catch(() => []) : [];
   // Drafts stay out unless the flag is on, and the newest published one wins.
   const latest = letters.filter((l) => MENTOR_FORM_ENABLED || !l.draft).at(-1) ?? null;
+  // Newest first, and a visit marked "now" comes first whatever its date.
+  const visits = MENTOR_FORM_ENABLED && dbConfigured() ? await readVisits().catch(() => []) : [];
+  const recent = [...visits].sort((a, b) => Number(b.now) - Number(a.now) || b.at.localeCompare(a.at)).slice(0, 2);
   return (
     <div className="page page-enter">
       <header className="hero full home">
@@ -59,6 +63,7 @@ export default async function HomePage() {
           {/* One card: the latest Sunday on top, the way in underneath. */}
           <section id="join" className="join join-card hero-side pop" style={pop(2)} aria-labelledby="join-h">
             <RecentSunday letter={latest} length={latest ? letterLength(latest as unknown as Letter) : ""} />
+            <RecentVisits visits={recent} />
             <div className="join-part">
               <span className="eyebrow">Come and build it with me</span>
               <h2 id="join-h">Join us</h2>
