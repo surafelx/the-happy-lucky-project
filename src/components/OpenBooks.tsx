@@ -6,6 +6,8 @@ import type { CSSProperties } from "react";
 import type { PublicBooks } from "@/lib/books";
 import { Flow, Standing } from "@/components/BooksCharts";
 import { monthlyFlow } from "@/lib/charts";
+import { moneyMap, wrap } from "@/lib/money-map";
+import type { MoneyNode } from "@/lib/money-map";
 import { useCountUp } from "@/lib/count-up";
 import { burst } from "@/lib/format";
 import { GENERAL_COLOR, GENERAL_ID } from "@/lib/books-ids";
@@ -23,27 +25,7 @@ function ago(iso: string, now: number) {
   return `${Math.floor(s / 3600)} h ago`;
 }
 
-/**
- * Where each node sits on the map, as a percentage of the canvas: the balance in
- * the middle and everything else on an arm around it, roughly clock order from
- * the top. Fixed spots rather than a layout engine, because the map should read
- * the same every visit — you learn where "spent" lives and it stays there.
- */
-const SPOT: Record<string, [number, number]> = {
-  core: [50, 47],
-  in: [50, 12],
-  out: [79, 18],
-  standing: [85, 50],
-  kind: [79, 83],
-  goals: [50, 88],
-  lines: [20, 84],
-  flow: [15, 48],
-  need: [20, 15],
-};
-const at = (id: string): CSSProperties => ({ "--x": `${SPOT[id][0]}%`, "--y": `${SPOT[id][1]}%` } as CSSProperties);
-
-type Wire = { id: string; d: string };
-type Panel = null | "lines" | "goals" | "how";
+type Panel = null | "lines" | "goals" | "how" | "charts";
 
 export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   const [data, setData] = useState<PublicBooks | null>(initial);
@@ -57,12 +39,10 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   const [open, setOpen] = useState<Entry | null>(null);
   const [panel, setPanel] = useState<Panel>(null);
   const [limit, setLimit] = useState(60);
-  const [wires, setWires] = useState<Wire[]>([]);
   const known = useRef<Set<string>>(new Set(initial?.entries.map((e) => e.ref) ?? []));
   // Without server data (the first read failed), the first fetch only learns what is already there: no "just in", no confetti.
   const primed = useRef(initial !== null);
   const canvasRef = useRef<HTMLDivElement>(null);
-  const nodes = useRef<Map<string, HTMLElement>>(new Map());
 
   const refresh = useCallback(async () => {
     try {
@@ -79,7 +59,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
         setBorn(new Set(fresh.map((e) => e.ref)));
         setLatest(fresh[0]);
         if (fresh.some((e) => e.kind === "in")) {
-          const box = nodes.current.get("core")?.getBoundingClientRect();
+          const box = canvasRef.current?.getBoundingClientRect();
           burst(box ? box.left + box.width / 2 : undefined, box ? box.top + box.height / 2 : undefined, 50);
         }
       }
@@ -143,56 +123,86 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   const hasFlow = months.some((m) => m.in > 0 || m.out > 0);
   const hasStanding = t.in > 0;
 
-  /** Keeps a node's element so the wires can be drawn between real boxes, not guessed ones. */
-  const reg = useCallback((id: string) => (el: HTMLElement | null) => {
-    if (el) nodes.current.set(id, el);
-    else nodes.current.delete(id);
-  }, []);
-
-  // The wires are measured from the laid-out boxes rather than computed from the
-  // percentages, so they stay attached however the cards end up sized. They are
-  // drawn under the cards, so only the span between two nodes is ever visible.
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const draw = () => {
-      const core = nodes.current.get("core");
-      if (!core) return;
-      const box = canvas.getBoundingClientRect();
-      const c = core.getBoundingClientRect();
-      const cx = c.left - box.left + c.width / 2;
-      const cy = c.top - box.top + c.height / 2;
-      const next: Wire[] = [];
-      for (const [id, el] of nodes.current) {
-        if (id === "core") continue;
-        const r = el.getBoundingClientRect();
-        const x = r.left - box.left + r.width / 2;
-        const y = r.top - box.top + r.height / 2;
-        const dx = x - cx;
-        const dy = y - cy;
-        const len = Math.hypot(dx, dy) || 1;
-        // A little bow, so the map looks drawn by a hand rather than plotted by a machine.
-        const bow = Math.min(30, len * 0.11);
-        const bx = (cx + x) / 2 + (-dy / len) * bow;
-        const by = (cy + y) / 2 + (dx / len) * bow;
-        next.push({ id, d: `M ${cx.toFixed(1)} ${cy.toFixed(1)} Q ${bx.toFixed(1)} ${by.toFixed(1)} ${x.toFixed(1)} ${y.toFixed(1)}` });
-      }
-      setWires(next);
-    };
-    const frame = requestAnimationFrame(draw);
-    const ro = new ResizeObserver(draw);
-    ro.observe(canvas);
-    for (const el of nodes.current.values()) ro.observe(el);
-    return () => {
-      cancelAnimationFrame(frame);
-      ro.disconnect();
-    };
-  }, [showKind, showNeed, hasFlow, hasStanding, goals.length]);
-
   const openLines = (id: string | null) => {
     setFocus(id);
     setLimit(60);
     setPanel("lines");
+  };
+
+  // The picture: a circle for each pot of money, and a line to whoever it reached.
+  // Drawn twice, wide and tall, and CSS shows whichever fits. Picking in
+  // JavaScript would mean measuring the window, which the server cannot do, and
+  // the first paint would be the wrong one.
+  const mapInput = useMemo(
+    () => ({
+      balance: t.balance,
+      general: t.general,
+      goals: goals.map((g) => ({ id: g.id, title: g.title, raised: g.raised })),
+      inKind: entries.filter((e) => e.kind === "inkind").map((e) => ({ amount: e.amount, recipient: e.recipient })),
+      spends: entries.filter((e) => e.kind === "out").map((e) => ({ name: e.name, amount: e.amount })),
+    }),
+    [t.balance, t.general, goals, entries],
+  );
+  const map = useMemo(() => moneyMap(mapInput), [mapInput]);
+  const tallMap = useMemo(() => moneyMap(mapInput, { portrait: true }), [mapInput]);
+
+  /** One circle. Clickable ones become a link or a button; the rest are just drawn. */
+  const Bubble = ({ n }: { n: MoneyNode }) => {
+    const lines = wrap(n.label, n.r > 40 ? 16 : 14);
+    const body = (
+      <>
+        <circle cx={n.x} cy={n.y} r={n.r} />
+        {n.amount > 0 ? (
+          <text className="bub-amount" x={n.x} y={n.y + 6} textAnchor="middle">
+            {fmt(n.amount)}
+          </text>
+        ) : null}
+        <text className="bub-label" x={n.x} y={n.y + n.r + 20} textAnchor="middle">
+          {lines.map((l, i) => (
+            <tspan key={l + i} x={n.x} dy={i === 0 ? 0 : 16}>
+              {l}
+            </tspan>
+          ))}
+        </text>
+        {n.note ? (
+          <text className="bub-note" x={n.x} y={n.y + n.r + 20 + lines.length * 16} textAnchor="middle">
+            {n.note}
+          </text>
+        ) : null}
+      </>
+    );
+    const label = `${n.label}${n.amount > 0 ? `, ${fmt(n.amount)} birr` : ""}${n.note ? `, ${n.note}` : ""}`;
+    if (n.href) {
+      return (
+        <a className={`bub ${n.kind} go`} href={n.href} aria-label={label}>
+          {body}
+        </a>
+      );
+    }
+    if (n.focus !== null) {
+      return (
+        <g
+          className={`bub ${n.kind} go`}
+          role="button"
+          tabIndex={0}
+          aria-label={`${label}. Opens its lines.`}
+          onClick={() => openLines(n.focus)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openLines(n.focus);
+            }
+          }}
+        >
+          {body}
+        </g>
+      );
+    }
+    return (
+      <g className={`bub ${n.kind}`} role="img" aria-label={label}>
+        {body}
+      </g>
+    );
   };
 
   return (
@@ -202,95 +212,78 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
           <span className="eyebrow">The audit</span>
           <h1>Every birr, <em>in the open</em></h1>
         </div>
-        <p className="map-lede">Logged by hand, usually the same day, with the receipt. This is the whole picture on one screen — open any node for the lines behind it.</p>
+        <p className="map-lede">Logged by hand, usually the same day, with the receipt. Every circle below is money, drawn to size, with a line to wherever it went.</p>
         <button type="button" className="map-how" onClick={() => setPanel("how")}>How this page works</button>
       </header>
 
-      <div className="map-canvas" ref={canvasRef}>
-        <svg className="map-wires" aria-hidden="true">
-          {wires.map((w) => (
-            <path key={w.id} d={w.d} />
-          ))}
-        </svg>
-
-        <div className="node node-core" style={at("core")} ref={reg("core")}>
+      <section className="map-stats" aria-label="The numbers">
+        <div className="mstat big">
           <span>What we have now</span>
           <b className="num">{fmt(balance)}<small> ETB</small></b>
           <em>money in minus money out</em>
         </div>
-
-        <div className="node node-stat in" style={at("in")} ref={reg("in")}>
+        <div className="mstat">
           <span>Given so far</span>
           <b className="num">{fmt(raised)}<small> ETB</small></b>
           <em>{t.givers} {t.givers === 1 ? "gift" : "gifts"}</em>
         </div>
-
-        <div className="node node-stat out" style={at("out")} ref={reg("out")}>
+        <div className="mstat">
           <span>Spent</span>
           <b className="num">{fmt(spent)}<small> ETB</small></b>
           <em>every payment has its line</em>
         </div>
-
+        {showKind ? (
+          <div className="mstat">
+            <span>Given in kind</span>
+            <b className="num">{fmt(inKindValue)}<small> ETB</small></b>
+            <em>never in the balance</em>
+          </div>
+        ) : null}
         {showNeed ? (
-          <div className="node node-stat need" style={at("need")} ref={reg("need")}>
+          <div className="mstat need">
             <span>Still needed</span>
             <b className="num">{fmt(needed)}<small> ETB</small></b>
             <em>for the open goals</em>
           </div>
         ) : null}
-
-        {showKind ? (
-          <div className="node node-stat kind" style={at("kind")} ref={reg("kind")}>
-            <span>Given in kind</span>
-            <b className="num">{fmt(inKindValue)}<small> ETB</small></b>
-            <em>{t.inKind.count} {t.inKind.count === 1 ? "gift" : "gifts"} of goods, handed over directly — never in the balance</em>
-          </div>
-        ) : null}
-
-        {hasFlow ? (
-          <div className="node node-chart" style={at("flow")} ref={reg("flow")}>
-            <Flow months={months} />
-          </div>
-        ) : null}
-
-        {hasStanding ? (
-          <div className="node node-chart" style={at("standing")} ref={reg("standing")}>
-            <Standing moneyIn={t.in} moneyOut={t.out} />
-          </div>
-        ) : null}
-
-        <div className="node node-goals" style={at("goals")} ref={reg("goals")}>
-          <span>What the money is for</span>
-          <ul>
-            {goals.slice(0, 3).map((g) => (
-              <li key={g.id}>
-                <button type="button" onClick={() => openLines(g.id)} style={{ "--goal": g.color } as CSSProperties}>
-                  <b>{g.title}</b>
-                  <i className="goal-bar" role="img" aria-label={`${g.pct}% of the way there`}><em style={{ width: `${g.pct}%` }} /></i>
-                  <span className="num">{fmt(g.raised)} of {fmt(g.target)}</span>
-                </button>
-              </li>
-            ))}
-            {hasGeneral || goals.length === 0 ? (
-              <li>
-                <button type="button" onClick={() => openLines(GENERAL_ID)} style={{ "--goal": GENERAL_COLOR } as CSSProperties}>
-                  <b>General fund</b>
-                  <span className="num">{fmt(t.general.raised)} given · {fmt(t.general.spent)} spent</span>
-                </button>
-              </li>
-            ) : null}
-          </ul>
-          <button type="button" className="node-more" onClick={() => setPanel("goals")}>
-            {goals.length > 3 ? `All ${goals.length} goals` : "Read the plans"}
-          </button>
-        </div>
-
-        <button type="button" className="node node-lines" style={at("lines")} ref={reg("lines")} onClick={() => openLines(null)}>
+        <button type="button" className="mstat live" onClick={() => openLines(null)}>
           <span><i className={error ? "off" : ""} aria-hidden="true" /> {error ? "Reconnecting…" : "Live"}</span>
           <b className="num">{fmt(count)}</b>
-          <em>{t.count === 1 ? "line written down" : "lines written down"} · updated {ago(fetchedAt, Math.max(clock, Date.parse(fetchedAt)))}</em>
-          <strong>Open every line →</strong>
+          <em>{t.count === 1 ? "line" : "lines"} · updated {ago(fetchedAt, Math.max(clock, Date.parse(fetchedAt)))} · open them →</em>
         </button>
+        {hasFlow || hasStanding ? (
+          <button type="button" className="mstat charts" onClick={() => setPanel("charts")}>
+            <span>Month by month</span>
+            <b aria-hidden="true">▁▃▅</b>
+            <em>in and out, drawn →</em>
+          </button>
+        ) : null}
+        {goals.length ? (
+          <button type="button" className="mstat charts" onClick={() => setPanel("goals")}>
+            <span>What it is for</span>
+            <b className="num">{goals.length}</b>
+            <em>{goals.length === 1 ? "goal" : "goals"} and their plans →</em>
+          </button>
+        ) : null}
+      </section>
+
+      <div className="map-canvas" ref={canvasRef}>
+        {[
+          { m: map, cls: "money-map wide" },
+          { m: tallMap, cls: "money-map tall" },
+        ].map(({ m, cls }) => (
+          <svg key={cls} className={cls} viewBox={`0 0 ${m.width} ${m.height}`} preserveAspectRatio="xMidYMid meet" role="group" aria-label="Where the money is">
+            <g className="map-wires" aria-hidden="true">
+              {m.links.map((l) => (
+                <line key={l.id} x1={l.x1} y1={l.y1} x2={l.x2} y2={l.y2} />
+              ))}
+            </g>
+            {m.nodes.map((n) => (
+              <Bubble key={n.id} n={n} />
+            ))}
+          </svg>
+        ))}
+        {map.nodes.length <= 1 ? <p className="map-empty">Nothing is logged yet. The first gift will draw itself here.</p> : null}
       </div>
 
       <p className="map-foot" aria-live="polite">
@@ -382,6 +375,19 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
                   {hasGeneral ? <button type="button" className="goal-look" onClick={() => openLines(GENERAL_ID)}>🧾 See its lines</button> : null}
                 </article>
               ) : null}
+            </div>
+          </section>
+        ) : null}
+
+        {panel === "charts" ? (
+          <section className="msheet" role="dialog" aria-modal="true" aria-label="In and out, drawn" onClick={(e) => e.stopPropagation()}>
+            <header>
+              <h2>The money, <em>drawn</em></h2>
+              <button type="button" className="x" aria-label="Close" onClick={() => setPanel(null)} autoFocus>×</button>
+            </header>
+            <div className="msheet-charts">
+              {hasStanding ? <Standing moneyIn={t.in} moneyOut={t.out} /> : null}
+              {hasFlow ? <Flow months={months} /> : null}
             </div>
           </section>
         ) : null}

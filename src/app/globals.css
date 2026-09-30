@@ -1378,7 +1378,8 @@ body:has(.admin-page){padding-bottom:0}
 .goal-row .pill{margin-left:.4rem}
 
 /* The middle of the map is gold, so its text stays dark whatever the theme. */
-.node-core,.node-core b,.node-core b small,.node-core>span,.node-core em{color:#1F1A1C}
+/* The middle of the strip is gold, so its text stays dark whatever the theme. */
+.mstat.big,.mstat.big b,.mstat.big b small,.mstat.big>span,.mstat.big em{color:#1F1A1C}
 
 
 /* ---------- home: name, the numbers (people and money together), join ---------- */
@@ -1463,51 +1464,48 @@ body:has(.admin-page){padding-bottom:0}
 .map-how:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
 
 /* The canvas. Wires sit under the cards, so only the span between two nodes shows. */
-.map-canvas{position:relative;min-height:0}
-.map-wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
-.map-wires path{fill:none;stroke:var(--ink);stroke-width:2.5;stroke-linecap:round;opacity:.45}
 
-.node{position:absolute;left:var(--x);top:var(--y);transform:translate(-50%,-50%);z-index:1;background:var(--paper);border:2.5px solid var(--ink);border-radius:20px;padding:.7rem .85rem;box-shadow:4px 4px 0 var(--ink);display:grid;gap:.1rem;align-content:start;text-align:left;min-width:0}
-.node>span{font-size:.65rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);display:flex;align-items:center;gap:.4rem}
-.node b.num{font-family:var(--font-lucky);font-weight:400;font-size:clamp(1.25rem,2.1vw,1.8rem);line-height:1.05;overflow-wrap:anywhere}
-.node b.num small{font-family:var(--font-poppins);font-weight:700;font-size:.7rem;color:var(--teal-deep)}
-.node em{font-style:normal;font-size:.68rem;color:var(--ink-2);font-weight:600;line-height:1.35}
-.node:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+/* The numbers, in one row along the top. */
+.map-stats{display:flex;flex-wrap:wrap;gap:.6rem;align-items:stretch}
+.mstat{background:var(--paper);border:2.5px solid var(--ink);border-radius:16px;padding:.5rem .8rem;box-shadow:3px 3px 0 var(--ink);display:grid;gap:.05rem;align-content:center;min-width:0;text-align:left;font:inherit;color:var(--ink);flex:1 1 auto}
+.mstat>span{font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);display:flex;align-items:center;gap:.35rem;white-space:nowrap}
+.mstat b{font-family:var(--font-lucky);font-weight:400;font-size:clamp(1.1rem,1.9vw,1.6rem);line-height:1.05}
+.mstat b small{font-family:var(--font-poppins);font-weight:700;font-size:.62rem;color:var(--teal-deep)}
+.mstat em{font-style:normal;font-size:.64rem;color:var(--ink-2);font-weight:600;white-space:nowrap}
+.mstat.big{background:var(--gold);box-shadow:5px 5px 0 var(--ink);flex:1.4 1 auto}
+.mstat.big b{font-size:clamp(1.5rem,2.8vw,2.3rem)}
+.mstat.need{background:var(--rose-soft)}
+.mstat.live,.mstat.charts{cursor:pointer}
+.mstat.live:hover,.mstat.charts:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
+.mstat.live:focus-visible,.mstat.charts:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.mstat.live em,.mstat.charts em{color:var(--rose-deep)}
+.mstat.live>span i{width:8px;height:8px;border-radius:50%;background:#2DBE6C;box-shadow:0 0 0 0 rgba(45,190,108,.6);animation:livepulse 1.8s infinite;flex:none}
+.mstat.live>span i.off{background:var(--ink-3);animation:none}
+.msheet-charts{display:grid;gap:1.4rem;overflow:auto;min-height:0;padding-right:.2rem}
 
-.node-stat{width:clamp(9rem,14vw,12.5rem)}
-.node-stat.in{box-shadow:4px 4px 0 #0E6E99}
-.node-stat.out{box-shadow:4px 4px 0 #A85B14}
-.node-stat.kind{box-shadow:4px 4px 0 var(--rose)}
-.node-stat.need{background:var(--rose-soft)}
+.map-canvas{position:relative;min-height:0;display:grid;place-items:center}
+.money-map{width:100%;height:100%;max-height:100%;display:block;overflow:visible}
+.money-map.tall{display:none}
+.map-wires line{stroke:var(--ink);stroke-width:2.5;opacity:.4;stroke-linecap:round}
+.map-empty{position:absolute;inset:auto;font-size:.9rem;color:var(--ink-3)}
 
-.node-core{width:clamp(14rem,23vw,20rem);background:var(--gold);box-shadow:7px 7px 0 var(--ink);transform:translate(-50%,-50%) rotate(-1deg);padding:1rem 1.2rem 1.05rem;gap:.2rem}
-.node-core>span{font-size:.74rem;letter-spacing:.14em;color:var(--ink)}
-.node-core b.num{font-size:clamp(2.2rem,4.6vw,3.6rem);line-height:.95;display:flex;align-items:baseline;gap:.2em;flex-wrap:wrap}
-.node-core b.num small{font-size:clamp(.78rem,1.3vw,1.05rem);color:var(--ink)}
-.node-core em{font-size:.8rem;color:var(--ink)}
-
-.node-chart{width:clamp(16rem,25vw,22rem);gap:.6rem}
-.node-chart .chart{margin:0;display:grid;gap:.6rem;align-content:start;min-width:0}
-.node-chart .chart figcaption{display:grid;gap:.15rem}
-.node-chart .chart h3{font-size:1.05rem;line-height:1.05}
-.node-chart .chart figcaption p{font-size:.72rem;color:var(--ink-2);line-height:1.35}
-
-.node-goals{width:clamp(14rem,22vw,19rem);gap:.25rem}
-.node-goals ul{list-style:none;margin:0;padding:0;display:grid;gap:.3rem}
-.node-goals li button{width:100%;text-align:left;border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:12px;padding:.3rem .5rem;font:inherit;display:grid;gap:.18rem;cursor:pointer;box-shadow:2px 2px 0 var(--goal)}
-.node-goals li button:hover{transform:translate(1px,1px);box-shadow:1px 1px 0 var(--goal)}
-.node-goals li button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
-.node-goals li b{font-size:.78rem;font-weight:700;line-height:1.2}
-.node-goals li .num{font-size:.66rem;color:var(--ink-2);font-weight:600}
-.node-goals .goal-bar{display:block;height:7px;border:1.5px solid var(--ink);border-radius:999px;background:var(--ground);overflow:hidden}
-.node-goals .goal-bar em{display:block;height:100%;background:var(--goal)}
-.node-more{margin-top:.2rem;border:0;background:none;padding:0;font:inherit;font-size:.7rem;font-weight:700;color:var(--rose-deep);text-decoration:underline;cursor:pointer;justify-self:start}
-
-.node-lines{width:clamp(11rem,18vw,15rem);cursor:pointer;font:inherit;color:var(--ink);gap:.14rem}
-.node-lines:hover{transform:translate(-50%,-50%) translate(2px,2px);box-shadow:2px 2px 0 var(--ink)}
-.node-lines strong{font-size:.74rem;color:var(--rose-deep);margin-top:.25rem}
-.node-lines>span i{width:9px;height:9px;border-radius:50%;background:#2DBE6C;box-shadow:0 0 0 0 rgba(45,190,108,.6);animation:livepulse 1.8s infinite;flex:none}
-.node-lines>span i.off{background:var(--ink-3);animation:none}
+/* Every circle is money, drawn to size: the area is the amount, not the width. */
+.bub circle{stroke:var(--ink);stroke-width:2.5;fill:var(--paper)}
+.bub.core circle{fill:var(--gold);stroke-width:3}
+.bub.fund circle{fill:#D8E9F2}
+.bub.gift circle{fill:var(--rose-soft)}
+.bub.spend circle{fill:#F6E3D0}
+.bub.place circle{fill:var(--paper);stroke-dasharray:6 5}
+.bub .bub-amount{font-family:var(--font-lucky),sans-serif;font-size:19px;fill:var(--ink)}
+.bub.core .bub-amount{font-size:30px}
+.bub .bub-label{font-family:var(--font-poppins),sans-serif;font-size:14px;font-weight:700;fill:var(--ink)}
+.bub .bub-note{font-family:var(--font-poppins),sans-serif;font-size:12px;font-weight:500;fill:var(--ink-3)}
+.bub.go{cursor:pointer}
+.bub.go circle{transition:transform .25s var(--spring)}
+.bub.go:hover circle,.bub.go:focus-visible circle{transform-box:fill-box;transform-origin:center;transform:scale(1.06)}
+.bub.go:focus-visible{outline:none}
+.bub.go:focus-visible circle{stroke-width:5}
+.bub.go .bub-label{text-decoration:underline;text-underline-offset:2px}
 
 .map-foot{min-height:1.4rem;font-size:.85rem;text-align:center;color:var(--ink-2)}
 .map-foot b{color:var(--teal-deep)}
@@ -1560,21 +1558,99 @@ body:has(.admin-page){padding-bottom:0}
 .books-map .flow-tip{position:absolute;bottom:calc(100% + .2rem);left:50%;transform:translateX(-50%);z-index:3;display:grid;gap:.1rem;background:var(--ink);color:var(--ground);border-radius:10px;padding:.4rem .6rem;font-size:.72rem;white-space:nowrap;pointer-events:none}
 .books-map .flow-tip b{font-size:.78rem}
 
-/* A phone has no room to spread a map out. Below this the nodes stack and the
-   page scrolls: a cramped map nobody can read would be worse than a list. */
+/* The picture scales with its viewBox, so on a narrow screen the circles would
+   keep their labels and the labels would become unreadable. The text is sized in
+   viewBox units, so growing it here grows it against the circles rather than
+   against the screen, and the drawing stays legible at any width. */
 @media (max-width:980px),(max-height:620px){
   .books-page.light{overflow:visible}
-  .books-map{height:auto;overflow:visible;padding-bottom:2.5rem}
+  .books-map{height:auto;overflow:visible;padding-bottom:2.5rem;gap:1rem}
   .map-head{grid-template-columns:minmax(0,1fr);gap:.5rem;justify-items:start}
-  .map-canvas{display:grid;gap:1rem;min-height:0}
-  .map-wires{display:none}
-  .node,.node-stat,.node-core,.node-chart,.node-goals,.node-lines{position:static;transform:none;width:auto}
-  .node-core{transform:rotate(-1deg)}
-  .node-lines:hover{transform:translate(2px,2px)}
+  .map-canvas{min-height:0;align-items:start}
+  .money-map.wide{display:none}
+  .money-map.tall{display:block;height:auto}
+  /* Room is width here, not height: the lines wrap rather than being cut off. */
+  .mstat{flex:1 1 9rem}
+  .mstat>span,.mstat em{white-space:normal}
   .map-foot{text-align:left}
 }
 @media (prefers-reduced-motion:reduce){
-  .node-lines>span i{animation:none}
-  .map-how:hover,.node-lines:hover,.node-goals li button:hover{transform:none}
+  .mstat.live>span i{animation:none}
+  .map-how:hover,.mstat.live:hover,.mstat.charts:hover{transform:none}
+  .bub.go circle{transition:none}
+  .bub.go:hover circle,.bub.go:focus-visible circle{transform:none}
   .msheet{transition:none}
+}
+
+/* ---------- the master plan: a document, grouped by how true each line is ---------- */
+.plan{padding:clamp(2.2rem,6vw,4rem) 0 4.5rem;display:grid;gap:2.4rem}
+.plan-head{display:grid;gap:.5rem;max-width:62ch}
+.plan-head h1{font-family:var(--font-lucky);font-weight:400;font-size:clamp(2.2rem,6.5vw,4.2rem);line-height:1;margin:.3rem 0 .4rem}
+.plan-head h1 em{font-style:normal;color:var(--teal-deep);display:inline-block;transform:rotate(-2deg)}
+.plan-when{font-size:.85rem;color:var(--ink-2);font-weight:600}
+.plan-when .quiet{color:var(--ink-3);font-weight:500}
+.plan h2{font-size:clamp(1.5rem,3.5vw,2.1rem);line-height:1.05}
+.plan h2 em{font-style:normal;color:var(--teal-deep);display:inline-block;transform:rotate(-2deg)}
+.plan h2 .num{font-family:var(--font-poppins);font-size:.85rem;font-weight:700;color:var(--ink-3);vertical-align:middle}
+
+/* The badge. Its own word is inside it, so the colour is decoration and never the meaning. */
+.plan-status{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;border:2px solid var(--ink);border-radius:999px;padding:.12rem .6rem;background:var(--paper);color:var(--ink);white-space:nowrap}
+.plan-status.active{background:var(--teal-soft)}
+.plan-status.planning{background:var(--gold-soft)}
+.plan-status.idea{background:transparent;border-style:dashed;color:var(--ink-2)}
+.plan-status.paused{background:var(--rose-soft)}
+.plan-status.completed{background:var(--ground);color:var(--ink-2)}
+
+.plan-key{background:var(--paper);border:2.5px solid var(--ink);border-radius:24px;padding:1.3rem 1.4rem;box-shadow:6px 6px 0 var(--teal)}
+.plan-key dl{margin:1rem 0 0;display:grid;gap:.7rem}
+.plan-key dl>div{display:grid;grid-template-columns:minmax(8.5rem,auto) minmax(0,1fr);gap:.4rem 1rem;align-items:baseline}
+.plan-key dt{display:flex;align-items:center;gap:.5rem}
+.plan-key dt em{font-style:normal;font-size:.78rem;font-weight:700;color:var(--ink-3)}
+.plan-key dd{margin:0;font-size:.92rem;color:var(--ink-2)}
+
+.plan-changed{background:var(--paper);border:2.5px solid var(--ink);border-radius:24px;padding:1.3rem 1.4rem;box-shadow:6px 6px 0 var(--gold)}
+.plan-changed h3{font-size:.76rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:.9rem 0 .4rem}
+.plan-changed ul{margin:0;padding-left:1.1rem;display:grid;gap:.4rem;color:var(--ink-2)}
+.plan-changed details{margin-top:1rem;border-top:2px dashed var(--line);padding-top:.6rem}
+.plan-changed summary{font-weight:700;cursor:pointer;font-size:.9rem}
+.plan-changed summary:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+
+.plan-group{display:grid;gap:.5rem}
+.plan-means{font-size:.92rem;color:var(--ink-2);max-width:70ch;margin-bottom:.6rem}
+.plan-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,22rem),1fr));gap:1.2rem}
+.plan-item{background:var(--paper);border:2.5px solid var(--ink);border-radius:22px;padding:1.1rem 1.2rem 1.15rem;box-shadow:5px 5px 0 var(--ink);display:grid;gap:.5rem;align-content:start;min-width:0}
+.plan-item.active{box-shadow:5px 5px 0 var(--teal)}
+.plan-item.planning{box-shadow:5px 5px 0 var(--gold)}
+.plan-item.idea{box-shadow:none;border-style:dashed}
+.plan-item.paused{box-shadow:5px 5px 0 var(--rose)}
+.plan-item.completed{opacity:.85}
+.plan-item header{display:grid;gap:.4rem}
+.plan-item h3{font-size:1.3rem;line-height:1.08}
+.plan-tags{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .6rem}
+.plan-kind,.plan-since{font-size:.72rem;font-weight:700;color:var(--ink-3);letter-spacing:.04em}
+.plan-item p{font-size:.92rem;color:var(--ink-2);line-height:1.55;overflow-wrap:anywhere}
+.plan-summary{color:var(--ink);font-weight:600}
+.plan-line b,.plan-item p b{color:var(--ink)}
+.plan-money{display:grid;gap:.35rem;margin:.2rem 0}
+.plan-money .goal-bar{background:var(--ground)}
+.plan-money .goal-bar b{background:var(--teal)}
+.plan-money .num{font-size:.88rem;color:var(--ink)}
+.plan-source{font-size:.78rem;color:var(--ink-3)}
+.plan-source.venture{border-left:3px solid var(--rose);padding-left:.6rem}
+.plan-source a,.plan-go a{color:var(--rose-deep);font-weight:700}
+.plan-go{margin-top:.2rem}
+
+.plan-how{background:var(--paper);border:2.5px solid var(--ink);border-radius:24px;padding:1.4rem 1.5rem;box-shadow:6px 6px 0 var(--rose)}
+.plan-how ul{margin:1rem 0 0;padding-left:1.1rem;display:grid;gap:.6rem;max-width:75ch;color:var(--ink-2)}
+.plan-how li b{color:var(--ink)}
+.plan-how a{color:var(--rose-deep);font-weight:700}
+
+.plan-notes-admin{list-style:none;margin:.8rem 0 0;padding:0;display:grid;gap:.4rem;font-size:.85rem}
+.plan-notes-admin li{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;border:2px dashed var(--line);border-radius:12px;padding:.4rem .6rem}
+.plan-notes-admin b{font-family:ui-monospace,Menlo,monospace;font-size:.78rem;color:var(--ink-3)}
+
+@media (max-width:560px){
+  .plan{gap:1.8rem}
+  .plan-key dl>div{grid-template-columns:minmax(0,1fr)}
+  .plan-key,.plan-changed,.plan-how{padding:1.1rem 1rem;box-shadow:4px 4px 0 var(--ink)}
 }

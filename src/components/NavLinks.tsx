@@ -11,11 +11,14 @@ const LINKS = MENTOR_FORM_ENABLED
       { href: "/sundays", label: "Sundays" },
       { href: "/visits", label: "Visits" },
       { href: "/audit", label: "Audit" },
+      { href: "/master-plan", label: "The plan" },
       // Give is off the nav for now; the home page still has a button to it.
     ]
   : [
       { href: "/", label: "Home" },
       { href: "/sundays", label: "Sundays" },
+      // The plan needs no database and no flag, so it is linked either way.
+      { href: "/master-plan", label: "The plan" },
     ];
 
 export function NavLinks() {

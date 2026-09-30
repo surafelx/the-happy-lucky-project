@@ -1,13 +1,18 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 
+import { moneyMap, wrap } from "../src/lib/money-map.ts";
+
 import {
   badgeProgress,
   checkGoal,
   checkLedgerEntry,
+  checkInitiative,
   checkLetter,
+  checkPlanNote,
   checkPledge,
   checkVisit,
+  isoMonth,
   blockWords,
   ledgerTotals,
   cleanReceiptLink,
@@ -419,4 +424,175 @@ test("standing splits what was given into spent and still here, and the parts ad
   assert.deepEqual(standing(0, 0), { spent: 0, held: 0, spentPct: 0, heldPct: 0 });
   // Spending more than was given never draws a negative remainder.
   assert.equal(standing(100, 400).held, 0);
+});
+
+// ---------- the master plan ----------
+
+const initiative = (over: Record<string, unknown> = {}) => ({ title: "A thing", kind: "project", status: "idea", summary: "One line about it", ...over });
+
+test("an initiative needs a name, a kind, a status and a line", () => {
+  assert.equal(checkInitiative(initiative({ title: "" })).ok, false);
+  assert.equal(checkInitiative(initiative({ kind: "scheme" })).ok, false);
+  assert.equal(checkInitiative(initiative({ status: "going great" })).ok, false);
+  assert.equal(checkInitiative(initiative({ summary: "" })).ok, false);
+  const ok = checkInitiative(initiative());
+  assert.equal(ok.ok, true);
+  if (ok.ok) assert.equal(ok.value.status, "idea");
+});
+
+test("a venture can never be funded by a goal, however the form is filled in", () => {
+  // Asking for it is refused outright rather than quietly ignored, so nobody
+  // believes they linked the two.
+  const asked = checkInitiative(initiative({ kind: "venture", goalId: "pads" }));
+  assert.equal(asked.ok, false);
+  if (!asked.ok) assert.match(asked.error, /donated money/i);
+
+  // And a venture saved without one keeps goalId null, so nothing downstream
+  // can read a goal off it.
+  const clean = checkInitiative(initiative({ kind: "venture" }));
+  assert.equal(clean.ok, true);
+  if (clean.ok) assert.equal(clean.value.goalId, null);
+});
+
+test("a campaign or project may point at a goal, and an empty one stays null", () => {
+  const funded = checkInitiative(initiative({ kind: "campaign", goalId: "pads" }));
+  assert.equal(funded.ok, true);
+  if (funded.ok) assert.equal(funded.value.goalId, "pads");
+
+  const unfunded = checkInitiative(initiative({ kind: "campaign", goalId: "" }));
+  assert.equal(unfunded.ok, true);
+  if (unfunded.ok) assert.equal(unfunded.value.goalId, null);
+});
+
+test("an initiative carries no amount of its own", () => {
+  // The public page reads money from the ledger through a goal. If a figure
+  // could ride along on the row, the two could disagree.
+  const ok = checkInitiative(initiative({ amount: 5000, raised: 9999, target: 1 }));
+  assert.equal(ok.ok, true);
+  if (ok.ok) {
+    assert.equal("amount" in ok.value, false);
+    assert.equal("raised" in ok.value, false);
+    assert.equal("target" in ok.value, false);
+  }
+});
+
+test("a link on the plan is a path here or a real address, nothing else", () => {
+  assert.equal(checkInitiative(initiative({ href: "javascript:alert(1)" })).ok, false);
+  assert.equal(checkInitiative(initiative({ href: "//evil.example" })).ok, false);
+  const ok = checkInitiative(initiative({ href: "/campaigns/a-year-covered" }));
+  assert.equal(ok.ok, true);
+  if (ok.ok) assert.equal(ok.value.href, "/campaigns/a-year-covered");
+});
+
+test("a changelog line needs a real month", () => {
+  assert.equal(checkPlanNote({ month: "2026-13", text: "x y" }).ok, false);
+  assert.equal(checkPlanNote({ month: "Sept", text: "x y" }).ok, false);
+  assert.equal(checkPlanNote({ month: "2026-09", text: "" }).ok, false);
+  assert.equal(checkPlanNote({ month: "2026-09", text: "Started keeping this page." }).ok, true);
+});
+
+test("isoMonth pads the month so the changelog sorts as text", () => {
+  assert.equal(isoMonth(new Date(2026, 8, 30)), "2026-09");
+  assert.equal(isoMonth(new Date(2026, 11, 1)), "2026-12");
+  assert.ok("2026-09" < "2026-12");
+});
+
+// ---------- the money, drawn as circles ----------
+
+const mapInput = {
+  balance: 21591,
+  general: { raised: 24591, spent: 3000 },
+  goals: [],
+  inKind: [{ amount: 3000, recipient: "One Heart Wholeness Center" }],
+  spends: [{ name: "Shop", amount: 3000 }],
+};
+
+test("a gift in kind gets its own circle and a line to whoever received it", () => {
+  const m = moneyMap(mapInput);
+  const gift = m.nodes.find((n) => n.kind === "gift");
+  const place = m.nodes.find((n) => n.kind === "place");
+  assert.ok(gift, "the gift should be drawn");
+  assert.ok(place, "the recipient should be drawn");
+  assert.equal(gift!.amount, 3000);
+  assert.equal(place!.label, "One Heart Wholeness Center");
+  assert.ok(m.links.some((l) => l.x1 === gift!.x && l.y1 === gift!.y && l.x2 === place!.x && l.y2 === place!.y));
+});
+
+test("the general fund is a circle that goes to the plan", () => {
+  const general = moneyMap(mapInput).nodes.find((n) => n.id === "general");
+  assert.ok(general);
+  assert.equal(general!.amount, 24591);
+  assert.equal(general!.href, "/master-plan");
+});
+
+test("area carries the amount, so a four-times gift is twice as wide", () => {
+  const m = moneyMap({ ...mapInput, general: { raised: 4000, spent: 0 }, inKind: [{ amount: 1000, recipient: "A home" }], spends: [] });
+  const big = m.nodes.find((n) => n.id === "general")!;
+  const small = m.nodes.find((n) => n.kind === "gift")!;
+  // r = 18 + 40*sqrt(share): the floor is shared, the growth above it is sqrt.
+  assert.ok(big.r > small.r);
+  assert.ok(Math.abs((big.r - 18) / (small.r - 18) - 2) < 0.001, `expected twice the growth, got ${(big.r - 18) / (small.r - 18)}`);
+});
+
+test("every circle sits on a rounded coordinate, so the server and the browser agree", () => {
+  // Node and Chrome differ in the last bits of Math.sin and Math.cos, which is
+  // enough for React to throw the server's markup away and draw it again.
+  for (const n of moneyMap(mapInput).nodes) {
+    assert.equal(n.x, Math.round(n.x * 10) / 10, `${n.id} x`);
+    assert.equal(n.y, Math.round(n.y * 10) / 10, `${n.id} y`);
+    assert.equal(n.r, Math.round(n.r * 10) / 10, `${n.id} r`);
+  }
+});
+
+test("an empty ledger still draws the middle and nothing else", () => {
+  const m = moneyMap({ balance: 0, general: { raised: 0, spent: 0 }, goals: [], inKind: [], spends: [] });
+  assert.equal(m.nodes.length, 1);
+  assert.equal(m.nodes[0].kind, "core");
+  assert.equal(m.links.length, 0);
+});
+
+test("spending to the same place is one circle, not one per receipt", () => {
+  const m = moneyMap({ ...mapInput, inKind: [], spends: [{ name: "Shop", amount: 100 }, { name: "Shop", amount: 400 }, { name: "Bus", amount: 50 }] });
+  const spends = m.nodes.filter((n) => n.kind === "spend");
+  assert.equal(spends.length, 2);
+  assert.equal(spends[0].amount, 500); // biggest first, so the picture is stable
+  assert.match(spends[0].label, /Shop/);
+});
+
+test("a long name is wrapped on words and capped, never run off its circle", () => {
+  assert.deepEqual(wrap("One Heart", 18), ["One Heart"]);
+  assert.deepEqual(wrap("One Heart Wholeness Center", 14), ["One Heart", "Wholeness", "Center"]);
+  const capped = wrap("One Heart Wholeness Center for Children and Families", 12, 2);
+  assert.equal(capped.length, 2);
+  assert.match(capped[1], /…$/);
+  // A single word longer than the line is kept rather than dropped.
+  assert.deepEqual(wrap("Antidisestablishmentarianism", 10, 2), ["Antidisestablishmentarianism"]);
+});
+
+test("on a phone the circles run down the page instead of around the middle", () => {
+  const wide = moneyMap(mapInput);
+  const tall = moneyMap(mapInput, { portrait: true });
+  assert.ok(tall.height > tall.width, "portrait should be taller than it is wide");
+  assert.ok(wide.width > wide.height, "landscape should be wider than it is tall");
+  assert.equal(tall.nodes.length, wide.nodes.length, "the same money, drawn either way");
+
+  // Nothing may sit outside its own canvas, or it is drawn off the edge.
+  for (const m of [wide, tall]) {
+    for (const n of m.nodes) {
+      assert.ok(n.x - n.r >= 0 && n.x + n.r <= m.width, `${n.id} runs off the side`);
+      assert.ok(n.y - n.r >= 0 && n.y + n.r <= m.height, `${n.id} runs off the top or bottom`);
+    }
+  }
+});
+
+test("the portrait canvas grows with what is on it, so circles never pile up", () => {
+  const one = moneyMap({ balance: 0, general: { raised: 100, spent: 0 }, goals: [], inKind: [], spends: [] }, { portrait: true });
+  const many = moneyMap({
+    balance: 0,
+    general: { raised: 100, spent: 0 },
+    goals: [{ id: "a", title: "A", raised: 50 }, { id: "b", title: "B", raised: 50 }],
+    inKind: [],
+    spends: [{ name: "Shop", amount: 20 }],
+  }, { portrait: true });
+  assert.ok(many.height > one.height);
 });

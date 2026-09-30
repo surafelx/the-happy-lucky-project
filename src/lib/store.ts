@@ -7,8 +7,9 @@ import { letters as LETTERS } from "../data/letter.ts";
 import { getMeta, one, query, setMeta } from "./db.ts";
 import { importLegacyFiles } from "./db-import.ts";
 import { LEDGER_SEED } from "../data/ledger-seed.ts";
+import { PLAN_NOTES_SEED, PLAN_SEED } from "../data/plan.ts";
 import { PLEDGE_STATUSES, REQUEST_STATUSES, STATUSES, SUBSCRIPTION_STATUSES, clubFor, isoDate, nextMonth, nextSundays, receiptId, sundayKind } from "./office.ts";
-import type { ActivityKind, GoalFields, GoalStatus, LedgerFields, LedgerKind, LetterFields, MentorStatus, PledgeFields, PledgeStatus, RequestStatus, SubjectKind, SubscriptionStatus, SundayKind, VisitFields } from "./office.ts";
+import type { ActivityKind, GoalFields, GoalStatus, InitiativeFields, LedgerFields, LedgerKind, LetterFields, MentorStatus, PledgeFields, PledgeStatus, RequestStatus, SubjectKind, SubscriptionStatus, SundayKind, VisitFields } from "./office.ts";
 
 /**
  * The data layer. Every read and write in the app goes through here, and here
@@ -781,4 +782,111 @@ export async function updateLetter(slug: string, f: LetterFields): Promise<Lette
 export async function deleteLetter(slug: string): Promise<boolean> {
   await prepared();
   return (await query("UPDATE letters SET deleted_at = $2, updated_at = $2 WHERE slug = $1 AND deleted_at IS NULL RETURNING slug", [slug, now()])).length > 0;
+}
+
+// ---------- the master plan: initiatives and what changed ----------
+export type Initiative = InitiativeFields & { id: string; at: string; updatedAt: string };
+type InitiativeRow = {
+  id: string; title: string; kind: InitiativeFields["kind"]; status: InitiativeFields["status"];
+  summary: string; detail: string; need: string; next_step: string; goal_id: string | null;
+  href: string; since: string; at: string; updated_at: string;
+};
+const INIT_COLS = "id, title, kind, status, summary, detail, need, next_step, goal_id, href, since, at, updated_at";
+const toInitiative = (r: InitiativeRow): Initiative => ({
+  id: r.id, title: r.title, kind: r.kind, status: r.status, summary: r.summary, detail: r.detail,
+  need: r.need, nextStep: r.next_step, goalId: r.goal_id, href: r.href ?? "", since: r.since ?? "",
+  at: r.at, updatedAt: r.updated_at,
+});
+
+/**
+ * The plan as it was first written down, brought in once.
+ *
+ * Held to one run per process: the public page reads the initiatives and the
+ * changelog at the same time, and two seeds racing each other wrote the first
+ * changelog line twice. The unique index from migration 012 is what actually
+ * makes that impossible; this just stops the work being done twice over.
+ */
+let planSeeded: Promise<void> | null = null;
+function seedPlan(): Promise<void> {
+  planSeeded ??= (async () => {
+    try {
+      for (const p of PLAN_SEED) {
+        const key = `plan_seed:${p.id}`;
+        if (await getMeta(key)) continue;
+        await query(
+          `INSERT INTO initiatives (id, title, kind, status, summary, detail, need, next_step, goal_id, href, since, at, updated_at)
+           VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12) ON CONFLICT (id) DO NOTHING`,
+          [p.id, p.title, p.kind, p.status, p.summary, p.detail, p.need, p.nextStep, p.goalId, p.href, p.since, new Date().toISOString()],
+        );
+        // Marked only once the row is safely in, so a failed write is simply retried
+        // on the next read instead of being remembered as done for good.
+        await setMeta(key, new Date().toISOString());
+      }
+      for (const n of PLAN_NOTES_SEED) {
+        const key = `plan_note_seed:${n.month}`;
+        if (await getMeta(key)) continue;
+        await query("INSERT INTO plan_notes (month, text, at) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING", [n.month, n.text, new Date().toISOString()]);
+        await setMeta(key, new Date().toISOString());
+      }
+    } catch (err) {
+      planSeeded = null; // a failed seed is retried on the next read, not remembered as done
+      throw err;
+    }
+  })();
+  return planSeeded;
+}
+
+export async function readInitiatives(): Promise<Initiative[]> {
+  await prepared();
+  await seedPlan();
+  return (await query<InitiativeRow>(`SELECT ${INIT_COLS} FROM initiatives ORDER BY position NULLS LAST, title`)).map(toInitiative);
+}
+export async function createInitiative(f: InitiativeFields, at = now(), id = newId("i-", at)): Promise<Initiative> {
+  await prepared();
+  const rows = await query<InitiativeRow>(
+    `INSERT INTO initiatives (id, title, kind, status, summary, detail, need, next_step, goal_id, href, since, at, updated_at)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$12) RETURNING ${INIT_COLS}`,
+    [id, f.title, f.kind, f.status, f.summary, f.detail, f.need, f.nextStep, f.goalId, f.href, f.since, at],
+  );
+  return toInitiative(rows[0]);
+}
+export async function updateInitiative(id: string, f: InitiativeFields): Promise<Initiative | null> {
+  await prepared();
+  const r = await one<InitiativeRow>(
+    `UPDATE initiatives SET title = $2, kind = $3, status = $4, summary = $5, detail = $6, need = $7, next_step = $8, goal_id = $9, href = $10, since = $11, updated_at = $12
+     WHERE id = $1 RETURNING ${INIT_COLS}`,
+    [id, f.title, f.kind, f.status, f.summary, f.detail, f.need, f.nextStep, f.goalId, f.href, f.since, now()],
+  );
+  return r ? toInitiative(r) : null;
+}
+export async function deleteInitiative(id: string): Promise<boolean> {
+  await prepared();
+  return (await query("DELETE FROM initiatives WHERE id = $1 RETURNING id", [id])).length > 0;
+}
+
+export type PlanNote = { id: number; month: string; text: string; at: string };
+/** Newest month first, and newest line first inside a month. */
+export async function readPlanNotes(limit = 60): Promise<PlanNote[]> {
+  await prepared();
+  await seedPlan();
+  const rows = await query<{ id: number; month: string; text: string; at: string }>(
+    "SELECT id, month, text, at FROM plan_notes ORDER BY month DESC, id DESC LIMIT $1",
+    [limit],
+  );
+  return rows.map((r) => ({ id: Number(r.id), month: r.month, text: r.text, at: r.at }));
+}
+/** Writing the same line twice in one month is a slip, not a second event, so it is a no-op. */
+export async function addPlanNote(f: { month: string; text: string }, at = now()): Promise<PlanNote> {
+  await prepared();
+  const rows = await query<{ id: number; month: string; text: string; at: string }>(
+    "INSERT INTO plan_notes (month, text, at) VALUES ($1,$2,$3) ON CONFLICT DO NOTHING RETURNING id, month, text, at",
+    [f.month, f.text, at],
+  );
+  const r = rows[0] ?? (await one<{ id: number; month: string; text: string; at: string }>("SELECT id, month, text, at FROM plan_notes WHERE month = $1 AND text = $2", [f.month, f.text]));
+  if (!r) throw new Error("The line could not be written down.");
+  return { id: Number(r.id), month: r.month, text: r.text, at: r.at };
+}
+export async function deletePlanNote(id: number): Promise<boolean> {
+  await prepared();
+  return (await query("DELETE FROM plan_notes WHERE id = $1 RETURNING id", [id])).length > 0;
 }

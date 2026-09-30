@@ -11,6 +11,7 @@ import { OfficeMembers } from "@/components/OfficeMembers";
 import { OfficePledges } from "@/components/OfficePledges";
 import { OfficeSupporters } from "@/components/OfficeSupporters";
 import { OfficeVisits } from "@/components/OfficeVisits";
+import { OfficePlan } from "@/components/OfficePlan";
 import { AdminShell, useHashTab } from "@/components/AdminShell";
 import { KIND_LABEL, REQUEST_LABEL, REQUEST_STATUSES, STATUSES, STATUS_LABEL } from "@/lib/office";
 import type { MentorStatus, RequestStatus, SundayKind } from "@/lib/office";
@@ -45,6 +46,7 @@ const TABS = [
   { key: "requests", label: "Requests", icon: "📨" },
   { key: "sundays", label: "Sundays", icon: "📅" },
   { key: "visits", label: "Visits", icon: "📍" },
+  { key: "plan", label: "Master plan", icon: "🗺️" },
   { key: "letters", label: "Letters", icon: "✉️" },
   { key: "tasks", label: "To do", icon: "☑" },
   { key: "pledges", label: "Pledges", icon: "🤝" },
@@ -399,6 +401,7 @@ export function OfficeDashboard() {
       {tab === "activity" ? <OfficeActivity toast={toast} onChanged={() => void load()} /> : null}
       {tab === "members" ? <OfficeMembers toast={toast} onChanged={() => void load()} /> : null}
       {tab === "visits" ? <OfficeVisits toast={toast} onChanged={() => void load()} /> : null}
+      {tab === "plan" ? <OfficePlan toast={toast} onChanged={() => void load()} /> : null}
       {tab === "letters" ? <OfficeLetters toast={toast} onChanged={() => void load()} /> : null}
 
       {tab === "ledger" ? <OfficeLedger toast={toast} onChanged={() => void load()} /> : null}

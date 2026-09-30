@@ -562,3 +562,111 @@ export function blockWords(blocks: Block[]): number {
   }
   return n;
 }
+
+// ---------- the master plan: campaigns, projects and ventures ----------
+
+/**
+ * A campaign raises for one thing and ends. A project is how the charity runs and
+ * keeps running. A venture is meant to earn, and it is funded and kept entirely
+ * apart from donated money — see `checkInitiative`, which will not let one be
+ * attached to a goal.
+ */
+export const INITIATIVE_KINDS = ["campaign", "project", "venture"] as const;
+export type InitiativeKind = (typeof INITIATIVE_KINDS)[number];
+export const INITIATIVE_KIND_LABEL: Record<InitiativeKind, string> = {
+  campaign: "Campaign",
+  project: "Project",
+  venture: "Venture",
+};
+
+/**
+ * Where something honestly is. The order is the order the plan reads in, and it
+ * is deliberately not flattering: `idea` means nobody has done anything yet, and
+ * a thing stays at `idea` until there is something real to point at.
+ */
+export const INITIATIVE_STATUSES = ["active", "planning", "idea", "paused", "completed"] as const;
+export type InitiativeStatus = (typeof INITIATIVE_STATUSES)[number];
+export const INITIATIVE_STATUS_LABEL: Record<InitiativeStatus, string> = {
+  active: "Active",
+  planning: "Planning",
+  idea: "Idea",
+  paused: "Paused",
+  completed: "Completed",
+};
+/** What each status actually claims, said plainly, so a reader is never left guessing. */
+export const INITIATIVE_STATUS_MEANS: Record<InitiativeStatus, string> = {
+  active: "Happening now. Something has already been done and there is a next thing booked.",
+  planning: "Decided on, not started. We know what it is; we are working out what it takes.",
+  idea: "Written down so it is not lost. Nobody has done anything about it yet.",
+  paused: "Started and stopped. The reason is written here, not hidden.",
+  completed: "Finished. It stays on the page so the record is not just what went well.",
+};
+
+export type InitiativeFields = {
+  title: string;
+  kind: InitiativeKind;
+  status: InitiativeStatus;
+  summary: string;
+  detail: string;
+  need: string;
+  nextStep: string;
+  /** The goal that funds it, or null. The money then comes from the ledger, never from this row. */
+  goalId: string | null;
+  href: string;
+  since: string;
+};
+
+/**
+ * One initiative, from the office form.
+ *
+ * The only rule with teeth: a venture may never point at a goal. A goal is fed by
+ * the public ledger — donated money — and the promise is that a venture is funded
+ * separately and earns on its own. Letting the two meet in a dropdown is how that
+ * promise would quietly stop being true, so it is refused here rather than
+ * written down in a policy somewhere.
+ */
+export function checkInitiative(raw: Record<string, unknown>): { ok: true; value: InitiativeFields } | { ok: false; error: string } {
+  const title = text(raw.title, 160);
+  if (title.length < 2) return { ok: false, error: "Give it a name." };
+  const kind = text(raw.kind, 20);
+  if (!(INITIATIVE_KINDS as readonly string[]).includes(kind)) return { ok: false, error: "Is it a campaign, a project or a venture?" };
+  const status = text(raw.status, 20);
+  if (!(INITIATIVE_STATUSES as readonly string[]).includes(status)) return { ok: false, error: "Pick where it honestly is." };
+  const summary = text(raw.summary, 300);
+  if (summary.length < 2) return { ok: false, error: "Say in one line what it is." };
+  const href = cleanOutbound(raw.href);
+  if (href === null) return { ok: false, error: "That link should start with / or be an http(s) address." };
+  const goalIdRaw = text(raw.goalId, 80);
+  if (kind === "venture" && goalIdRaw) {
+    return { ok: false, error: "A venture cannot be funded by a goal. Donated money and venture money stay apart." };
+  }
+  return {
+    ok: true,
+    value: {
+      title,
+      kind: kind as InitiativeKind,
+      status: status as InitiativeStatus,
+      summary,
+      detail: text(raw.detail, 4000),
+      need: text(raw.need, 1000),
+      nextStep: text(raw.nextStep, 500),
+      goalId: kind === "venture" ? null : goalIdRaw || null,
+      href,
+      since: text(raw.since, 40),
+    },
+  };
+}
+
+/** A month as YYYY-MM, which is how the changelog is grouped and sorted. */
+export const isoMonth = (d: Date): string => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+
+export type PlanNoteFields = { month: string; text: string };
+
+/** One line in "what changed". The month is checked because it is what the page sorts on. */
+export function checkPlanNote(raw: Record<string, unknown>): { ok: true; value: PlanNoteFields } | { ok: false; error: string } {
+  const month = text(raw.month, 7);
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) return { ok: false, error: "The month should look like 2026-09." };
+  const body = text(raw.text, 500);
+  if (body.length < 2) return { ok: false, error: "Say what changed." };
+  return { ok: true, value: { month, text: body } };
+}

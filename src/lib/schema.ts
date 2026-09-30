@@ -291,4 +291,54 @@ export const MIGRATIONS: { id: string; statements: string[] }[] = [
       `ALTER TABLE visits ADD COLUMN logo TEXT NOT NULL DEFAULT ''`,
     ],
   },
+  {
+    id: "011_initiatives",
+    statements: [
+      // The master plan: every campaign, project and venture, at the status it is
+      // honestly at. No money column, on purpose. Funding hangs off a goal, and a
+      // goal's raised and spent are counted from the ledger, so no number on the
+      // plan can be typed in by hand and no number can drift from the books.
+      //
+      // A venture is different in kind: it is meant to earn, and it never touches
+      // donated money. That is enforced above this table, in checkInitiative.
+      `CREATE TABLE IF NOT EXISTS initiatives (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        kind TEXT NOT NULL CHECK (kind IN ('campaign', 'project', 'venture')),
+        status TEXT NOT NULL CHECK (status IN ('active', 'planning', 'idea', 'completed', 'paused')),
+        summary TEXT NOT NULL DEFAULT '',
+        detail TEXT NOT NULL DEFAULT '',
+        need TEXT NOT NULL DEFAULT '',
+        next_step TEXT NOT NULL DEFAULT '',
+        goal_id TEXT REFERENCES goals(id) ON DELETE SET NULL,
+        href TEXT NOT NULL DEFAULT '',
+        since TEXT NOT NULL DEFAULT '',
+        position SERIAL,
+        at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      )`,
+
+      // What changed, month by month, written in the office. The newest month is
+      // the page's "what changed"; the rest stay as the history under it.
+      `CREATE TABLE IF NOT EXISTS plan_notes (
+        id SERIAL PRIMARY KEY,
+        month TEXT NOT NULL,
+        text TEXT NOT NULL,
+        at TEXT NOT NULL
+      )`,
+      `CREATE INDEX plan_notes_when ON plan_notes (month DESC, id DESC)`,
+    ],
+  },
+  {
+    id: "012_plan_notes_unique",
+    statements: [
+      // The seed ran from two reads at once and wrote the first line twice: each
+      // checked for the row before either had inserted it. A check in code cannot
+      // win that race, so the database decides instead. The same sentence twice in
+      // the same month is a duplicate by any reading, which makes this safe to
+      // enforce rather than merely convenient.
+      `DELETE FROM plan_notes a USING plan_notes b WHERE a.id > b.id AND a.month = b.month AND a.text = b.text`,
+      `CREATE UNIQUE INDEX IF NOT EXISTS plan_notes_once ON plan_notes (month, text)`,
+    ],
+  },
 ];
