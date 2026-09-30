@@ -29,8 +29,8 @@ import {
   weekStart,
 } from "../src/lib/office.ts";
 import { ETHIOPIA_BORDER, VIEW, inside, project, spread, toPath } from "../src/lib/geo.ts";
-import { H, W, placeAnchors, placeStars } from "../src/lib/sky.ts";
 import { agrees, parseAmount, parseWhen, providerName } from "../src/lib/verify.ts";
+import { monthlyFlow, standing, tallest } from "../src/lib/charts.ts";
 
 test("sundaysOfMonth lists every Sunday of September 2026", () => {
   assert.deepEqual(sundaysOfMonth(2026, 8), [6, 13, 20, 27]);
@@ -282,40 +282,6 @@ test("ledgerTotals: balance is in minus out, and only open goals count as still 
   assert.deepEqual([books.raised, books.spent, books.remaining, books.pct], [6000, 4500, 0, 100]);
 });
 
-const goal = (i: number) => ({ id: `g${i}`, title: `Goal ${i}`, color: "#fff", target: 100, about: "", plan: "", status: "open" as const, raised: 0, spent: 0, remaining: 100, pct: 0 });
-
-test("the sky spreads its goals out and never stacks two in one column", () => {
-  const two = placeAnchors([goal(0), goal(1)], false);
-  assert.equal(two.length, 2);
-  assert.ok(Math.abs(two[0].x - two[1].x) > 400, "two goals sit side by side");
-  assert.equal(two[0].y, two[1].y);
-  for (const n of [3, 4, 5]) {
-    const out = placeAnchors(Array.from({ length: n }, (_, i) => goal(i)), true);
-    assert.equal(out.length, n + 1); // the general fund sits in the middle
-    assert.deepEqual([out[0].x, out[0].y], [W / 2, H / 2]);
-    for (const a of out) assert.ok(a.x > 0 && a.x < W && a.y > 0 && a.y < H, `${a.title} stays inside the sky`);
-    for (let i = 1; i < out.length; i++) {
-      for (let j = i + 1; j < out.length; j++) {
-        assert.ok(Math.hypot(out[i].x - out[j].x, out[i].y - out[j].y) > 120, `${out[i].title} and ${out[j].title} keep their distance`);
-      }
-    }
-  }
-});
-
-test("stars stay inside the sky and keep off their goal's name", () => {
-  const anchors = placeAnchors([goal(0), goal(1)], false);
-  const entries = Array.from({ length: 40 }, (_, i) => ({ ref: `HLP-2609-${i}`, kind: "in" as const, amount: 100 + i * 37, name: "A", goalId: i % 2 ? "g1" : "g0", method: "", note: "", items: "", recipient: "", occurredAt: `2026-09-${String(1 + (i % 28)).padStart(2, "0")}T09:00:00.000Z`, loggedAt: "", receipt: false, photo: "", verified: false, verifiedBy: "", verifiedAt: null }));
-  const stars = placeStars(entries, anchors);
-  assert.equal(stars.length, 40);
-  for (const s of stars) {
-    assert.ok(s.x >= 16 && s.x <= W - 16 && s.y >= 16 && s.y <= H - 16);
-    const a = anchors.find((x) => x.id === s.anchor)!;
-    const labelHalf = Math.min(34, a.title.length) * 4.4 + 10; // the same band placeStars keeps clear
-    const onTheName = Math.abs(s.x - a.x) < labelHalf && s.y > a.y + 28 && s.y < a.y + 58;
-    assert.equal(onTheName, false, `a star sits on ${a.title}`);
-  }
-});
-
 test("bank amounts arrive as numbers or as decorated strings", () => {
   assert.equal(parseAmount(3000), 3000);
   assert.equal(parseAmount("3,000.00"), 3000);
@@ -414,4 +380,43 @@ test("a letter keeps the blocks it understands and drops the ones it does not", 
   // The words in a letter are what the "min read" is worked out from.
   assert.equal(blockWords(r.value.body), 8);
   assert.equal(blockWords([]), 0);
+});
+
+test("the monthly flow keeps empty months and ignores gifts in kind", () => {
+  const now = new Date(2026, 8, 15); // September 2026
+  const months = monthlyFlow(
+    [
+      { kind: "in", amount: 1000, occurredAt: "2026-09-02T09:00:00.000Z" },
+      { kind: "in", amount: 500, occurredAt: "2026-09-20T09:00:00.000Z" },
+      { kind: "out", amount: 300, occurredAt: "2026-09-21T09:00:00.000Z" },
+      { kind: "in", amount: 250, occurredAt: "2026-07-05T09:00:00.000Z" },
+      // Goods never passed through the books, so they are in neither bar.
+      { kind: "inkind", amount: 3000, occurredAt: "2026-09-10T09:00:00.000Z" },
+      // Older than the window.
+      { kind: "in", amount: 9999, occurredAt: "2025-01-01T09:00:00.000Z" },
+    ],
+    now,
+    6,
+  );
+  assert.equal(months.length, 6);
+  assert.deepEqual(months.map((m) => m.label), ["Apr", "May", "Jun", "Jul", "Aug", "Sep"]);
+  const sep = months.at(-1)!;
+  assert.deepEqual([sep.in, sep.out], [1500, 300]);
+  assert.deepEqual([months[3].in, months[3].out], [250, 0]); // July
+  assert.deepEqual([months[4].in, months[4].out], [0, 0]); // August, empty and still shown
+  assert.equal(tallest(months), 1500);
+  assert.equal(tallest([]), 1); // never zero, so a bar height is always a real fraction
+});
+
+test("standing splits what was given into spent and still here, and the parts add to a hundred", () => {
+  const s1 = standing(10000, 2500);
+  assert.deepEqual([s1.spent, s1.held], [2500, 7500]);
+  assert.equal(s1.spentPct + s1.heldPct, 100);
+  // A third spent, two thirds held: the rounding must not leave 99 or 101.
+  const s2 = standing(3000, 1000);
+  assert.equal(s2.spentPct + s2.heldPct, 100);
+  // Nothing given yet is not a bar at all.
+  assert.deepEqual(standing(0, 0), { spent: 0, held: 0, spentPct: 0, heldPct: 0 });
+  // Spending more than was given never draws a negative remainder.
+  assert.equal(standing(100, 400).held, 0);
 });

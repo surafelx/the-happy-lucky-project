@@ -2,14 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { createPortal } from "react-dom";
 
 import type { PublicBooks } from "@/lib/books";
-import { SkyCanvas } from "@/components/SkyCanvas";
+import { BooksCharts } from "@/components/BooksCharts";
 import { useCountUp } from "@/lib/count-up";
 import { burst, prefersReducedMotion } from "@/lib/format";
-import { GENERAL_COLOR, GENERAL_ID, placeAnchors, placeStars, sparkle } from "@/lib/sky";
-import type { Entry, Star } from "@/lib/sky";
+import { GENERAL_COLOR, GENERAL_ID } from "@/lib/books-ids";
+import type { PublicEntry as Entry } from "@/lib/books-ids";
 
 const POLL_MS = 15_000;
 const fmt = (n: number) => n.toLocaleString("en-US");
@@ -32,14 +31,12 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   const [latest, setLatest] = useState<Entry | null>(null);
   const [q, setQ] = useState("");
   const [focus, setFocus] = useState<string | null>(null);
-  const [tip, setTip] = useState<Star | null>(null);
   const [open, setOpen] = useState<Entry | null>(null);
   const [limit, setLimit] = useState(60);
-  const [fullSky, setFullSky] = useState(false);
   const known = useRef<Set<string>>(new Set(initial?.entries.map((e) => e.ref) ?? []));
   // Without server data (the first read failed), the first fetch only learns what is already there: no "just in", no confetti.
   const primed = useRef(initial !== null);
-  const skyRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -56,7 +53,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
         setBorn(new Set(fresh.map((e) => e.ref)));
         setLatest(fresh[0]);
         if (fresh.some((e) => e.kind === "in")) {
-          const box = skyRef.current?.getBoundingClientRect();
+          const box = listRef.current?.getBoundingClientRect();
           burst(box ? box.left + box.width / 2 : undefined, box ? box.top + box.height / 3 : undefined, 50);
         }
       }
@@ -83,37 +80,20 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   }, [initial, refresh]);
 
   useEffect(() => {
-    if (!open && !fullSky) return;
-    // Escape closes the receipt first, then the full-screen sky.
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Escape") return;
-      if (open) setOpen(null);
-      else setFullSky(false);
-    };
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null);
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [open, fullSky]);
-
-  // The page behind should not scroll while the sky is open.
-  useEffect(() => {
-    if (!fullSky) return;
-    const had = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = had;
-    };
-  }, [fullSky]);
+  }, [open]);
 
   const entries = useMemo(() => data?.entries ?? [], [data]);
   const goals = useMemo(() => data?.goals ?? [], [data]);
-  const hasGeneral = entries.some((e) => !e.goalId || !goals.some((g) => g.id === e.goalId));
-  const anchors = useMemo(() => placeAnchors(goals, hasGeneral || goals.length === 0), [goals, hasGeneral]);
-  const stars = useMemo(() => placeStars(entries, anchors), [entries, anchors]);
+  const goalOf = (e: Entry) => goals.find((g) => g.id === e.goalId) ?? null;
   const needle = q.trim().toLowerCase();
   const matches = (e: Entry) => !needle || e.name.toLowerCase().includes(needle) || e.ref.toLowerCase().includes(needle);
   const inFocus = (e: Entry) => !focus || (focus === GENERAL_ID ? !e.goalId || !goals.some((g) => g.id === e.goalId) : e.goalId === focus);
   const listed = entries.filter((e) => matches(e) && inFocus(e));
-  const goalOf = (e: Entry) => goals.find((g) => g.id === e.goalId) ?? null;
+  const focusTitle = focus ? (focus === GENERAL_ID ? "General fund" : goals.find((g) => g.id === focus)?.title ?? "") : "";
 
   const t = data?.totals ?? { in: 0, out: 0, balance: 0, count: 0, givers: 0, needed: 0, inKind: { value: 0, count: 0 }, general: { raised: 0, spent: 0 } };
   const balance = useCountUp(t.balance);
@@ -122,32 +102,13 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
   const spent = useCountUp(t.out);
   const needed = useCountUp(t.needed);
   const inKindValue = useCountUp(t.inKind.value);
-  const focusTitle = focus ? anchors.find((a) => a.id === focus)?.title ?? "" : "";
 
-  const starState = (e: Entry) => {
-    const hit = needle !== "" && matches(e);
-    return { dim: (needle !== "" && !hit) || !inFocus(e), hit, born: born.has(e.ref) };
-  };
-  const renderTip = (s: Star) => (
-    <>
-      <b>{s.entry.kind === "out" ? `Paid to ${s.entry.name}` : s.entry.name}</b>
-      {s.entry.kind === "inkind" ? `${s.entry.items} \u00b7 worth ` : s.entry.kind === "in" ? "+" : "\u2212"}
-      {fmt(s.entry.amount)} ETB · {shortDate(s.entry.occurredAt)}
-      <br />
-      <span className="mono">{s.entry.ref}</span>
-    </>
-  );
-  const skyLegend = (
-    <div className="sky-legend">
-      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d={sparkle(0, 0, 5.5)} fill="#F6EFD9" /></svg> a gift</span>
-      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><circle r="4" fill="none" stroke="#F6EFD9" strokeWidth="1.6" /></svg> money spent</span>
-      <span><svg width="11" height="11" viewBox="-6 -6 12 12" aria-hidden="true"><path d="M-5 -1h10v5h-10Z" fill="#F6EFD9" /></svg> a gift in kind</span>
-    </div>
-  );
+  // Money given without naming a goal, which is its own card below.
+  const hasGeneral = entries.some((e) => !e.goalId || !goals.some((g) => g.id === e.goalId));
 
-  const showOnSky = (id: string) => {
+  const showEntries = (id: string) => {
     setFocus(id);
-    skyRef.current?.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
+    listRef.current?.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "center" });
   };
 
   return (
@@ -158,7 +119,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
           Every birr, <em>in the open</em>
         </h1>
         <p className="lede pop" style={{ "--i": 2 } as CSSProperties}>
-          What we have, what we still need, and where every gift went. We log each gift and each payment by hand, usually the same day, with the receipt. Every star in the sky below is one of them.
+          What we have, what we still need, and where every gift went. We log each gift and each payment by hand, usually the same day, with the receipt. Every line below is one of them.
         </p>
       </header>
 
@@ -178,7 +139,10 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
         {t.inKind.count ? (
           <div className="bstat"><span>Given in kind</span><b className="num">{fmt(inKindValue)}<small> ETB</small></b><em>{t.inKind.count} {t.inKind.count === 1 ? "gift" : "gifts"} of goods, handed over directly</em></div>
         ) : null}
-        <div className="bstat need"><span>Still needed</span><b className="num">{fmt(needed)}<small> ETB</small></b><em>for the open goals below</em></div>
+        {/* With no open goal there is nothing to need, and "0 ETB still needed" reads like a bug. */}
+        {t.needed > 0 ? (
+          <div className="bstat need"><span>Still needed</span><b className="num">{fmt(needed)}<small> ETB</small></b><em>for the open goals below</em></div>
+        ) : null}
       </section>
 
       <p className="books-latest" aria-live="polite">
@@ -192,41 +156,9 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
         ) : null}
       </p>
 
-      <section className="sky-grid books-sky" aria-label="The sky of gifts">
-        <div>
-          <div ref={skyRef}>
-            <SkyCanvas
-              anchors={anchors}
-              stars={stars}
-              focus={focus}
-              onFocus={setFocus}
-              onOpen={setOpen}
-              onTip={setTip}
-              starState={starState}
-              tip={tip}
-              renderTip={renderTip}
-            >
-              {entries.length === 0 ? <p className="sky-empty">The sky is empty for now. The first gift will be the first star.</p> : null}
-              {skyLegend}
-              <span className="sky-hint">{focus ? <button type="button" onClick={() => setFocus(null)}>Show every goal</button> : "Tap a star to see its receipt"}</span>
-              {entries.length ? (
-                <button type="button" className="sky-open" onClick={() => setFullSky(true)}>⤢ Open the whole sky</button>
-              ) : null}
-            </SkyCanvas>
-          </div>
-          {/* On a phone the names inside the sky would be too small to read, so they move here. */}
-          <ul className="sky-key">
-            {anchors.map((a) => (
-              <li key={a.id}>
-                <button type="button" className={focus === a.id ? "on" : ""} onClick={() => setFocus(focus === a.id ? null : a.id)}>
-                  <i style={{ background: a.color }} />
-                  {a.title}
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
+      <BooksCharts entries={entries} moneyIn={t.in} moneyOut={t.out} now={data?.now ?? new Date().toISOString()} />
 
+      <section className="books-lines" aria-label="Every line" ref={listRef}>
         <aside className="receipts" aria-label="Receipts">
           <h3>Receipts <span className="num">{listed.length}</span></h3>
           <label className="rsearch">
@@ -275,7 +207,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
               <p className="goal-nums num"><b>{fmt(g.raised)}</b> of {fmt(g.target)} ETB{g.status === "open" && g.remaining > 0 ? <> · <b>{fmt(g.remaining)}</b> to go</> : null}{g.spent ? <> · {fmt(g.spent)} spent</> : null}</p>
               {g.about ? <><h4>Why</h4><p>{g.about}</p></> : null}
               {g.plan ? <><h4>The plan</h4><p>{g.plan}</p></> : null}
-              <button type="button" className="goal-look" onClick={() => showOnSky(g.id)}>✨ See its stars</button>
+              <button type="button" className="goal-look" onClick={() => showEntries(g.id)}>🧾 See its lines</button>
             </article>
           ))}
           {hasGeneral || goals.length === 0 ? (
@@ -283,7 +215,7 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
               <header><h3>General fund</h3></header>
               <p className="goal-nums num"><b>{fmt(t.general.raised)}</b> ETB given · {fmt(t.general.spent)} spent</p>
               <p>Gifts that aren’t tied to one goal. They go wherever the need is biggest that week, and each payment from here is logged like any other.</p>
-              {hasGeneral ? <button type="button" className="goal-look" onClick={() => showOnSky(GENERAL_ID)}>✨ See its stars</button> : null}
+              {hasGeneral ? <button type="button" className="goal-look" onClick={() => showEntries(GENERAL_ID)}>🧾 See its lines</button> : null}
             </article>
           ) : null}
         </div>
@@ -301,35 +233,6 @@ export function OpenBooks({ initial }: { initial: PublicBooks | null }) {
           <li><b>See a mistake?</b> Tell us and we’ll fix it. A corrected entry keeps its receipt number.</li>
         </ul>
       </section>
-
-      {fullSky
-        ? createPortal(
-        <div className="sky-full" role="dialog" aria-modal="true" aria-label="The whole sky">
-          <header className="sky-full-bar">
-            <div>
-              <b>{fmt(t.count)}</b> {t.count === 1 ? "line" : "lines"} in the open · <b>{fmt(t.balance)} ETB</b> in hand
-            </div>
-            <span className="sky-full-hint">drag to move · scroll to zoom · tap a star for its receipt</span>
-            <button type="button" className="sky-close" onClick={() => setFullSky(false)} autoFocus>Close ✕</button>
-          </header>
-          <SkyCanvas
-            anchors={anchors}
-            stars={stars}
-            focus={focus}
-            onFocus={setFocus}
-            onOpen={setOpen}
-            onTip={setTip}
-            starState={starState}
-            tip={tip}
-            renderTip={renderTip}
-            navigable
-          >
-            {skyLegend}
-          </SkyCanvas>
-        </div>,
-        document.body,
-          )
-        : null}
 
       <div className={`lightbox${open ? " open" : ""}`} onClick={() => setOpen(null)} aria-hidden={!open}>
         {open ? (
