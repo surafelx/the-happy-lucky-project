@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 
-import { monthlyFlow, standing, tallest } from "@/lib/charts";
-import type { Entry, MonthFlow } from "@/lib/charts";
+import { standing, tallest } from "@/lib/charts";
+import type { MonthFlow } from "@/lib/charts";
 
 /**
  * The audit's charts, in the site's own colours.
@@ -11,14 +11,17 @@ import type { Entry, MonthFlow } from "@/lib/charts";
  * Two series only: money in and money out. They are a polarity, not a list of
  * categories, so they take a warm/cool pair that stays apart for colour-blind
  * readers (checked with the palette validator, not by eye). Gifts in kind are
- * not cash and never join these bars; they have their own block.
+ * not cash and never join these bars; they have their own node on the map.
+ *
+ * Both charts are drawn bare: the map node around them is the card, so they
+ * bring no border or shadow of their own.
  */
-const IN = "#0E6E99";
-const OUT = "#A85B14";
+export const IN = "#0E6E99";
+export const OUT = "#A85B14";
 const fmt = (n: number) => n.toLocaleString("en-US");
 
 /** One horizontal bar: everything given, split into what is spent and what is still here. */
-function Standing({ moneyIn, moneyOut }: { moneyIn: number; moneyOut: number }) {
+export function Standing({ moneyIn, moneyOut }: { moneyIn: number; moneyOut: number }) {
   const s = standing(moneyIn, moneyOut);
   if (moneyIn <= 0) return null;
   return (
@@ -40,7 +43,7 @@ function Standing({ moneyIn, moneyOut }: { moneyIn: number; moneyOut: number }) 
 }
 
 /** Money in above the line, money out below it, month by month. */
-function Flow({ months }: { months: MonthFlow[] }) {
+export function Flow({ months }: { months: MonthFlow[] }) {
   const [over, setOver] = useState<string | null>(null);
   const top = tallest(months);
   const anything = months.some((m) => m.in > 0 || m.out > 0);
@@ -89,15 +92,5 @@ function Flow({ months }: { months: MonthFlow[] }) {
         <li><i style={{ background: OUT }} /> Money out</li>
       </ul>
     </figure>
-  );
-}
-
-export function BooksCharts({ entries, moneyIn, moneyOut, now }: { entries: Entry[]; moneyIn: number; moneyOut: number; now: string }) {
-  const months = monthlyFlow(entries, new Date(now), 6);
-  return (
-    <section className="books-charts" aria-label="The money, drawn">
-      <Standing moneyIn={moneyIn} moneyOut={moneyOut} />
-      <Flow months={months} />
-    </section>
   );
 }
