@@ -11,8 +11,8 @@ export { WORK_KINDS } from "../lib/office.ts";
 export type { WorkKind } from "../lib/office.ts";
 import type { WorkKind } from "../lib/office.ts";
 
-export const KIND_TONE: Record<WorkKind, "teal" | "rose" | "gold" | "ink"> = { School: "teal", "Children's home": "gold", Community: "ink", Campaign: "rose" };
-export const KIND_EMOJI: Record<WorkKind, string> = { School: "🏫", "Children's home": "🏠", Community: "🤝", Campaign: "🌸" };
+export const KIND_TONE: Record<WorkKind, "teal" | "rose" | "gold" | "ink"> = { School: "teal", "Children's home": "gold", "Therapy centre": "teal", Community: "ink", Campaign: "rose" };
+export const KIND_EMOJI: Record<WorkKind, string> = { School: "🏫", "Children's home": "🏠", "Therapy centre": "💞", Community: "🤝", Campaign: "🌸" };
 
 export type WorkPlace = {
   id: string;
@@ -33,14 +33,20 @@ export type WorkPlace = {
 export const WORK: WorkPlace[] = [
   {
     id: "one-heart",
-    name: "One Heart Wholeness Center",
-    kind: "Children's home",
+    name: "The One Heart Wholeness Centre",
+    // Not a children's home: the children go home to their families every
+    // afternoon, which is the whole point of the place. Their own site says so.
+    kind: "Therapy centre",
     town: "Bahir Dar",
     at: [37.39, 11.59],
     since: "2026",
-    what: "Four packs of diapers, forty-eight in all, bought and carried over in person. The first thing we have handed to anyone.",
+    what:
+      "A day therapy centre for twenty-eight children with profound disabilities, run by Mena since 2013. Buses bring the children in every weekday morning and take them home every afternoon. We painted a mural with them, and carried over four packs of nappies, forty-eight in all, which was the first thing we had handed to anyone.",
+    reached: 28,
     logo: "/visits/one-heart-wholeness-centre.png",
-    href: "https://ohwc.org.et",
+    // The apex redirects to www, and the certificate has been the shaky one on
+    // whichever side is not in use, so point at the name that answers.
+    href: "https://www.ohwc.org.et",
     now: true,
   },
 ];

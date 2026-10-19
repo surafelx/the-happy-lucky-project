@@ -46,16 +46,17 @@ export const PLAN_SEED: PlanSeed[] = [
   },
   {
     id: "one-heart",
-    title: "One Heart Wholeness Center, Bahir Dar",
+    title: "The One Heart Wholeness Centre, Bahir Dar",
     kind: "campaign",
     status: "active",
     since: "2026",
     href: "/visits",
-    summary: "Four packs of diapers, forty-eight in all, carried over in person.",
+    summary: "A mural, and four packs of nappies for twenty-eight children in daily therapy.",
     detail:
-      "The first thing we have handed to anyone. Bought by a giver and delivered directly, so it appears in the audit as a gift in kind and not as money we held.",
-    need: "A next delivery, and a conversation with the home about what they actually need rather than what we assume.",
-    nextStep: "Ask the home what would help most, and write down the answer.",
+      "A day therapy centre run by Mena since 2013: buses bring twenty-eight children with profound disabilities in every weekday morning and take them home every afternoon. We painted a mural with them, and a giver bought nappies that were carried over directly, which is why they appear in the audit as a gift in kind rather than money we held.",
+    need:
+      "They publish what they need: nappies, milk, oats and soap. We no longer have to guess, we have to turn up with some of it more than once.",
+    nextStep: "Agree with Mena what we bring next, and how often.",
     goalId: null,
   },
   {

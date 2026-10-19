@@ -1495,16 +1495,28 @@ body:has(.admin-page){padding-bottom:0}
 .bub.fund circle{fill:#D8E9F2}
 .bub.gift circle{fill:var(--rose-soft)}
 .bub.spend circle{fill:#F6E3D0}
-.bub.place circle{fill:var(--paper);stroke-dasharray:6 5}
+/* An organisation is a flower in its own colour; we are the logo. */
+.flower .petal{fill:var(--petal);stroke:var(--ink);stroke-width:2.5}
+.flower .eye{fill:var(--paper);stroke:var(--ink);stroke-width:2.5}
+/* One line in the ledger, floating near whatever it paid for. The colour comes
+   through a property, not a fill attribute: .bub circle sets a fill, and CSS
+   beats a presentation attribute however specific the attribute looks. */
+.bub .dot{fill:var(--dotc,var(--ink));stroke:var(--ink);stroke-width:1.5;opacity:.9}
+.dot-wrap{pointer-events:auto;cursor:help}
+.dot-wrap:hover .dot{opacity:1;stroke-width:2.5}
+.bub.core .bub-label{font-size:16px}
+.bub.place .bub-label{font-size:15px}
 .bub .bub-amount{font-family:var(--font-lucky),sans-serif;font-size:19px;fill:var(--ink)}
 .bub.core .bub-amount{font-size:30px}
-.bub .bub-label{font-family:var(--font-poppins),sans-serif;font-size:14px;font-weight:700;fill:var(--ink)}
-.bub .bub-note{font-family:var(--font-poppins),sans-serif;font-size:12px;font-weight:500;fill:var(--ink-3)}
+/* A wire may pass behind a label, so the text is drawn with a halo of the page
+   colour first and the line never reads as a strikethrough. */
+.bub .bub-label{font-family:var(--font-poppins),sans-serif;font-size:14px;font-weight:700;fill:var(--ink);paint-order:stroke;stroke:var(--ground);stroke-width:5px;stroke-linejoin:round}
+.bub .bub-note{font-family:var(--font-poppins),sans-serif;font-size:12px;font-weight:500;fill:var(--ink-3);paint-order:stroke;stroke:var(--ground);stroke-width:4px;stroke-linejoin:round}
 .bub.go{cursor:pointer}
-.bub.go circle{transition:transform .25s var(--spring)}
-.bub.go:hover circle,.bub.go:focus-visible circle{transform-box:fill-box;transform-origin:center;transform:scale(1.06)}
+.bub.go>circle,.bub.go .flower,.bub.go>g{transition:transform .25s var(--spring);transform-box:fill-box;transform-origin:center}
+.bub.go:hover>circle,.bub.go:focus-visible>circle,.bub.go:hover .flower,.bub.go:focus-visible .flower{transform:scale(1.07)}
 .bub.go:focus-visible{outline:none}
-.bub.go:focus-visible circle{stroke-width:5}
+.bub.go:focus-visible>circle,.bub.go:focus-visible .eye{stroke-width:5}
 .bub.go .bub-label{text-decoration:underline;text-underline-offset:2px}
 
 .map-foot{min-height:1.4rem;font-size:.85rem;text-align:center;color:var(--ink-2)}
@@ -1577,80 +1589,111 @@ body:has(.admin-page){padding-bottom:0}
 @media (prefers-reduced-motion:reduce){
   .mstat.live>span i{animation:none}
   .map-how:hover,.mstat.live:hover,.mstat.charts:hover{transform:none}
-  .bub.go circle{transition:none}
-  .bub.go:hover circle,.bub.go:focus-visible circle{transform:none}
+  .bub.go>circle,.bub.go .flower,.bub.go>g{transition:none}
+  .bub.go:hover>circle,.bub.go:focus-visible>circle,.bub.go:hover .flower,.bub.go:focus-visible .flower{transform:none}
   .msheet{transition:none}
 }
 
-/* ---------- the master plan: a document, grouped by how true each line is ---------- */
-.plan{padding:clamp(2.2rem,6vw,4rem) 0 4.5rem;display:grid;gap:2.4rem}
-.plan-head{display:grid;gap:.5rem;max-width:62ch}
-.plan-head h1{font-family:var(--font-lucky);font-weight:400;font-size:clamp(2.2rem,6.5vw,4.2rem);line-height:1;margin:.3rem 0 .4rem}
-.plan-head h1 em{font-style:normal;color:var(--teal-deep);display:inline-block;transform:rotate(-2deg)}
-.plan-when{font-size:.85rem;color:var(--ink-2);font-weight:600}
-.plan-when .quiet{color:var(--ink-3);font-weight:500}
-.plan h2{font-size:clamp(1.5rem,3.5vw,2.1rem);line-height:1.05}
-.plan h2 em{font-style:normal;color:var(--teal-deep);display:inline-block;transform:rotate(-2deg)}
-.plan h2 .num{font-family:var(--font-poppins);font-size:.85rem;font-weight:700;color:var(--ink-3);vertical-align:middle}
+/* ---------- the master plan: one screen, one table ---------- */
+.plan-page{height:calc(100dvh - var(--nav,62px));display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:.7rem;padding:.9rem clamp(.9rem,3vw,2rem) .8rem;overflow:hidden}
+/* Title and its line sit together on the left; the buttons keep the right edge.
+   Squeezing the lede into a middle column turned it into a thin ribbon. */
+.plan-top{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.25rem 1.4rem}
+.plan-top>div{grid-column:1;grid-row:1}
+.plan-lede{grid-column:1;grid-row:2}
+.plan-actions{grid-column:2;grid-row:1/3;align-self:center}
+.plan-top h1{font-family:var(--font-lucky);font-weight:400;font-size:clamp(1.4rem,2.8vw,2.2rem);line-height:1;margin:.1rem 0 0}
+.plan-top h1 em{font-style:normal;color:var(--teal-deep);display:inline-block;transform:rotate(-2deg)}
+.plan-lede{font-size:.8rem;color:var(--ink-2);line-height:1.45;max-width:62ch}
+.plan-actions{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:flex-end}
+.plan-actions button{border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:999px;padding:.35rem .8rem;font:inherit;font-size:.76rem;font-weight:700;cursor:pointer;box-shadow:3px 3px 0 var(--ink);white-space:nowrap}
+.plan-actions button:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
+.plan-actions button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+
+/* The page does not scroll. If the plan ever outgrows one screen the table
+   itself scrolls, rather than the header and the footer sliding away with it. */
+.plan-tablewrap{min-height:0;overflow:auto;border:2.5px solid var(--ink);border-radius:20px;background:var(--paper);box-shadow:5px 5px 0 var(--ink)}
+.plan-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.plan-table thead th{position:sticky;top:0;z-index:1;background:var(--ground);text-align:left;font-size:.66rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);padding:.6rem .8rem;border-bottom:2.5px solid var(--ink);white-space:nowrap}
+.plan-table tbody tr{border-bottom:2px dashed var(--line)}
+.plan-table tbody tr:last-child{border-bottom:0}
+.plan-table tbody tr:hover{background:var(--ground)}
+.plan-table th[scope=row]{text-align:left;font-weight:400;padding:.6rem .8rem;min-width:14rem}
+.plan-table th[scope=row] b{display:block;font-size:.95rem;font-weight:700;line-height:1.2}
+.plan-table th[scope=row] small{display:block;font-size:.75rem;color:var(--ink-2);line-height:1.35;margin-top:.1rem}
+.plan-table td{padding:.6rem .8rem;color:var(--ink-2);vertical-align:top}
+.plan-table td.num{color:var(--ink);white-space:nowrap}
+.plan-table .quiet{color:var(--ink-3);font-size:.78rem}
+.plan-table tr.idea th[scope=row] b,.plan-table tr.completed th[scope=row] b{color:var(--ink-2)}
+.plan-go-cell{white-space:nowrap;text-align:right}
+.plan-more{border:2px solid var(--ink);background:var(--paper);color:var(--ink);border-radius:999px;padding:.2rem .7rem;font:inherit;font-size:.74rem;font-weight:700;cursor:pointer}
+.plan-more:hover{background:var(--gold-soft)}
+.plan-more:focus-visible,.plan-visit:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.plan-visit{display:inline-block;margin-left:.45rem;font-size:.74rem;font-weight:700;color:var(--rose-deep)}
+
+.plan-foot{font-size:.78rem;color:var(--ink-3);display:flex;flex-wrap:wrap;gap:.4rem 1rem}
+.plan-foot a{color:var(--rose-deep);font-weight:700}
 
 /* The badge. Its own word is inside it, so the colour is decoration and never the meaning. */
-.plan-status{display:inline-block;font-size:.68rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;border:2px solid var(--ink);border-radius:999px;padding:.12rem .6rem;background:var(--paper);color:var(--ink);white-space:nowrap}
+.plan-status{display:inline-block;font-size:.66rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;border:2px solid var(--ink);border-radius:999px;padding:.1rem .55rem;background:var(--paper);color:var(--ink);white-space:nowrap}
 .plan-status.active{background:var(--teal-soft)}
 .plan-status.planning{background:var(--gold-soft)}
 .plan-status.idea{background:transparent;border-style:dashed;color:var(--ink-2)}
 .plan-status.paused{background:var(--rose-soft)}
 .plan-status.completed{background:var(--ground);color:var(--ink-2)}
 
-.plan-key{background:var(--paper);border:2.5px solid var(--ink);border-radius:24px;padding:1.3rem 1.4rem;box-shadow:6px 6px 0 var(--teal)}
-.plan-key dl{margin:1rem 0 0;display:grid;gap:.7rem}
-.plan-key dl>div{display:grid;grid-template-columns:minmax(8.5rem,auto) minmax(0,1fr);gap:.4rem 1rem;align-items:baseline}
-.plan-key dt{display:flex;align-items:center;gap:.5rem}
-.plan-key dt em{font-style:normal;font-size:.78rem;font-weight:700;color:var(--ink-3)}
-.plan-key dd{margin:0;font-size:.92rem;color:var(--ink-2)}
-
-.plan-changed{background:var(--paper);border:2.5px solid var(--ink);border-radius:24px;padding:1.3rem 1.4rem;box-shadow:6px 6px 0 var(--gold)}
-.plan-changed h3{font-size:.76rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:.9rem 0 .4rem}
-.plan-changed ul{margin:0;padding-left:1.1rem;display:grid;gap:.4rem;color:var(--ink-2)}
-.plan-changed details{margin-top:1rem;border-top:2px dashed var(--line);padding-top:.6rem}
-.plan-changed summary{font-weight:700;cursor:pointer;font-size:.9rem}
-.plan-changed summary:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
-
-.plan-group{display:grid;gap:.5rem}
-.plan-means{font-size:.92rem;color:var(--ink-2);max-width:70ch;margin-bottom:.6rem}
-.plan-items{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,22rem),1fr));gap:1.2rem}
-.plan-item{background:var(--paper);border:2.5px solid var(--ink);border-radius:22px;padding:1.1rem 1.2rem 1.15rem;box-shadow:5px 5px 0 var(--ink);display:grid;gap:.5rem;align-content:start;min-width:0}
-.plan-item.active{box-shadow:5px 5px 0 var(--teal)}
-.plan-item.planning{box-shadow:5px 5px 0 var(--gold)}
-.plan-item.idea{box-shadow:none;border-style:dashed}
-.plan-item.paused{box-shadow:5px 5px 0 var(--rose)}
-.plan-item.completed{opacity:.85}
-.plan-item header{display:grid;gap:.4rem}
-.plan-item h3{font-size:1.3rem;line-height:1.08}
+.msheet-read{overflow:auto;min-height:0;padding-right:.2rem;display:grid;gap:.6rem;color:var(--ink-2);font-size:.92rem;line-height:1.55}
+.msheet-read b{color:var(--ink)}
+.msheet-read h3{font-size:.74rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin-top:.5rem}
+.msheet-read ul{margin:.3rem 0 0;padding-left:1.1rem;display:grid;gap:.4rem}
+.msheet-read .plan-summary{color:var(--ink);font-weight:600}
 .plan-tags{display:flex;flex-wrap:wrap;align-items:center;gap:.4rem .6rem}
 .plan-kind,.plan-since{font-size:.72rem;font-weight:700;color:var(--ink-3);letter-spacing:.04em}
-.plan-item p{font-size:.92rem;color:var(--ink-2);line-height:1.55;overflow-wrap:anywhere}
-.plan-summary{color:var(--ink);font-weight:600}
-.plan-line b,.plan-item p b{color:var(--ink)}
-.plan-money{display:grid;gap:.35rem;margin:.2rem 0}
-.plan-money .goal-bar{background:var(--ground)}
-.plan-money .goal-bar b{background:var(--teal)}
-.plan-money .num{font-size:.88rem;color:var(--ink)}
+.plan-key-list{margin:0;display:grid;gap:.7rem}
+.plan-key-list>div{display:grid;grid-template-columns:minmax(7.5rem,auto) minmax(0,1fr);gap:.3rem 1rem;align-items:baseline}
+.plan-key-list dt{display:flex;align-items:center;gap:.5rem}
+.plan-key-list dt em{font-style:normal;font-size:.78rem;font-weight:700;color:var(--ink-3)}
+.plan-key-list dd{margin:0}
 .plan-source{font-size:.78rem;color:var(--ink-3)}
 .plan-source.venture{border-left:3px solid var(--rose);padding-left:.6rem}
 .plan-source a,.plan-go a{color:var(--rose-deep);font-weight:700}
-.plan-go{margin-top:.2rem}
-
-.plan-how{background:var(--paper);border:2.5px solid var(--ink);border-radius:24px;padding:1.4rem 1.5rem;box-shadow:6px 6px 0 var(--rose)}
-.plan-how ul{margin:1rem 0 0;padding-left:1.1rem;display:grid;gap:.6rem;max-width:75ch;color:var(--ink-2)}
-.plan-how li b{color:var(--ink)}
-.plan-how a{color:var(--rose-deep);font-weight:700}
+.plan-money .goal-bar b{background:var(--teal)}
 
 .plan-notes-admin{list-style:none;margin:.8rem 0 0;padding:0;display:grid;gap:.4rem;font-size:.85rem}
 .plan-notes-admin li{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem;border:2px dashed var(--line);border-radius:12px;padding:.4rem .6rem}
 .plan-notes-admin b{font-family:ui-monospace,Menlo,monospace;font-size:.78rem;color:var(--ink-3)}
 
-@media (max-width:560px){
-  .plan{gap:1.8rem}
-  .plan-key dl>div{grid-template-columns:minmax(0,1fr)}
-  .plan-key,.plan-changed,.plan-how{padding:1.1rem 1rem;box-shadow:4px 4px 0 var(--ink)}
+/* A phone cannot hold six columns, so each row becomes its own little card and
+   the page scrolls: a table squeezed to 375px is unreadable either way. */
+@media (max-width:900px){
+  .plan-page{height:auto;overflow:visible;padding-bottom:2.5rem}
+  .plan-top{grid-template-columns:minmax(0,1fr);gap:.5rem;justify-items:start}
+  .plan-top>div,.plan-lede,.plan-actions{grid-column:1;grid-row:auto}
+  .plan-actions{justify-content:flex-start}
+  .plan-tablewrap{overflow:visible;border:0;border-radius:0;background:none;box-shadow:none}
+  .plan-table,.plan-table tbody,.plan-table tr,.plan-table th,.plan-table td{display:block;width:auto}
+  .plan-table thead{display:none}
+  .plan-table tbody tr{background:var(--paper);border:2.5px solid var(--ink);border-radius:18px;box-shadow:4px 4px 0 var(--ink);padding:.7rem .9rem;margin-bottom:.9rem}
+  .plan-table tbody tr:hover{background:var(--paper)}
+  .plan-table th[scope=row]{padding:0 0 .4rem;min-width:0}
+  .plan-table td{padding:.15rem 0}
+  .plan-table td[data-label]:not([data-label=""])::before{content:attr(data-label) ": ";font-size:.64rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-3)}
+  .plan-go-cell{text-align:left;padding-top:.5rem !important}
 }
+@media (prefers-reduced-motion:reduce){.plan-actions button:hover{transform:none}}
+
+/* ---------- follow along: the channels, as links out ---------- */
+.follow{display:grid;gap:.5rem;margin-top:1.1rem;padding-top:1rem;border-top:2px dashed var(--line)}
+.follow ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.6rem}
+.follow li{flex:1 1 9.5rem;min-width:0}
+.follow-card{display:flex;align-items:center;gap:.6rem;border:2.5px solid var(--ink);border-radius:16px;padding:.5rem .7rem;background:var(--paper);color:var(--ink);text-decoration:none;box-shadow:3px 3px 0 var(--ink);transition:transform .2s var(--spring),box-shadow .2s}
+.follow-card:hover{transform:translate(1px,1px);box-shadow:2px 2px 0 var(--ink)}
+.follow-card:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.follow-card i{flex:none;width:26px;height:26px;display:grid;place-items:center}
+.follow-card i svg{width:100%;height:100%;display:block}
+.follow-card.youtube i{color:#E02F2F}
+.follow-card.telegram i{color:#2AA0DA}
+.follow-card span{display:grid;min-width:0}
+.follow-card b{font-size:.92rem;font-weight:700;line-height:1.15}
+.follow-card small{font-size:.74rem;color:var(--ink-2);line-height:1.3}
+@media (prefers-reduced-motion:reduce){.follow-card:hover{transform:none}}

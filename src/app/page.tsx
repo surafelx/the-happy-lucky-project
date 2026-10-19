@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { Follow } from "@/components/Follow";
 import { JoinForm } from "@/components/JoinForm";
 import { HomeStats } from "@/components/HomeStats";
 import { RecentSunday } from "@/components/RecentSunday";
@@ -69,6 +70,7 @@ export default async function HomePage() {
               <h2 id="join-h">Join us</h2>
               <p className="note">Leave your email and you&apos;ll hear from us when there is something real to share.</p>
               <JoinForm />
+              <Follow />
             </div>
           </section>
         </div>

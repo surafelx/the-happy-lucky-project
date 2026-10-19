@@ -6,7 +6,7 @@
 import type { Block } from "@/data/letter";
 
 /** The kinds of place a pin on the map can be. Kept here so this file stays import-free. */
-export const WORK_KINDS = ["School", "Children's home", "Community", "Campaign"] as const;
+export const WORK_KINDS = ["School", "Children's home", "Therapy centre", "Community", "Campaign"] as const;
 export type WorkKind = (typeof WORK_KINDS)[number];
 
 export const STATUSES = ["new", "contacted", "inducted", "active"] as const;

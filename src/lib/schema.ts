@@ -341,4 +341,42 @@ export const MIGRATIONS: { id: string; statements: string[] }[] = [
       `CREATE UNIQUE INDEX IF NOT EXISTS plan_notes_once ON plan_notes (month, text)`,
     ],
   },
+  {
+    id: "013_therapy_centre",
+    statements: [
+      // A day therapy centre is not a children's home, and One Heart had been
+      // filed as one since the map was first drawn. The children there go home
+      // to their families every afternoon; that is the whole point of the place.
+      `ALTER TABLE visits DROP CONSTRAINT IF EXISTS visits_kind_check`,
+      `ALTER TABLE visits ADD CONSTRAINT visits_kind_check CHECK (kind IN ('School', 'Children''s home', 'Therapy centre', 'Community', 'Campaign'))`,
+
+      // The correction itself, guarded on the wrong value: if the office has
+      // already fixed any of this by hand, this does nothing rather than
+      // overwriting a person's work with a migration.
+      `UPDATE visits SET
+         name = 'The One Heart Wholeness Centre',
+         kind = 'Therapy centre',
+         what = 'A day therapy centre for twenty-eight children with profound disabilities, run by Mena since 2013. Buses bring the children in every weekday morning and take them home every afternoon. We painted a mural with them, and carried over four packs of nappies, forty-eight in all, which was the first thing we had handed to anyone.',
+         href = 'https://www.ohwc.org.et',
+         reached = 28,
+         updated_at = to_char(now() AT TIME ZONE 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+       WHERE id = 'one-heart' AND kind = 'Children''s home'`,
+
+      // The plan asked us to find out what the centre actually needs. They
+      // publish it, so the question is answered and the row should say so --
+      // again only where nobody has already edited it in the office.
+      `UPDATE initiatives SET
+         title = 'The One Heart Wholeness Centre, Bahir Dar',
+         summary = 'A mural, and four packs of nappies for twenty-eight children in daily therapy.',
+         detail = 'A day therapy centre run by Mena since 2013: buses bring twenty-eight children with profound disabilities in every weekday morning and take them home every afternoon. We painted a mural with them, and a giver bought nappies that were carried over directly, which is why they appear in the audit as a gift in kind rather than money we held.',
+         need = 'They publish what they need: nappies, milk, oats and soap. We no longer have to guess, we have to turn up with some of it more than once.',
+         next_step = 'Agree with Mena what we bring next, and how often.',
+         updated_at = to_char(now() AT TIME ZONE 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+       WHERE id = 'one-heart' AND next_step = 'Ask the home what would help most, and write down the answer.'`,
+
+      `INSERT INTO plan_notes (month, text, at)
+       VALUES ('2026-10', 'Corrected the record on One Heart: it is a day therapy centre, not a children''s home, and the children go home to their families every afternoon. Added the mural, which we had done and never written down.', to_char(now() AT TIME ZONE 'utc', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'))
+       ON CONFLICT DO NOTHING`,
+    ],
+  },
 ];
